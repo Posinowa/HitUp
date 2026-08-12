@@ -52,10 +52,15 @@ app.*.map.json
 **/firebase-adminsdk*.json
 **/*-firebase-adminsdk-*.json
 **/google-services-desktop.json
+credentials*.json
+!assets/**/credentials*.json
 *.jks
 *.keystore
 *.p12
+*.pfx
 *.pem
+*.key
+*.p8
 *.mobileprovision
 **/Cloudflare*Secret*
 **/r2*secret*

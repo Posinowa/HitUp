@@ -2,33 +2,51 @@
 
 Closes #
 
+## Target
+
+- [ ] `develop` (normal feature / fix / chore)
+- [ ] `main` (release from `develop` or emergency `hotfix/*` only)
+
 ## Summary
 
 -
 
-## Changes
+## Technical Changes
 
 -
 
+## Screenshots / Recording
+
+Required for visible UI changes.
+
 ## Testing
 
-- [ ] `dart format .`
+- [ ] `dart format`
 - [ ] `flutter analyze`
 - [ ] `flutter test`
-- [ ] Android checked
-- [ ] iOS checked if applicable
+- [ ] Android build/tested where applicable
+- [ ] iOS build/tested where applicable
 
-## UI Evidence
+## Security
 
-Screenshots / recordings if applicable.
+- [ ] No secrets
+- [ ] No `.env`
+- [ ] No service account / Admin SDK credentials
+- [ ] No R2 Access Key / Secret
+- [ ] No signing keys (`.jks` / `.p12` / `.p8`)
+- [ ] No custom backend introduced (`backend/`, `server/`, `functions/`, …)
+- [ ] No direct Firestore / FirebaseAuth calls from presentation widgets
 
-## Checklist
+## Architecture
 
+- [ ] Riverpod conventions followed
+- [ ] Repository boundaries followed
+- [ ] Design tokens used
 - [ ] Scope matches GitHub Issue
-- [ ] No unrelated changes
-- [ ] No credentials or secrets committed
-- [ ] No custom backend introduced
-- [ ] No Firebase Cloud Functions introduced
-- [ ] Design tokens used where applicable
-- [ ] Repository architecture followed
-- [ ] Documentation updated if required
+
+## New Dependencies (if any)
+
+- Why needed:
+- Why existing packages are insufficient:
+- Maintained?
+- New native permissions?
