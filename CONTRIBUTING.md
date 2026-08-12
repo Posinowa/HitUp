@@ -2,14 +2,31 @@
 
 This guide is for intern/junior Flutter developers working from the GitHub backlog.
 
-## Important exception
+## Branch strategy
 
-Initial repository bootstrap was created directly on `main`.  
-**All subsequent issue implementation must use feature branches and pull requests.**
+```text
+feature/*  →  develop  →  main
+```
 
-## Development Workflow
+| Branch | Purpose |
+|--------|---------|
+| `main` | Production / release line (highly protected) |
+| `develop` | Integration branch (protected) |
+| `feature/*` | Issue implementation |
+| `fix/*` | Bug fixes |
+| `chore/*` | Tooling / docs / config |
+| `hotfix/*` | Emergency fixes → `main`, then sync back to `develop` |
 
-Start from a GitHub Issue, for example:
+### NEVER push directly to `main` or `develop`
+
+Except the authenticated repository owner bypass account under exceptional/administrative circumstances.  
+Owner bypass is an **emergency / admin mechanism only** — interns must never rely on it. Prefer a PR even when bypassing reviews, for audit history.
+
+CODEOWNER (`@yusufyilmazf`) is **not** a general bypass role.
+
+## Start from a GitHub Issue
+
+Example:
 
 ```text
 HIT-029 – Build Reusable Breathing Engine
@@ -18,26 +35,43 @@ HIT-029 – Build Reusable Breathing Engine
 GitHub issue numbers (`#32`) are **not** the same as Backlog IDs (`HIT-029`).  
 Execution order: [`docs/development/ISSUE_EXECUTION_ORDER.md`](docs/development/ISSUE_EXECUTION_ORDER.md)
 
-## Branch Rule
+## Create a branch FROM develop
+
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feature/HIT-XXX-description
+```
+
+Naming examples:
 
 ```text
 feature/HIT-029-breathing-engine
 feature/HIT-017-registration-screen
-fix/HIT-XXX-short-description
-chore/HIT-XXX-short-description
+fix/HIT-054-streak-rollover
+chore/HIT-009-firebase-config
+hotfix/HIT-XXX-critical-fix
 ```
 
-Do **not** commit application work directly to `main`.
+## Pull request destination
 
-## Before Starting an Issue
+| Change type | Open PR against |
+|-------------|-----------------|
+| Normal feature / fix / chore | **`develop`** |
+| Release | **`main`** (head must be `develop`) |
+| Emergency hotfix | **`main`** (head must be `hotfix/*`) then sync into `develop` |
+
+**Never** open `feature/*` → `main`.
+
+## Before starting an issue
 
 1. Read the complete issue (Objective, Scope, Acceptance Criteria, Out of Scope).
 2. Read dependencies — verify they are Done.
-3. Pull latest `main`.
-4. Create a new branch from `main`.
+3. Pull latest **`develop`**.
+4. Create a new branch from **`develop`**.
 5. Implement **only** the issue scope.
 
-## During Implementation
+## During implementation
 
 - Follow feature-first architecture in `docs/architecture/ARCHITECTURE.md`
 - Use **Riverpod** for DI and state
@@ -49,7 +83,22 @@ Do **not** commit application work directly to `main`.
 - Do not add a backend, Cloud Functions, AI, or payments
 - Do not embed secrets or R2 credentials
 
-## Required Before PR
+### New dependencies
+
+Any new `pubspec.yaml` package must be justified in the PR:
+
+- Why is it needed?
+- Why are existing dependencies insufficient?
+- Is it maintained?
+- Does it introduce native permissions?
+
+Avoid package sprawl.
+
+### Manifest / Info.plist changes
+
+Changes to `android/app/src/main/AndroidManifest.xml` or `ios/Runner/Info.plist` require CODEOWNER review and must explain new permissions (microphone, notifications, camera, storage, etc.). Camera is not MVP.
+
+## Required before PR
 
 ```bash
 dart format .
@@ -59,7 +108,7 @@ flutter test
 
 All must pass. Existing tests must not fail.
 
-## Commit Convention
+## Commit convention
 
 ```text
 feat(auth): add registration screen [HIT-017]
@@ -69,50 +118,35 @@ chore(firebase): configure firebase core [HIT-009]
 docs: update architecture guide
 ```
 
-## Pull Request
+## Pull request checklist
 
-Every PR must:
+Use `.github/pull_request_template.md`. Every PR must:
 
 - reference the GitHub issue
+- target the correct base branch
 - describe changes and testing
 - include screenshots for UI changes
 - contain no unrelated work
 - contain no secrets
 
-Template (also in `.github/pull_request_template.md`):
+## CI + release-ready pipeline
 
-```markdown
-## Related Issue
+PRs run format, analyze, tests, dependency review, secret/repository policy guards, and Android/iOS compile validation.  
+This is **CI + release-ready validation**, **not** automatic App Store / Play Store deployment. Store CD requires separate signing credentials (future issue).
 
-Closes #XX
+## Secrets
 
-## What Changed
+See [`SECURITY.md`](SECURITY.md). Never commit `.env` secrets, Admin SDK keys, R2 write credentials, or signing material.
 
--
+## Generated files
 
-## Screenshots
-
-If UI change.
-
-## Testing
-
-- [ ] flutter analyze
-- [ ] flutter test
-- [ ] Android tested
-- [ ] iOS tested if applicable
-
-## Checklist
-
-- [ ] Scope matches issue
-- [ ] No secrets committed
-- [ ] No backend introduced
-- [ ] Design tokens used
-- [ ] Relevant documentation updated
-```
+Do **not** commit `build/` or `.dart_tool/`.  
+**Do** keep `pubspec.lock` committed for deterministic app dependencies.
 
 ## Do NOT
 
-- work directly on `main`
+- push directly to `main` or `develop`
+- open `feature/*` → `main`
 - create a custom backend
 - add Firebase Cloud Functions
 - add AI integrations
@@ -124,3 +158,7 @@ If UI change.
 - implement unrelated features
 - ignore issue dependencies
 - close an issue unless its acceptance criteria are truly met
+
+## Historical note
+
+Initial Flutter bootstrap was committed directly to `main` before protections existed. That exception is closed; normal workflow applies going forward.

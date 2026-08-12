@@ -1,0 +1,46 @@
+name: Branch Policy
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: branch-policy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  branch-policy:
+    name: branch-policy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce main source-branch policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="${{ github.base_ref }}"
+          head="${{ github.head_ref }}"
+          echo "Evaluating PR: $head → $base"
+
+          if [ "$base" != "main" ]; then
+            echo "Not targeting main; nothing to enforce."
+            exit 0
+          fi
+
+          case "$head" in
+            develop)
+              echo "Allowed: develop → main (release)"
+              exit 0
+              ;;
+            hotfix/*)
+              echo "Allowed: hotfix/* → main (emergency)"
+              exit 0
+              ;;
+            *)
+              echo "::error::PRs into main must come from 'develop' (release) or 'hotfix/*' (emergency). Got head='$head'."
+              exit 1
+              ;;
+          esac

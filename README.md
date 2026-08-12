@@ -147,14 +147,41 @@ flutter analyze
 flutter test
 ```
 
-## Git Workflow
+## Branch Strategy
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md).  
-Initial bootstrap was committed to `main`. All subsequent work uses feature branches + PRs.
+```text
+feature/*  →  develop  →  main
+```
 
-## Security Rules
+| Branch | Role |
+|--------|------|
+| `main` | Production / release branch (highly protected) |
+| `develop` | Integration branch (protected) |
+| `feature/*` | Issue implementation |
 
-Firestore rules are mandatory (HIT-011). Users may only access their own data. Never commit service accounts, R2 secrets, signing keys, or tokens.
+Developers branch **from `develop`** and open PRs **into `develop`**.  
+Releases are `develop` → `main`. Emergency fixes use `hotfix/*` → `main`, then sync to `develop`.
+
+`com.posinowa.hitup` is the Android/iOS **application identifier**, not a domain or API URL.
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## CI + Release-Ready Pipeline
+
+GitHub Actions validates PRs to `develop` / `main`:
+
+- repository policy + secret-file guard
+- `dart format` / `flutter analyze` / `flutter test` (+ coverage artifact)
+- Dependency Review (high severity)
+- Android debug APK build (unsigned)
+- iOS simulator build (no codesign)
+- `branch-policy` on `main` (only `develop` or `hotfix/*` allowed as head)
+
+This is **CI + release-ready validation**. It does **not** deploy to the App Store or Google Play. Store CD requires approved signing credentials (future work).
+
+## Security
+
+See [`SECURITY.md`](SECURITY.md). Secret scanning, push protection, Dependabot, and CODEOWNERS are part of repository governance.
 
 ## Explicitly Out of Scope
 
