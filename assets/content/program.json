@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1.0-placeholder",
+  "status": "PLACEHOLDER — not approved curriculum (see HIT-080)",
+  "programId": "hitup_mvp_placeholder",
+  "title": "HitUp MVP Program (Placeholder)",
+  "days": [
+    {
+      "day": 1,
+      "title": "Placeholder Day 1",
+      "exerciseIds": ["breathing_diaphragm_01", "ux_lips_placeholder"],
+      "estimatedMinutes": 10
+    }
+  ]
+}

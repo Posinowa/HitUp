@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "0.1.0-placeholder",
+  "status": "PLACEHOLDER — not approved curriculum (see HIT-080)",
+  "exercises": [
+    {
+      "id": "breathing_diaphragm_01",
+      "title": "Diaphragm Breathing (Placeholder)",
+      "presentationType": "breathing",
+      "durationSeconds": 120,
+      "instructions": "PLACEHOLDER — replace with approved instructional copy.",
+      "breathing": {
+        "inhaleSeconds": 4,
+        "holdSeconds": 2,
+        "exhaleSeconds": 6,
+        "cycles": 5
+      }
+    },
+    {
+      "id": "ux_lips_placeholder",
+      "title": "U-X Lip Exercise (Placeholder)",
+      "presentationType": "rive",
+      "durationSeconds": 60,
+      "instructions": "PLACEHOLDER — local Rive asset preferred for MVP (no R2 required).",
+      "media": {
+        "riveAsset": "assets/rive/ux_lips.riv",
+        "stateMachine": "LipStates"
+      }
+    }
+  ]
+}

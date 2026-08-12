@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "0.1.0-placeholder",
+  "status": "PLACEHOLDER — not approved curriculum (see HIT-080)",
+  "challenges": [
+    {
+      "id": "sc_intro_60",
+      "title": "Introduce Yourself",
+      "prompt": "PLACEHOLDER — kendinizi tanıtın (onaylı içerik HIT-080).",
+      "durationSeconds": 60,
+      "preparationSeconds": 3
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1.0-placeholder",
+  "status": "PLACEHOLDER — not approved curriculum (see HIT-080)",
+  "tongueTwisters": [
+    {
+      "id": "tt_r_01",
+      "text": "PLACEHOLDER — approved Turkish tongue twister pending HIT-080",
+      "targetLetter": "R",
+      "difficulty": "easy",
+      "recommendedDurationSeconds": 60,
+      "category": "letter"
+    }
+  ]
+}

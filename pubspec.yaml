@@ -1,0 +1,49 @@
+name: hitup
+description: HitUp — guided daily diction, articulation, breathing and public-speaking trainer.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management & DI (LOCKED decision — HIT-005)
+  flutter_riverpod: ^2.6.1
+
+  # Routing (LOCKED decision — HIT-006)
+  go_router: ^14.8.1
+
+  # Firebase client services only — NO custom backend / NO Cloud Functions
+  firebase_core: ^3.12.1
+  firebase_auth: ^5.5.1
+  cloud_firestore: ^5.6.5
+  firebase_analytics: ^11.4.4
+  firebase_crashlytics: ^4.3.4
+
+  # Local preferences (onboarding flags, etc.)
+  shared_preferences: ^2.5.2
+
+  # Exercise animations (prefer local .riv assets for MVP)
+  rive: ^0.13.20
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/branding/logo/
+    - assets/branding/icons/
+    - assets/content/
+    - assets/rive/
+    - assets/audio/
+    - assets/images/
+    - assets/illustrations/
