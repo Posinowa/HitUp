@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^1.0.9
 
   # State management & DI (LOCKED decision — HIT-005)
   flutter_riverpod: ^2.6.1
@@ -26,10 +26,10 @@ dependencies:
   firebase_crashlytics: ^4.3.4
 
   # Local preferences (onboarding flags, etc.)
-  shared_preferences: ^2.5.2
+  shared_preferences: ^2.5.5
 
   # Exercise animations (prefer local .riv assets for MVP)
-  rive: ^0.13.20
+  rive: ^0.14.11
 
 dev_dependencies:
   flutter_test:
