@@ -4,7 +4,7 @@ import 'app_colors.dart';
 import 'app_radius.dart';
 import 'app_typography.dart';
 
-/// Central HitUp [ThemeData] — Seafoam baseline, approved in HIT-007.
+/// Central HitUp [ThemeData]. Seafoam baseline, approved in HIT-007.
 ///
 /// See `docs/design/IDENTITY.md` for the token rationale. [AppColors.primary]
 /// (not [AppColors.primaryContainer]) carries [Colors.white] foregrounds

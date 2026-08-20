@@ -1,6 +1,6 @@
 import 'package:flutter/painting.dart';
 
-/// HitUp design tokens — Seafoam baseline, approved in HIT-007.
+/// HitUp design tokens. Seafoam baseline, approved in HIT-007.
 ///
 /// See `docs/design/IDENTITY.md` for the full rationale, contrast notes,
 /// and the variants that were considered.

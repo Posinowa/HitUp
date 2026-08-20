@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
-/// HitUp type scale — Manrope for headings, Plus Jakarta Sans for body,
+/// HitUp type scale: Manrope for headings, Plus Jakarta Sans for body,
 /// per the HIT-007 baseline in `docs/design/IDENTITY.md`.
 abstract final class AppTypography {
   static const String headingFontFamily = 'Manrope';
