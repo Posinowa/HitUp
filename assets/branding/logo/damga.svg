@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="damgaTitle">
+  <title id="damgaTitle">HitUp mark, direction B: Damga (tamga)</title>
+  <defs>
+    <linearGradient id="damgaGradient" gradientUnits="userSpaceOnUse" x1="113" y1="435" x2="405" y2="93">
+      <stop offset="0" stop-color="#1B5C50"/>
+      <stop offset="0.55" stop-color="#257C6C"/>
+      <stop offset="1" stop-color="#48BCA2"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#damgaGradient)">
+    <path d="M169 111 L213 99 L213 443 L169 443 Z"/>
+    <circle cx="121" cy="247" r="19"/>
+    <circle cx="121" cy="311" r="19"/>
+  </g>
+  <g fill="none" stroke="url(#damgaGradient)" stroke-width="42" stroke-linecap="butt">
+    <path d="M205 365 L302 313"/>
+    <path d="M205 277 L346 202"/>
+    <path d="M205 189 L390 91"/>
+  </g>
+</svg>
