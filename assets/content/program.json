@@ -1,14 +1,44 @@
 {
-  "schemaVersion": "0.1.0-placeholder",
-  "status": "PLACEHOLDER — not approved curriculum (see HIT-080)",
-  "programId": "hitup_mvp_placeholder",
-  "title": "HitUp MVP Program (Placeholder)",
+  "schemaVersion": "1.0.0",
+  "contentVersion": "0.1.0",
+  "status": "placeholder",
+  "locale": "tr-TR",
+  "programId": "hitup_mvp",
+  "title": "HitUp MVP programı (yer tutucu)",
   "days": [
     {
       "day": 1,
-      "title": "Placeholder Day 1",
-      "exerciseIds": ["breathing_diaphragm_01", "ux_lips_placeholder"],
-      "estimatedMinutes": 10
+      "title": "Yer tutucu 1. gün",
+      "estimatedMinutes": 5,
+      "exerciseIds": [
+        "intro_text_01",
+        "breathing_diaphragm_01",
+        "articulation_lips_ux_01",
+        "letter_r_01"
+      ]
+    },
+    {
+      "day": 2,
+      "title": "Yer tutucu 2. gün",
+      "estimatedMinutes": 5,
+      "exerciseIds": [
+        "warmup_timer_01",
+        "rive_sample_01",
+        "twister_r_01",
+        "emphasis_sample_01",
+        "intonation_sample_01"
+      ]
+    },
+    {
+      "day": 3,
+      "title": "Yer tutucu 3. gün",
+      "estimatedMinutes": 5,
+      "exerciseIds": [
+        "listening_audio_01",
+        "pause_sample_01",
+        "reading_timed_01",
+        "speaking_intro_01"
+      ]
     }
   ]
 }

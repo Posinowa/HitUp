@@ -1,12 +1,22 @@
 {
-  "schemaVersion": "0.1.0-placeholder",
-  "status": "PLACEHOLDER — not approved curriculum (see HIT-080)",
+  "schemaVersion": "1.0.0",
+  "contentVersion": "0.1.0",
+  "status": "placeholder",
+  "locale": "tr-TR",
   "letters": [
     {
+      "key": "r",
       "letter": "R",
       "syllables": ["RA", "RE", "RI", "RO", "RU"],
-      "words": ["Rüzgar", "Araba", "Radar"],
-      "notes": "PLACEHOLDER Turkish letter ladder"
+      "words": ["Yer", "Tutucu", "Rakam"],
+      "notes": "Yer tutucu harf merdiveni. Onaylı içerik HIT-080 ile gelecek."
+    },
+    {
+      "key": "s_cedilla",
+      "letter": "Ş",
+      "syllables": ["ŞA", "ŞE", "ŞI", "ŞO", "ŞU"],
+      "words": ["Şafak", "Yer", "Tutucu"],
+      "notes": "ASCII olmayan harfler için anahtar dönüştürme kuralına örnek. Onaylı içerik HIT-080 ile gelecek."
     }
   ]
 }
