@@ -77,7 +77,7 @@ hotfix/HIT-XXX-critical-fix
 - Use **Riverpod** for DI and state
 - Use **go_router** for navigation
 - Call Firebase only through repositories — never from presentation widgets
-- Use design tokens in `lib/core/theme/`
+- Use design tokens in `lib/core/theme/` (see [`docs/design/THEMING.md`](docs/design/THEMING.md))
 - Reuse components; avoid scope creep
 - Do not add unrequested packages
 - Do not add a backend, Cloud Functions, AI, or payments

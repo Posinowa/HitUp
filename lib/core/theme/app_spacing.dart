@@ -1,6 +1,8 @@
 /// Spacing scale (logical pixels).
 ///
-/// STATUS: DRAFT / TEMPORARY — finalize with HIT-007 / HIT-008.
+/// STATUS: APPROVED (HIT-007 scale, wired in HIT-008).
+///
+/// See `docs/design/THEMING.md` for how to consume these.
 abstract final class AppSpacing {
   static const double xs = 4;
   static const double sm = 8;
