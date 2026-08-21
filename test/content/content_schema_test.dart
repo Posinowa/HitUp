@@ -143,6 +143,27 @@ void main() {
       }
     });
 
+    test('every example word actually contains its target letter', () {
+      // Caught a real bug: "Tutucu" and "Yer" (from the note "Yer tutucu",
+      // Turkish for "placeholder") had leaked into the word lists as if
+      // they were examples, for letters they don't even contain.
+      //
+      // toLowerCase() is fine for the letters currently in this file. It is
+      // NOT Turkish-aware for I/ı/İ/i, so if a letter entry for one of those
+      // is ever added, this check needs a proper Turkish case fold instead.
+      for (final letter in letters) {
+        final target = (letter['letter'] as String).toLowerCase();
+        final words = (letter['words'] as List<dynamic>).cast<String>();
+        for (final word in words) {
+          expect(
+            word.toLowerCase(),
+            contains(target),
+            reason: '${letter['key']}: "$word" has no "$target"',
+          );
+        }
+      }
+    });
+
     test('tongue twister ids are unique and prefixed tt_', () {
       expect(twisterIds.length, twisters.length, reason: 'duplicate id');
       for (final id in twisterIds) {

@@ -8,14 +8,14 @@
       "key": "r",
       "letter": "R",
       "syllables": ["RA", "RE", "RI", "RO", "RU"],
-      "words": ["Yer", "Tutucu", "Rakam"],
+      "words": ["Yer", "Araba", "Rakam"],
       "notes": "Yer tutucu harf merdiveni. Onaylı içerik HIT-080 ile gelecek."
     },
     {
       "key": "s_cedilla",
       "letter": "Ş",
       "syllables": ["ŞA", "ŞE", "ŞI", "ŞO", "ŞU"],
-      "words": ["Şafak", "Yer", "Tutucu"],
+      "words": ["Şafak", "Kuş", "Güneş"],
       "notes": "ASCII olmayan harfler için anahtar dönüştürme kuralına örnek. Onaylı içerik HIT-080 ile gelecek."
     }
   ]
