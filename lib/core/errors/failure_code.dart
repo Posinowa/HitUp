@@ -12,7 +12,6 @@ abstract final class FailureCode {
 
   // Authentication
   static const authInvalidCredentials = 'auth.invalid_credentials';
-  static const authUserNotFound = 'auth.user_not_found';
   static const authUserDisabled = 'auth.user_disabled';
   static const authEmailInUse = 'auth.email_in_use';
   static const authInvalidEmail = 'auth.invalid_email';
@@ -46,7 +45,6 @@ abstract final class FailureCode {
   /// ship without copy behind it.
   static const all = <String>[
     authInvalidCredentials,
-    authUserNotFound,
     authUserDisabled,
     authEmailInUse,
     authInvalidEmail,

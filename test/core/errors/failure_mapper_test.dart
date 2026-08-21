@@ -11,21 +11,29 @@ import 'package:hitup/core/errors/failure_mapper.dart';
 
 void main() {
   group('authentication errors', () {
-    test('credential problems map to a single shared code', () {
-      for (final code in [
-        'invalid-credential',
-        'invalid-login-credentials',
-        'wrong-password',
-      ]) {
-        final failure = mapErrorToFailure(FirebaseAuthException(code: code));
-        expect(failure, isA<AuthFailure>(), reason: code);
-        expect(failure.code, FailureCode.authInvalidCredentials, reason: code);
-      }
-    });
+    test(
+      'credential problems map to a single shared code, so a login '
+      'screen cannot tell an attacker which emails have an account',
+      () {
+        for (final code in [
+          'invalid-credential',
+          'invalid-login-credentials',
+          'wrong-password',
+          'user-not-found',
+        ]) {
+          final failure = mapErrorToFailure(FirebaseAuthException(code: code));
+          expect(failure, isA<AuthFailure>(), reason: code);
+          expect(
+            failure.code,
+            FailureCode.authInvalidCredentials,
+            reason: code,
+          );
+        }
+      },
+    );
 
     test('each known auth code maps to its own failure code', () {
       const expected = {
-        'user-not-found': FailureCode.authUserNotFound,
         'user-disabled': FailureCode.authUserDisabled,
         'email-already-in-use': FailureCode.authEmailInUse,
         'invalid-email': FailureCode.authInvalidEmail,

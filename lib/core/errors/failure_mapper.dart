@@ -79,11 +79,16 @@ Failure _fromFirebaseAuth(FirebaseAuthException e, String detail) {
   }
 
   final code = switch (e.code) {
+    // A wrong password and an unregistered email get the same code and the
+    // same sentence on purpose. Splitting them lets a login screen reveal
+    // which emails have an account here, one guess at a time. The Firebase
+    // code itself (in `detail`) still tells us which one it actually was,
+    // for logs, so nothing is lost except the leak.
     'invalid-credential' ||
     'invalid-login-credentials' ||
-    'wrong-password' =>
+    'wrong-password' ||
+    'user-not-found' =>
       FailureCode.authInvalidCredentials,
-    'user-not-found' => FailureCode.authUserNotFound,
     'user-disabled' => FailureCode.authUserDisabled,
     'email-already-in-use' => FailureCode.authEmailInUse,
     'invalid-email' => FailureCode.authInvalidEmail,

@@ -12,9 +12,9 @@ import 'package:hitup/core/errors/failure_code.dart';
 /// `assets/`. Error copy is what gets shown when loading fails, so it cannot
 /// itself depend on loading succeeding.
 const failureMessagesTr = <String, String>{
+  // Also shown for an unregistered email, on purpose, see failure_mapper.dart.
   FailureCode.authInvalidCredentials:
       'E-posta veya şifre hatalı. Kontrol edip tekrar dener misiniz?',
-  FailureCode.authUserNotFound: 'Bu e-posta ile kayıtlı bir hesap bulamadık.',
   FailureCode.authUserDisabled: 'Bu hesap kullanıma kapatılmış.',
   FailureCode.authEmailInUse:
       'Bu e-posta zaten kayıtlı. Giriş yapmayı deneyebilirsiniz.',
