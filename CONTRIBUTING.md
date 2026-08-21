@@ -108,6 +108,8 @@ flutter test
 
 All must pass. Existing tests must not fail.
 
+Tests are written alongside the code they cover, in the same PR, not added afterward. A piece of work is not done until its tests exist.
+
 ## Commit convention
 
 ```text
