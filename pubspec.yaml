@@ -31,6 +31,15 @@ dependencies:
   # Exercise animations (prefer local .riv assets for MVP)
   rive: ^0.14.11
 
+  # Daily reminders, on-device only (HIT-057). No Firebase Cloud Messaging and
+  # no server: the reminder is scheduled by the device for the device.
+  # timezone + flutter_timezone are not optional extras here; scheduling at a
+  # local wall-clock time requires a real timezone database, see
+  # docs/architecture/NOTIFICATIONS.md.
+  flutter_local_notifications: ^22.3.0
+  timezone: ^0.11.1
+  flutter_timezone: ^5.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

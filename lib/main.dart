@@ -5,6 +5,6 @@ import 'app/app.dart';
 import 'app/bootstrap/app_bootstrap.dart';
 
 Future<void> main() async {
-  await AppBootstrap.init();
-  runApp(const ProviderScope(child: HitUpApp()));
+  final List<Override> overrides = await AppBootstrap.init();
+  runApp(ProviderScope(overrides: overrides, child: const HitUpApp()));
 }
