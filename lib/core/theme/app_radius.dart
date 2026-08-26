@@ -1,9 +1,7 @@
-/// Corner radius scale.
-///
-/// STATUS: DRAFT / TEMPORARY — finalize with HIT-007 / HIT-008.
+/// Corner radius scale, approved in HIT-007 (`docs/design/IDENTITY.md`).
 abstract final class AppRadius {
-  static const double sm = 8;
+  static const double sm = 6;
   static const double md = 12;
-  static const double lg = 16;
-  static const double xl = 24;
+  static const double lg = 20;
+  static const double pill = 999;
 }
