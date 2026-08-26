@@ -52,6 +52,23 @@ lib/
 
 Larger features may use `data/`, `domain/`, `presentation/` internally. Tiny features need not create empty ceremony folders.
 
+## Supported OS versions
+
+| Platform | Floor | Set in |
+|---|---|---|
+| Android | API 24 (7.0) | `android/app/build.gradle` |
+| iOS | 12.0 | `ios/Runner.xcodeproj`, `ios/Flutter/AppFrameworkInfo.plist` |
+
+Both are written as **explicit literals**, never derived from
+`flutter.minSdkVersion` or any other toolchain default. The floor is visible to
+users: raising it stops updates reaching devices below it. That has to be a
+change someone makes deliberately and a reviewer sees in a diff, not something
+a Flutter SDK upgrade does quietly on a day nobody touched the setting.
+
+Raising a floor is its own change, with its own reasoning, in its own PR. The
+Android floor moved 23 to 24 because `flutter_local_notifications` (HIT-057)
+declares `minSdkVersion 24` and will not link below it.
+
 ## Package identifiers
 
 **STATUS: OWNER DECISION REQUIRED (provisional selected)**
@@ -65,6 +82,7 @@ Local curriculum JSON must remain usable without network. Firestore sync may req
 ## Related docs
 
 - `CONTENT_SCHEMA.md`
+- `ERROR_HANDLING.md`
 - `FIRESTORE_MODEL.md`
 - `R2_MEDIA.md`
 - `../design/IDENTITY.md`
