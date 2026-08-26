@@ -157,6 +157,59 @@ jobs:
           fi
           echo "No forbidden credential-like files detected."
 
+      - name: Scan file contents for credential patterns
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          # The step above matches file NAMES. It catches a committed key file
+          # and nothing else. An R2 access key pasted into a Dart constant
+          # passes it untouched, which is the case SECURITY.md and the PR
+          # template both call out by name. Filename checking and content
+          # checking are two different controls; this is the second one.
+          allowlist='.github/secret-scan-allowlist.txt'
+
+          # Each entry is a label and a pattern. Labels are what reach the log,
+          # never the match itself.
+          patterns=(
+            'AWS/R2 style access key id|AKIA[0-9A-Z]{16}'
+            'Google API key|AIza[0-9A-Za-z_-]{35}'
+            'PEM private key block|-----BEGIN [A-Z ]*PRIVATE KEY-----'
+            'Firebase Admin service account marker|"type"[[:space:]]*:[[:space:]]*"service_account"'
+            'Slack token|xox[baprs]-[0-9A-Za-z-]{10,}'
+            'Generic assigned secret|(secret|password|passwd|token|apikey|api_key)[[:space:]]*[:=][[:space:]]*["'"'"'][A-Za-z0-9/+=_-]{24,}["'"'"']'
+          )
+
+          fail=0
+          for entry in "${patterns[@]}"; do
+            label="${entry%%|*}"
+            regex="${entry#*|}"
+            while IFS= read -r hit; do
+              [ -z "$hit" ] && continue
+              file="${hit%%:*}"
+              line="$(echo "$hit" | cut -d: -f2)"
+              if [ -f "$allowlist" ] && grep -qxF "${file}:${line}" "$allowlist"; then
+                echo "::notice::Reviewed false positive: ${file}:${line}"
+                continue
+              fi
+              # File and line only. The matched text is never printed, because
+              # a workflow log is readable by anyone who can see the run.
+              #
+              # The pattern is passed with -e on purpose: the PEM one starts
+              # with dashes, and without -e grep reads it as options and
+              # searches for nothing at all, silently, while still exiting 0.
+              echo "::error file=${file},line=${line}::Possible credential in source: ${label}. If this is a false positive, add ${file}:${line} to ${allowlist} with the reason in the pull request."
+              fail=1
+            done < <(
+              grep -rnE --binary-files=without-match                 --exclude-dir=.git --exclude-dir=build --exclude-dir=.dart_tool                 --exclude="$(basename "$allowlist")"                 -e "$regex" . 2>/dev/null | sed 's|^\./||' | cut -d: -f1,2 || true
+            )
+          done
+
+          if [ "$fail" -eq 0 ]; then
+            echo "No credential patterns found in file contents."
+          fi
+          exit "$fail"
+
   flutter-format:
     name: flutter-format
     runs-on: ubuntu-latest
