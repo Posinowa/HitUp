@@ -24,7 +24,17 @@ android {
         applicationId = "com.posinowa.hitup"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23 // Firebase client SDKs
+        // An explicit literal on purpose, never flutter.minSdkVersion. The
+        // supported Android floor is visible to users: raising it stops
+        // updates reaching devices below it, so it has to be a change someone
+        // makes and a reviewer sees, not something a Flutter SDK upgrade does
+        // on its own.
+        //
+        // 24 is what flutter_local_notifications 22.3.0 requires; it declares
+        // minSdkVersion 24 in its own Gradle config and will not link below
+        // it, so HIT-057 cannot ship without this floor. The previous value of
+        // 23 was set for the Firebase client SDKs, and 24 clears that too.
+        minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
