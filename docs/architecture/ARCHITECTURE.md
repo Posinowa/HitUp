@@ -81,6 +81,7 @@ Local curriculum JSON must remain usable without network. Firestore sync may req
 
 ## Related docs
 
+- `CONTENT_SCHEMA.md`
 - `FIRESTORE_MODEL.md`
 - `R2_MEDIA.md`
 - `../design/IDENTITY.md`
