@@ -25,6 +25,24 @@ abstract final class AppColors {
   static const Color error = Color(0xFFE74C3C);
   static const Color warning = Color(0xFFF39C12);
 
+  /// Surface behind an error message, and the text that sits on it.
+  ///
+  /// [error] is the alert tone: strong enough to be noticed, too dark to read
+  /// small text on. White on it measures 3.82:1 and the darkest text token
+  /// measures 4.18:1, both under the 4.5:1 needed for body text, so nothing in
+  /// the palette could be written on it legibly. That is why an error message
+  /// gets its own quieter surface instead of being painted on [error] itself.
+  ///
+  /// Neither value is a new colour invented for this: both are [error] itself,
+  /// [errorContainer] lightened towards white and [onErrorContainer] deepened
+  /// towards black. The pair keeps the warmth of Coral Red rather than falling
+  /// back to a neutral grey, and measures 9.86:1 together.
+  ///
+  /// [error] stays the right choice for anything that is not text on a
+  /// surface: an icon, a border, a validation underline.
+  static const Color errorContainer = Color(0xFFFCEAE8);
+  static const Color onErrorContainer = Color(0xFF68221B);
+
   // Dark-mode tokens: not wired into a ThemeData yet (HIT-008 scope is
   // light-only), kept alongside the light set so dark mode can be added
   // later without re-deriving values.

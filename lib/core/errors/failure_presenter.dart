@@ -59,14 +59,28 @@ Future<void> showFailureDialog(
   VoidCallback? onRetry,
   String title = FailureLabelsTr.dialogTitle,
 }) {
+  final colors = Theme.of(context).colorScheme;
+
   return showDialog<void>(
     context: context,
     builder: (dialogContext) => AlertDialog(
-      title: Text(title),
-      content: Text(failureMessage(failure)),
+      // Same two tokens as the snack bar and ErrorView. All three ways a
+      // failure reaches the user sit on the error surface with the error text
+      // colour on it, so a problem is recognisable as a problem before the
+      // sentence is even read.
+      backgroundColor: colors.errorContainer,
+      icon: Icon(Icons.error_outline, color: colors.error),
+      title: Text(title, style: TextStyle(color: colors.onErrorContainer)),
+      content: Text(
+        failureMessage(failure),
+        style: TextStyle(color: colors.onErrorContainer),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(),
+          style: TextButton.styleFrom(
+            foregroundColor: colors.onErrorContainer,
+          ),
           child: const Text(FailureLabelsTr.dismiss),
         ),
         if (failure.canOfferRetry(onRetry))
@@ -75,6 +89,10 @@ Future<void> showFailureDialog(
               Navigator.of(dialogContext).pop();
               onRetry!();
             },
+            style: FilledButton.styleFrom(
+              backgroundColor: colors.onErrorContainer,
+              foregroundColor: colors.errorContainer,
+            ),
             child: const Text(FailureLabelsTr.retry),
           ),
       ],
