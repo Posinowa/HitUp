@@ -1,0 +1,17 @@
+# Files exempted from the presentation layer boundary check in
+# .github/workflows/flutter_ci.yml (repository-policy job).
+#
+# The rule: nothing under lib/app/** or lib/features/*/presentation/** may call
+# FirebaseAuth.instance, FirebaseFirestore.instance or FirebaseStorage.instance
+# directly. Data access goes through a repository. See
+# docs/architecture/ARCHITECTURE.md, hard rule 1.
+#
+# This file exists so an exception is a reviewed line in a diff rather than an
+# `// ignore` comment buried in a widget. Adding a path here means a reviewer
+# agreed the boundary should not apply, and the reason belongs in the PR that
+# adds it.
+#
+# One repository-relative path per line. Comments and blank lines are ignored
+# by the check because it matches whole lines exactly.
+#
+# Empty on purpose: the tree has no exceptions today.

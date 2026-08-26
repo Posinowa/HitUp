@@ -1,0 +1,71 @@
+name: Bug
+description: Something behaves differently from what the code or the issue said it would.
+title: "HIT-XXX - "
+labels: ["type: bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste credentials, tokens, or a real user's data into this form.
+        Everything here is public.
+  - type: input
+    id: backlog-id
+    attributes:
+      label: Backlog ID
+      placeholder: HIT-092
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Numbered, starting from a clean install where that matters.
+      value: |
+        1. 
+        2. 
+        3. 
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: What happened instead. Include the exact message the user sees, not a paraphrase.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Device, OS version, build (debug or release), and the branch or commit.
+      value: |
+        - Device: 
+        - OS version: 
+        - Build: 
+        - Branch / commit: 
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Blocks a core flow, no workaround
+        - Blocks a core flow, workaround exists
+        - Wrong behaviour in a secondary flow
+        - Cosmetic
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Logs with secrets removed, screenshots, when it started.
+    validations:
+      required: false
