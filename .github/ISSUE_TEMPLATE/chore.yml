@@ -1,0 +1,47 @@
+name: Chore
+description: Maintenance, tooling, CI, or documentation work with no user-visible behaviour change.
+title: "HIT-XXX - "
+labels: ["type: chore"]
+body:
+  - type: input
+    id: backlog-id
+    attributes:
+      label: Backlog ID
+      placeholder: HIT-092
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What
+      description: The change itself, concretely. Name the files where you can.
+    validations:
+      required: true
+  - type: textarea
+    id: why-now
+    attributes:
+      label: Why now
+      description: >
+        Maintenance work competes with product work, so it needs a reason it
+        cannot wait. "It is cheap while the tree is still clean" is a good one.
+    validations:
+      required: true
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Risk level
+      options:
+        - None, documentation or comments only
+        - Low, tooling change with a clear signal if it breaks
+        - Medium, touches the build or CI gates
+        - High, changes a user-visible constraint such as a supported OS floor
+    validations:
+      required: true
+  - type: textarea
+    id: definition-of-done
+    attributes:
+      label: Definition of done
+      value: |
+        - [ ] 
+    validations:
+      required: true
