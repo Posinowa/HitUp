@@ -4,20 +4,26 @@ import 'app_colors.dart';
 import 'app_radius.dart';
 import 'app_typography.dart';
 
-/// Central HitUp [ThemeData].
+/// Central HitUp [ThemeData]. Seafoam baseline, approved in HIT-007.
 ///
-/// Temporary tokens until HIT-007 is approved; replace values only in theme files.
+/// See `docs/design/IDENTITY.md` for the token rationale. [AppColors.primary]
+/// (not [AppColors.primaryContainer]) carries [Colors.white] foregrounds
+/// because the lighter container swatch fails contrast with white text.
 abstract final class AppTheme {
   static ThemeData light() {
     final colorScheme = ColorScheme.light(
       primary: AppColors.primary,
-      secondary: AppColors.secondary,
-      tertiary: AppColors.accent,
-      surface: AppColors.surface,
-      error: AppColors.error,
       onPrimary: Colors.white,
-      onSecondary: Colors.white,
+      primaryContainer: AppColors.primaryContainer,
+      onPrimaryContainer: AppColors.textPrimary,
+      secondary: AppColors.secondary,
+      onSecondary: AppColors.textPrimary,
+      tertiary: AppColors.accent,
+      onTertiary: AppColors.textPrimary,
+      surface: AppColors.surface,
       onSurface: AppColors.textPrimary,
+      outline: AppColors.outline,
+      error: AppColors.error,
       onError: Colors.white,
     );
 

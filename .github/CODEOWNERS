@@ -1,15 +1,15 @@
 # Default owner for all paths
-* @yusufyilmazf
+* @yusufyilmazf @AlperEnesErsu
 
 # Critical infrastructure (explicit — same owner; documents review expectation)
-/.github/ @yusufyilmazf
-/.github/workflows/ @yusufyilmazf
-/.github/CODEOWNERS @yusufyilmazf
-/.github/dependabot.yml @yusufyilmazf
-/SECURITY.md @yusufyilmazf
-/android/ @yusufyilmazf
-/ios/ @yusufyilmazf
-/lib/core/ @yusufyilmazf
-/docs/architecture/ @yusufyilmazf
-/pubspec.yaml @yusufyilmazf
-/pubspec.lock @yusufyilmazf
+/.github/ @yusufyilmazf @AlperEnesErsu
+/.github/workflows/ @yusufyilmazf @AlperEnesErsu
+/.github/CODEOWNERS @yusufyilmazf @AlperEnesErsu
+/.github/dependabot.yml @yusufyilmazf @AlperEnesErsu
+/SECURITY.md @yusufyilmazf @AlperEnesErsu
+/android/ @yusufyilmazf @AlperEnesErsu
+/ios/ @yusufyilmazf @AlperEnesErsu
+/lib/core/ @yusufyilmazf @AlperEnesErsu
+/docs/architecture/ @yusufyilmazf @AlperEnesErsu
+/pubspec.yaml @yusufyilmazf @AlperEnesErsu
+/pubspec.lock @yusufyilmazf @AlperEnesErsu
