@@ -98,6 +98,16 @@ Avoid package sprawl.
 
 Changes to `android/app/src/main/AndroidManifest.xml` or `ios/Runner/Info.plist` require CODEOWNER review and must explain new permissions (microphone, notifications, camera, storage, etc.). Camera is not MVP.
 
+## Flutter version
+
+Install **Flutter 3.47.0**, stable channel. CI pins the same version, in the
+`FLUTTER_VERSION` value at the top of both workflow files.
+
+Running a different SDK locally is the usual reason a PR is green on one machine
+and red in CI, and the failure then reads as though the change caused it.
+Upgrading is a deliberate `chore(toolchain):` PR that moves the pin and the line
+above together, never something that happens on its own.
+
 ## Required before PR
 
 ```bash

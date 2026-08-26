@@ -1,0 +1,86 @@
+name: Feature
+description: A unit of product or infrastructure work, in the shape CONTRIBUTING.md expects.
+title: "HIT-XXX - "
+labels: ["type: feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fill every section. An issue without checkable acceptance criteria is an
+        issue whose scope gets renegotiated inside the pull request, which is the
+        most expensive place to do it.
+  - type: input
+    id: backlog-id
+    attributes:
+      label: Backlog ID
+      description: The HIT number for this work, matching the title.
+      placeholder: HIT-092
+    validations:
+      required: true
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: One or two sentences. What is true after this ships that is not true now.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why this is needed, and what a reader has to know to judge the approach.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What is actually built. Name files and directories where you can.
+    validations:
+      required: true
+  - type: textarea
+    id: technical-requirements
+    attributes:
+      label: Technical Requirements
+      description: Constraints the implementation has to satisfy, including anything ARCHITECTURE.md pins down.
+    validations:
+      required: true
+  - type: textarea
+    id: ui-ux-requirements
+    attributes:
+      label: UI / UX Requirements
+      description: Write "N/A for this issue" when there is no interface.
+      value: N/A for this issue
+    validations:
+      required: true
+  - type: textarea
+    id: data-requirements
+    attributes:
+      label: Data Requirements
+      description: Documents, fields and shapes this reads or writes. "N/A for this issue" when none.
+      value: N/A for this issue
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Issues that must land first, as "Depends on #N (HIT-XXX)". Write "None" when there are none.
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of Scope
+      description: What a reviewer should push back on if it appears in the pull request.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Checkable statements. Someone other than the author must be able to verify each one.
+      value: |
+        - [ ] 
+    validations:
+      required: true
