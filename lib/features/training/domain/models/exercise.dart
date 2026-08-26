@@ -1,0 +1,225 @@
+import 'package:flutter/foundation.dart';
+
+import 'exercise_config.dart';
+import 'exercise_presentation_type.dart';
+import 'json_reader.dart';
+import 'media_reference.dart';
+
+/// One exercise, as defined in `assets/content/exercises.json`.
+///
+/// An exercise says what to show, for how long, and how to present it. It never
+/// says where its media lives, and a screen never branches on its [id]. Both
+/// rules exist so adding an exercise is a content change, not a code change.
+@immutable
+class Exercise {
+  /// Creates an exercise.
+  ///
+  /// Prefer [Exercise.fromJson] for content. This constructor is for tests and
+  /// fixtures, and does not check the pairing rule.
+  const Exercise({
+    required this.id,
+    required this.title,
+    required this.presentationType,
+    required this.durationSeconds,
+    required this.instructions,
+    this.media,
+    this.config,
+  });
+
+  /// Reads an exercise from its JSON object.
+  ///
+  /// Throws a [FormatException] when a required field is missing or wrongly
+  /// typed, or when the type specific config does not match the presentation
+  /// type. It does **not** throw on an unrecognised presentation type: that
+  /// yields [ExercisePresentationType.unknown] so a newer content file can ship
+  /// to an older client and cost one exercise rather than the whole day. Callers
+  /// filter with [isRenderable].
+  factory Exercise.fromJson(Map<String, dynamic> json) {
+    // Read the id first, with a placeholder owner, so every later failure can
+    // name the exercise it came from.
+    final String id = json.requireString('id', ownerId: '<exercise>');
+
+    final ExercisePresentationType presentationType =
+        ExercisePresentationType.fromWireName(
+      json['presentationType'] as String?,
+    );
+
+    final Map<String, dynamic>? mediaJson = json.optionalObject(
+      'media',
+      ownerId: id,
+    );
+
+    return Exercise(
+      id: id,
+      title: json.requireString('title', ownerId: id),
+      presentationType: presentationType,
+      durationSeconds: json.requireIntAtLeast(
+        'durationSeconds',
+        1,
+        ownerId: id,
+      ),
+      instructions: json.requireString('instructions', ownerId: id),
+      media: mediaJson == null
+          ? null
+          : MediaReference.fromJson(mediaJson, ownerId: id),
+      config: _readConfig(json, id: id, presentationType: presentationType),
+    );
+  }
+
+  /// Reads the single type specific config block, enforcing the pairing rule.
+  ///
+  /// The schema allows at most one block per exercise, and it must be the one
+  /// its presentation type calls for. Checking that here means a renderer can
+  /// trust the pair it is handed instead of re-deriving the rule and deciding
+  /// for itself what to do when it does not hold.
+  static ExerciseConfig? _readConfig(
+    Map<String, dynamic> json, {
+    required String id,
+    required ExercisePresentationType presentationType,
+  }) {
+    const Map<String, ExercisePresentationType> blocks =
+        <String, ExercisePresentationType>{
+      'breathing': ExercisePresentationType.breathing,
+      'letter': ExercisePresentationType.letter,
+      'tongueTwister': ExercisePresentationType.tongueTwister,
+      'emphasis': ExercisePresentationType.emphasis,
+      'intonation': ExercisePresentationType.intonation,
+      'pause': ExercisePresentationType.pause,
+      'timedReading': ExercisePresentationType.timedReading,
+      'speakingChallenge': ExercisePresentationType.speakingChallenge,
+    };
+
+    final List<String> present =
+        blocks.keys.where((String field) => json.containsKey(field)).toList();
+
+    if (present.length > 1) {
+      throw FormatException(
+        'An exercise carries at most one type specific config, '
+        '"$id" carries ${present.join(", ")}',
+      );
+    }
+
+    if (present.isEmpty) {
+      // An unknown type reaching this build may well have brought a config
+      // block this build has no name for. That is not a content error, it is
+      // the forward-compatibility case, and the caller skips the exercise.
+      return null;
+    }
+
+    final String field = present.single;
+    final ExercisePresentationType expected = blocks[field]!;
+    if (expected != presentationType) {
+      throw FormatException(
+        'Config block "$field" belongs to ${expected.wireName}, '
+        'but "$id" is ${presentationType.wireName}',
+      );
+    }
+
+    final Map<String, dynamic> block = json.requireObject(field, ownerId: id);
+    return switch (expected) {
+      ExercisePresentationType.breathing => BreathingConfig.fromJson(
+          block,
+          ownerId: id,
+        ),
+      ExercisePresentationType.letter => LetterConfig.fromJson(
+          block,
+          ownerId: id,
+        ),
+      ExercisePresentationType.tongueTwister => TongueTwisterConfig.fromJson(
+          block,
+          ownerId: id,
+        ),
+      ExercisePresentationType.emphasis => EmphasisConfig.fromJson(
+          block,
+          ownerId: id,
+        ),
+      ExercisePresentationType.intonation => IntonationConfig.fromJson(
+          block,
+          ownerId: id,
+        ),
+      ExercisePresentationType.pause => PauseConfig.fromJson(
+          block,
+          ownerId: id,
+        ),
+      ExercisePresentationType.timedReading => TimedReadingConfig.fromJson(
+          block,
+          ownerId: id,
+        ),
+      ExercisePresentationType.speakingChallenge =>
+        SpeakingChallengeConfig.fromJson(block, ownerId: id),
+      // Every key in `blocks` is covered above. The map is the only source of
+      // `expected`, so this arm is unreachable rather than a silent fallback.
+      _ => throw StateError('Unhandled config block "$field" in "$id"'),
+    };
+  }
+
+  /// Stable identifier. Never renamed, never reused; completion records point
+  /// at it (HIT-052, HIT-053).
+  final String id;
+
+  /// Title shown to the user.
+  final String title;
+
+  /// How this exercise is presented.
+  final ExercisePresentationType presentationType;
+
+  /// How long the exercise runs.
+  final int durationSeconds;
+
+  /// What the user is asked to do.
+  final String instructions;
+
+  /// Media this exercise needs, if any. Resolved to a location elsewhere.
+  final MediaReference? media;
+
+  /// The type specific configuration, if this type calls for one.
+  final ExerciseConfig? config;
+
+  /// [durationSeconds] as a [Duration].
+  Duration get duration => Duration(seconds: durationSeconds);
+
+  /// Whether this build can present this exercise.
+  ///
+  /// False only for content naming a type this build does not know. A day
+  /// should filter on this before rendering.
+  bool get isRenderable => presentationType.isRenderable;
+
+  /// Returns [config] when it is a [T], otherwise null.
+  ///
+  /// Lets a renderer ask for the shape it needs without casting:
+  ///
+  /// ```dart
+  /// final BreathingConfig? breathing = exercise.configAs<BreathingConfig>();
+  /// ```
+  T? configAs<T extends ExerciseConfig>() {
+    final ExerciseConfig? value = config;
+    return value is T ? value : null;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Exercise &&
+          other.id == id &&
+          other.title == title &&
+          other.presentationType == presentationType &&
+          other.durationSeconds == durationSeconds &&
+          other.instructions == instructions &&
+          other.media == media &&
+          other.config == config;
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        title,
+        presentationType,
+        durationSeconds,
+        instructions,
+        media,
+        config,
+      );
+
+  @override
+  String toString() =>
+      'Exercise($id, ${presentationType.wireName}, ${durationSeconds}s)';
+}
