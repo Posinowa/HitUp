@@ -1,13 +1,40 @@
 {
-  "schemaVersion": "0.1.0-placeholder",
-  "status": "PLACEHOLDER — not approved curriculum (see HIT-080)",
+  "schemaVersion": "1.0.0",
+  "contentVersion": "0.1.0",
+  "status": "placeholder",
+  "locale": "tr-TR",
   "exercises": [
     {
+      "id": "intro_text_01",
+      "title": "Yer tutucu bilgi kartı",
+      "presentationType": "text",
+      "durationSeconds": 30,
+      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek."
+    },
+    {
+      "id": "warmup_timer_01",
+      "title": "Yer tutucu süreli hazırlık",
+      "presentationType": "timer",
+      "durationSeconds": 60,
+      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek."
+    },
+    {
+      "id": "listening_audio_01",
+      "title": "Yer tutucu dinleme",
+      "presentationType": "audio",
+      "durationSeconds": 45,
+      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
+      "media": {
+        "kind": "audio",
+        "key": "placeholder_sample"
+      }
+    },
+    {
       "id": "breathing_diaphragm_01",
-      "title": "Diaphragm Breathing (Placeholder)",
+      "title": "Yer tutucu diyafram çalışması",
       "presentationType": "breathing",
       "durationSeconds": 120,
-      "instructions": "PLACEHOLDER — replace with approved instructional copy.",
+      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
       "breathing": {
         "inhaleSeconds": 4,
         "holdSeconds": 2,
@@ -16,14 +43,108 @@
       }
     },
     {
-      "id": "ux_lips_placeholder",
-      "title": "U-X Lip Exercise (Placeholder)",
+      "id": "rive_sample_01",
+      "title": "Yer tutucu Rive gösterimi",
       "presentationType": "rive",
-      "durationSeconds": 60,
-      "instructions": "PLACEHOLDER — local Rive asset preferred for MVP (no R2 required).",
+      "durationSeconds": 45,
+      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
       "media": {
-        "riveAsset": "assets/rive/ux_lips.riv",
+        "kind": "rive",
+        "key": "placeholder_sample",
+        "stateMachine": "PlaceholderStates"
+      }
+    },
+    {
+      "id": "articulation_lips_ux_01",
+      "title": "Yer tutucu dudak çalışması (U-X)",
+      "presentationType": "articulation",
+      "durationSeconds": 60,
+      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
+      "media": {
+        "kind": "rive",
+        "key": "ux_lips",
         "stateMachine": "LipStates"
+      }
+    },
+    {
+      "id": "letter_r_01",
+      "title": "Yer tutucu harf merdiveni",
+      "presentationType": "letter",
+      "durationSeconds": 90,
+      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
+      "letter": {
+        "letterKey": "r",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "twister_r_01",
+      "title": "Yer tutucu tekerleme",
+      "presentationType": "tongueTwister",
+      "durationSeconds": 60,
+      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
+      "tongueTwister": {
+        "tongueTwisterIds": ["tt_r_01"],
+        "repetitions": 2
+      }
+    },
+    {
+      "id": "emphasis_sample_01",
+      "title": "Yer tutucu vurgu çalışması",
+      "presentationType": "emphasis",
+      "durationSeconds": 60,
+      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
+      "emphasis": {
+        "text": "Yer tutucu cümle, onaylı metin HIT-080 ile gelecek.",
+        "emphasisWordIndexes": [0, 4]
+      }
+    },
+    {
+      "id": "intonation_sample_01",
+      "title": "Yer tutucu tonlama çalışması",
+      "presentationType": "intonation",
+      "durationSeconds": 60,
+      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
+      "intonation": {
+        "text": "Yer tutucu cümle, onaylı metin HIT-080 ile gelecek.",
+        "contour": [
+          { "wordIndex": 0, "direction": "rise" },
+          { "wordIndex": 4, "direction": "flat" },
+          { "wordIndex": 7, "direction": "fall" }
+        ]
+      }
+    },
+    {
+      "id": "pause_sample_01",
+      "title": "Yer tutucu duraklama çalışması",
+      "presentationType": "pause",
+      "durationSeconds": 60,
+      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
+      "pause": {
+        "text": "Yer tutucu cümle, onaylı metin HIT-080 ile gelecek.",
+        "pauseAfterWordIndexes": [2, 5],
+        "pauseMilliseconds": 400
+      }
+    },
+    {
+      "id": "reading_timed_01",
+      "title": "Yer tutucu süreli okuma",
+      "presentationType": "timedReading",
+      "durationSeconds": 120,
+      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
+      "timedReading": {
+        "text": "Yer tutucu cümle, onaylı metin HIT-080 ile gelecek.",
+        "targetWordsPerMinute": 140
+      }
+    },
+    {
+      "id": "speaking_intro_01",
+      "title": "Yer tutucu konuşma görevi",
+      "presentationType": "speakingChallenge",
+      "durationSeconds": 60,
+      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
+      "speakingChallenge": {
+        "challengeId": "sc_intro_60"
       }
     }
   ]

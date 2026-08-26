@@ -187,6 +187,8 @@ See [`SECURITY.md`](SECURITY.md). Secret scanning, push protection, Dependabot, 
 
 Custom backend, Cloud Functions, AI speech analysis, payments, social network, admin/CMS, cloud audio upload, R2 uploads from the client, camera/lip tracking.
 
+See [`docs/development/FUTURE_BACKLOG.md`](docs/development/FUTURE_BACKLOG.md) for the fuller list of deferred ideas and why each one is deferred.
+
 ## GitHub Issues & Development Flow
 
 Work starts from a GitHub Issue (Backlog ID like `HIT-029`).  
