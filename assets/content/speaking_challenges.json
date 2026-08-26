@@ -1,13 +1,22 @@
 {
-  "schemaVersion": "0.1.0-placeholder",
-  "status": "PLACEHOLDER — not approved curriculum (see HIT-080)",
+  "schemaVersion": "1.0.0",
+  "contentVersion": "0.1.0",
+  "status": "placeholder",
+  "locale": "tr-TR",
   "challenges": [
     {
       "id": "sc_intro_60",
-      "title": "Introduce Yourself",
-      "prompt": "PLACEHOLDER — kendinizi tanıtın (onaylı içerik HIT-080).",
+      "title": "Yer tutucu tanıtım görevi",
+      "prompt": "Yer tutucu konuşma sorusu. Onaylı metin HIT-080 ile gelecek.",
       "durationSeconds": 60,
       "preparationSeconds": 3
+    },
+    {
+      "id": "sc_topic_90",
+      "title": "Yer tutucu serbest konu görevi",
+      "prompt": "Yer tutucu konuşma sorusu. Onaylı metin HIT-080 ile gelecek.",
+      "durationSeconds": 90,
+      "preparationSeconds": 5
     }
   ]
 }
