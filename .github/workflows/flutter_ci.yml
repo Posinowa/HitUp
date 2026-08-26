@@ -58,6 +58,48 @@ jobs:
 
           exit "$fail"
 
+      - name: Enforce the presentation layer boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # ARCHITECTURE.md hard rule 1: presentation widgets must not touch
+          # FirebaseAuth or FirebaseFirestore directly, they go through a
+          # repository. CONTRIBUTING.md repeats it and the PR template carries
+          # a checkbox for it. A checkbox the author ticks is a promise; this
+          # is the part that verifies.
+          #
+          # The tree is clean today, so this costs no remediation. It is much
+          # cheaper to hold an invariant than to restore one.
+          allowlist='.github/presentation-boundary-allowlist.txt'
+
+          mapfile -t targets < <(
+            find lib/app lib/features -type d -name presentation -prune -print 2>/dev/null
+            find lib/app -type f -name '*.dart' 2>/dev/null
+          )
+
+          fail=0
+          for pattern in 'FirebaseFirestore.instance' 'FirebaseAuth.instance' 'FirebaseStorage.instance'; do
+            while IFS= read -r hit; do
+              [ -z "$hit" ] && continue
+              file="${hit%%:*}"
+              if [ -f "$allowlist" ] && grep -qxF "$file" "$allowlist"; then
+                echo "::notice::Allowlisted presentation boundary exception: $file"
+                continue
+              fi
+              # File and line only. Never echo the surrounding source.
+              echo "::error file=${file},line=$(echo "$hit" | cut -d: -f2)::Presentation layer reaches a data source directly ($pattern). Call it through a repository instead. See docs/architecture/ARCHITECTURE.md, hard rule 1."
+              fail=1
+            done < <(
+              grep -rn --include='*.dart' -F "$pattern" lib/app lib/features/*/presentation 2>/dev/null | cut -d: -f1,2 || true
+            )
+          done
+
+          if [ "$fail" -eq 0 ]; then
+            echo "Presentation layer does not reach any data source directly."
+          fi
+          exit "$fail"
+
   secret-guard:
     name: secret-guard
     runs-on: ubuntu-latest
