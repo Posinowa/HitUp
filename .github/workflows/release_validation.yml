@@ -54,11 +54,21 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
-      - run: flutter build apk --debug
+      # Release mode, not debug. R8 minification and tree shaking only run in
+      # a release build, so missing keep rules and tree-shaking casualties
+      # cannot surface in a debug one. Building debug here meant the release
+      # line never compiled the way a shipped build compiles, and the first
+      # signal would have been a failed store upload on release day.
+      #
+      # No signing material is introduced: with no keystore configured Gradle
+      # falls back to the debug signing config. The artifact is not
+      # shippable, but the compilation path is the real one, which is the
+      # point of validation.
+      - run: flutter build apk --release
       - uses: actions/upload-artifact@v7
         with:
-          name: release-app-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: release-apk-unsigned-validation-only
+          path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: ignore
           retention-days: 7
 
@@ -72,4 +82,6 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: flutter build ios --simulator --no-codesign
+      # Release configuration, still unsigned. A simulator build skips the
+      # release compilation path in the same way a debug APK does.
+      - run: flutter build ios --release --no-codesign
