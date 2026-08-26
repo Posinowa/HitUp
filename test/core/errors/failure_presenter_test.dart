@@ -92,6 +92,55 @@ void main() {
 
       expect(find.text(FailureLabelsTr.retry), findsNothing);
     });
+
+    testWidgets('message and retry are painted with the same pair', (
+      tester,
+    ) async {
+      // The scheme here sets onErrorContainer and onInverseSurface to visibly
+      // different colours on purpose. In the app's real scheme both resolve to
+      // white, so a test built on that would pass even if the message fell
+      // back to Material's default snack bar pairing, which is what this test
+      // exists to catch.
+      const scheme = ColorScheme.light(
+        errorContainer: Color(0xFF7A0010),
+        onErrorContainer: Color(0xFFFFDAD6),
+        inverseSurface: Color(0xFF2F312E),
+        onInverseSurface: Color(0xFF00FF00),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(useMaterial3: true, colorScheme: scheme),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => showFailureSnackBar(
+                  context,
+                  offline,
+                  onRetry: () {},
+                ),
+                child: const Text('trigger'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await trigger(tester);
+
+      final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
+      expect(snackBar.backgroundColor, scheme.errorContainer);
+
+      final message = tester.widget<Text>(find.text(copyFor(offline)));
+      expect(
+        message.style?.color,
+        scheme.onErrorContainer,
+        reason: 'the message must pair with the background it sits on, not '
+            'with Material default onInverseSurface',
+      );
+
+      final retry = tester.widget<SnackBarAction>(find.byType(SnackBarAction));
+      expect(retry.textColor, scheme.onErrorContainer);
+    });
   });
 
   group('dialog', () {

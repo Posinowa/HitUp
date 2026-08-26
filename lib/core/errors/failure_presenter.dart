@@ -27,7 +27,17 @@ void showFailureSnackBar(
 
   messenger.showSnackBar(
     SnackBar(
-      content: Text(failureMessage(failure)),
+      // The message needs its colour named here, next to the background it
+      // sits on. A SnackBar whose content carries no colour falls back to
+      // Material's default, onInverseSurface, which is the pair for the
+      // default inverseSurface background, not for the errorContainer this
+      // call substitutes. The two happen to resolve to the same value in the
+      // current scheme, so nothing looks wrong yet; that is a coincidence, not
+      // a guarantee, and the retry action below already names its colour.
+      content: Text(
+        failureMessage(failure),
+        style: TextStyle(color: colors.onErrorContainer),
+      ),
       backgroundColor: colors.errorContainer,
       behavior: SnackBarBehavior.floating,
       action: failure.canOfferRetry(onRetry)
