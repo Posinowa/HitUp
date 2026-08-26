@@ -1,14 +1,32 @@
 {
-  "schemaVersion": "0.1.0-placeholder",
-  "status": "PLACEHOLDER — not approved curriculum (see HIT-080)",
+  "schemaVersion": "1.0.0",
+  "contentVersion": "0.1.0",
+  "status": "placeholder",
+  "locale": "tr-TR",
   "tongueTwisters": [
     {
       "id": "tt_r_01",
-      "text": "PLACEHOLDER — approved Turkish tongue twister pending HIT-080",
+      "text": "Yer tutucu tekerleme, onaylı metin HIT-080 ile gelecek.",
       "targetLetter": "R",
       "difficulty": "easy",
       "recommendedDurationSeconds": 60,
       "category": "letter"
+    },
+    {
+      "id": "tt_ritim_01",
+      "text": "Yer tutucu ritim tekerlemesi, onaylı metin HIT-080 ile gelecek.",
+      "targetLetter": null,
+      "difficulty": "medium",
+      "recommendedDurationSeconds": 45,
+      "category": "rhythm"
+    },
+    {
+      "id": "tt_nefes_01",
+      "text": "Yer tutucu nefes tekerlemesi, onaylı metin HIT-080 ile gelecek.",
+      "targetLetter": null,
+      "difficulty": "hard",
+      "recommendedDurationSeconds": 90,
+      "category": "breath"
     }
   ]
 }
