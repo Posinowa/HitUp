@@ -25,6 +25,14 @@ abstract final class AppTheme {
       outline: AppColors.outline,
       error: AppColors.error,
       onError: Colors.white,
+      // Spelled out rather than left to ColorScheme's fallbacks. Undeclared,
+      // errorContainer resolves to error and onErrorContainer to onError, which
+      // happens to be what HitUp wants today, but only by coincidence: the
+      // moment onError or the error swatch changes, anything painted on an
+      // error container follows silently. Naming the roles makes the pairing a
+      // decision instead of a side effect.
+      errorContainer: AppColors.error,
+      onErrorContainer: Colors.white,
     );
 
     return ThemeData(

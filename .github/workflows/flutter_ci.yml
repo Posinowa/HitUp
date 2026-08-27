@@ -16,6 +16,14 @@ concurrency:
 permissions:
   contents: read
 
+# Pinned on purpose. With only `channel: stable`, CI follows whatever
+# Flutter released most recently, so a Flutter release can turn every open
+# PR red on a day nobody changed anything. Upgrading is a deliberate
+# chore(toolchain) PR, never something that happens on its own.
+# CONTRIBUTING.md names the same version for local installs.
+env:
+  FLUTTER_VERSION: "3.47.0"
+
 jobs:
   pr-title:
     name: pr-title
@@ -99,6 +107,48 @@ jobs:
 
           exit "$fail"
 
+      - name: Enforce the presentation layer boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # ARCHITECTURE.md hard rule 1: presentation widgets must not touch
+          # FirebaseAuth or FirebaseFirestore directly, they go through a
+          # repository. CONTRIBUTING.md repeats it and the PR template carries
+          # a checkbox for it. A checkbox the author ticks is a promise; this
+          # is the part that verifies.
+          #
+          # The tree is clean today, so this costs no remediation. It is much
+          # cheaper to hold an invariant than to restore one.
+          allowlist='.github/presentation-boundary-allowlist.txt'
+
+          mapfile -t targets < <(
+            find lib/app lib/features -type d -name presentation -prune -print 2>/dev/null
+            find lib/app -type f -name '*.dart' 2>/dev/null
+          )
+
+          fail=0
+          for pattern in 'FirebaseFirestore.instance' 'FirebaseAuth.instance' 'FirebaseStorage.instance'; do
+            while IFS= read -r hit; do
+              [ -z "$hit" ] && continue
+              file="${hit%%:*}"
+              if [ -f "$allowlist" ] && grep -qxF "$file" "$allowlist"; then
+                echo "::notice::Allowlisted presentation boundary exception: $file"
+                continue
+              fi
+              # File and line only. Never echo the surrounding source.
+              echo "::error file=${file},line=$(echo "$hit" | cut -d: -f2)::Presentation layer reaches a data source directly ($pattern). Call it through a repository instead. See docs/architecture/ARCHITECTURE.md, hard rule 1."
+              fail=1
+            done < <(
+              grep -rn --include='*.dart' -F "$pattern" lib/app lib/features/*/presentation 2>/dev/null | cut -d: -f1,2 || true
+            )
+          done
+
+          if [ "$fail" -eq 0 ]; then
+            echo "Presentation layer does not reach any data source directly."
+          fi
+          exit "$fail"
+
   secret-guard:
     name: secret-guard
     runs-on: ubuntu-latest
@@ -148,6 +198,59 @@ jobs:
           fi
           echo "No forbidden credential-like files detected."
 
+      - name: Scan file contents for credential patterns
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          # The step above matches file NAMES. It catches a committed key file
+          # and nothing else. An R2 access key pasted into a Dart constant
+          # passes it untouched, which is the case SECURITY.md and the PR
+          # template both call out by name. Filename checking and content
+          # checking are two different controls; this is the second one.
+          allowlist='.github/secret-scan-allowlist.txt'
+
+          # Each entry is a label and a pattern. Labels are what reach the log,
+          # never the match itself.
+          patterns=(
+            'AWS/R2 style access key id|AKIA[0-9A-Z]{16}'
+            'Google API key|AIza[0-9A-Za-z_-]{35}'
+            'PEM private key block|-----BEGIN [A-Z ]*PRIVATE KEY-----'
+            'Firebase Admin service account marker|"type"[[:space:]]*:[[:space:]]*"service_account"'
+            'Slack token|xox[baprs]-[0-9A-Za-z-]{10,}'
+            'Generic assigned secret|(secret|password|passwd|token|apikey|api_key)[[:space:]]*[:=][[:space:]]*["'"'"'][A-Za-z0-9/+=_-]{24,}["'"'"']'
+          )
+
+          fail=0
+          for entry in "${patterns[@]}"; do
+            label="${entry%%|*}"
+            regex="${entry#*|}"
+            while IFS= read -r hit; do
+              [ -z "$hit" ] && continue
+              file="${hit%%:*}"
+              line="$(echo "$hit" | cut -d: -f2)"
+              if [ -f "$allowlist" ] && grep -qxF "${file}:${line}" "$allowlist"; then
+                echo "::notice::Reviewed false positive: ${file}:${line}"
+                continue
+              fi
+              # File and line only. The matched text is never printed, because
+              # a workflow log is readable by anyone who can see the run.
+              #
+              # The pattern is passed with -e on purpose: the PEM one starts
+              # with dashes, and without -e grep reads it as options and
+              # searches for nothing at all, silently, while still exiting 0.
+              echo "::error file=${file},line=${line}::Possible credential in source: ${label}. If this is a false positive, add ${file}:${line} to ${allowlist} with the reason in the pull request."
+              fail=1
+            done < <(
+              grep -rnE --binary-files=without-match                 --exclude-dir=.git --exclude-dir=build --exclude-dir=.dart_tool                 --exclude="$(basename "$allowlist")"                 -e "$regex" . 2>/dev/null | sed 's|^\./||' | cut -d: -f1,2 || true
+            )
+          done
+
+          if [ "$fail" -eq 0 ]; then
+            echo "No credential patterns found in file contents."
+          fi
+          exit "$fail"
+
   flutter-format:
     name: flutter-format
     runs-on: ubuntu-latest
@@ -155,6 +258,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
       - run: flutter pub get
@@ -168,6 +272,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
       - run: flutter pub get
@@ -180,6 +285,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
       - run: flutter pub get
@@ -206,6 +312,7 @@ jobs:
           java-version: "17"
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
       - run: flutter pub get
@@ -227,6 +334,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
       - run: flutter pub get
