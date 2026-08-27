@@ -48,12 +48,49 @@ void main() {
       final BoxDecoration decoration = panel.decoration as BoxDecoration;
 
       expect(decoration.color, colors.errorContainer);
+
       // The full-strength tone belongs on the edge and the icon, where nothing
-      // is written over it.
-      expect(decoration.border, isNotNull);
+      // is written over it. Checking only that a border exists would let it be
+      // drawn in the surface colour, which is the same as having none: the
+      // panel would stop reading as a problem at a glance.
+      final Border border = decoration.border! as Border;
+      expect(border.top.color, colors.error);
+
+      final Icon icon = tester.widget<Icon>(find.byType(Icon));
+      expect(icon.color, colors.error);
 
       final Text message = tester.widget<Text>(find.text(copyFor(offline)));
       expect(message.style?.color, colors.onErrorContainer);
+    });
+
+    testWidgets('the retry label stays readable on the error surface', (
+      tester,
+    ) async {
+      // A scheme whose error roles are visibly unlike the defaults, so a button
+      // that inherited its colour instead of taking the token cannot pass by
+      // coincidence. Painted with errorContainer, the label would be the
+      // surface colour on the surface: invisible.
+      const ColorScheme scheme = ColorScheme.light(
+        errorContainer: Color(0xFF7A0010),
+        onErrorContainer: Color(0xFFFFDAD6),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(useMaterial3: true, colorScheme: scheme),
+          home: Scaffold(
+            body: ErrorView(failure: offline, onRetry: () {}),
+          ),
+        ),
+      );
+
+      final TextButton retry = tester.widget<TextButton>(
+        find.widgetWithText(TextButton, FailureLabelsTr.retry),
+      );
+      expect(
+        retry.style?.foregroundColor?.resolve(<WidgetState>{}),
+        scheme.onErrorContainer,
+      );
     });
 
     testWidgets('offers retry when retrying could help', (tester) async {
