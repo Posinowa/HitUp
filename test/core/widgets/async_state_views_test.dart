@@ -100,6 +100,34 @@ void main() {
       expect(message.style?.color, isNot(colors.onErrorContainer));
       expect(find.byType(ErrorView), findsNothing);
     });
+
+    testWidgets('draws the illustration only when one is given', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(const EmptyView(message: 'Henüz bir antrenman yok.')),
+      );
+      expect(
+        find.byType(Icon),
+        findsNothing,
+        reason: 'no icon was supplied, so none should be drawn',
+      );
+
+      await tester.pumpWidget(
+        host(
+          const EmptyView(
+            message: 'Henüz bir antrenman yok.',
+            icon: Icons.self_improvement,
+          ),
+        ),
+      );
+
+      final Icon icon = tester.widget<Icon>(find.byType(Icon));
+      expect(icon.icon, Icons.self_improvement);
+      // The outline tone, not the error tone: an empty state is not a fault.
+      expect(icon.color, AppTheme.light().colorScheme.outline);
+      expect(find.text('Henüz bir antrenman yok.'), findsOneWidget);
+    });
   });
 
   group('LoadingView', () {
