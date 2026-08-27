@@ -14,13 +14,19 @@ concurrency:
 permissions:
   contents: read
 
-# Pinned on purpose. With only `channel: stable`, CI follows whatever
-# Flutter released most recently, so a Flutter release can turn every open
-# PR red on a day nobody changed anything. Upgrading is a deliberate
-# chore(toolchain) PR, never something that happens on its own.
-# CONTRIBUTING.md names the same version for local installs.
-env:
-  FLUTTER_VERSION: "3.47.0"
+# The Flutter version comes from `.fvmrc`, the same file flutter_ci.yml reads.
+# Two copies of a version number are two chances to disagree, and the way they
+# disagree here is quiet: pull requests would go green on one SDK while release
+# validation ran on another, so the first failure would appear on a release
+# pull request and look like the release changed something.
+#
+# `release-metadata` checks that file. flutter_ci runs the same check, but it
+# cannot stand in for this one: this workflow also runs on `v*` tags, and a tag
+# can be created on any commit, including one that never went through
+# flutter_ci. The check runs alongside the build jobs rather than ahead of them,
+# so a broken file shows up as a failed run rather than as skipped builds; on a
+# pull request that is enough to block the merge, and on a tag it is what turns
+# the run red.
 
 jobs:
   release-metadata:
@@ -28,6 +34,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Validate the pinned Flutter version
+        # Also run by flutter_ci.yml. The reasoning lives in the script.
+        run: bash .github/scripts/check-flutter-version.sh
       - name: Write build metadata
         run: |
           set -euo pipefail
@@ -57,7 +66,7 @@ jobs:
           java-version: "17"
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-version-file: .fvmrc
           channel: stable
           cache: true
       - run: flutter pub get
@@ -88,7 +97,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-version-file: .fvmrc
           channel: stable
           cache: true
       - run: flutter pub get

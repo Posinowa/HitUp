@@ -23,6 +23,10 @@ migrate_working_dir/
 # is commented out by default.
 #.vscode/
 
+# fvm keeps a machine-local SDK symlink here. `.fvmrc` itself is tracked, since
+# it is where the pinned Flutter version is written and CI reads it.
+.fvm/
+
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id

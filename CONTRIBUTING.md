@@ -100,13 +100,22 @@ Changes to `android/app/src/main/AndroidManifest.xml` or `ios/Runner/Info.plist`
 
 ## Flutter version
 
-Install **Flutter 3.47.0**, stable channel. CI pins the same version, in the
-`FLUTTER_VERSION` value at the top of both workflow files.
+The pinned version lives in [`.fvmrc`](.fvmrc) at the repository root, and that
+file is the only place it is written. Both CI workflows read it, so there is no
+second copy here to fall out of date:
+
+```bash
+cat .fvmrc
+```
+
+Install that version on the stable channel. If you use
+[fvm](https://fvm.app), `fvm install` reads the same file and there is nothing
+else to configure.
 
 Running a different SDK locally is the usual reason a PR is green on one machine
 and red in CI, and the failure then reads as though the change caused it.
-Upgrading is a deliberate `chore(toolchain):` PR that moves the pin and the line
-above together, never something that happens on its own.
+Upgrading is a deliberate `chore(toolchain):` PR that changes `.fvmrc`, and
+because everything reads that one file, nothing else has to be remembered.
 
 ## Required before PR
 
