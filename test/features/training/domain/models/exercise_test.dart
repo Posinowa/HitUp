@@ -305,6 +305,111 @@ void main() {
     });
   });
 
+  group('a library is a value too', () {
+    test('the same file read twice gives two equal libraries', () {
+      final ExerciseLibrary a = ExerciseLibrary.fromJson(
+        fileWith(<Map<String, dynamic>>[validExercise()]),
+      );
+      final ExerciseLibrary b = ExerciseLibrary.fromJson(
+        fileWith(<Map<String, dynamic>>[validExercise()]),
+      );
+
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      expect(a, a);
+    });
+
+    test('each of the three parts counts', () {
+      final ExerciseLibrary base = ExerciseLibrary.fromJson(
+        fileWith(<Map<String, dynamic>>[validExercise()]),
+      );
+
+      // A different envelope, same exercises.
+      final Map<String, dynamic> otherVersion = fileWith(
+        <Map<String, dynamic>>[validExercise()],
+      )..['contentVersion'] = '0.2.0';
+      expect(base, isNot(ExerciseLibrary.fromJson(otherVersion)));
+
+      // A different exercise list, same envelope.
+      expect(
+        base,
+        isNot(
+          ExerciseLibrary.fromJson(
+            fileWith(<Map<String, dynamic>>[validExercise(id: 'other_01')]),
+          ),
+        ),
+      );
+
+      // The same readable exercise, but one unreadable one skipped alongside
+      // it. Equality has to notice, or a library that quietly dropped an
+      // exercise would compare equal to one that did not.
+      final ExerciseLibrary withSkip = ExerciseLibrary.fromJson(
+        fileWith(<Map<String, dynamic>>[
+          validExercise(),
+          validExercise(id: 'skipped_01', type: 'somethingNewer'),
+        ]),
+      );
+      expect(withSkip.skippedIds, <String>['skipped_01']);
+      expect(withSkip.exercises, hasLength(1));
+      expect(base, isNot(withSkip));
+      expect(base.hashCode, isNot(withSkip.hashCode));
+    });
+
+    test('distinct libraries do not collapse onto one hash', () {
+      final Set<int> hashes = <ExerciseLibrary>{
+        ExerciseLibrary.fromJson(
+          fileWith(<Map<String, dynamic>>[validExercise()]),
+        ),
+        ExerciseLibrary.fromJson(
+          fileWith(<Map<String, dynamic>>[validExercise(id: 'other_01')]),
+        ),
+        ExerciseLibrary.fromJson(
+          fileWith(<Map<String, dynamic>>[
+            validExercise(),
+            validExercise(id: 'skipped_01', type: 'somethingNewer'),
+          ]),
+        ),
+      }.map((ExerciseLibrary l) => l.hashCode).toSet();
+
+      expect(hashes, hasLength(3));
+    });
+
+    test('a library and an exercise say what they hold', () {
+      final ExerciseLibrary library = ExerciseLibrary.fromJson(
+        fileWith(<Map<String, dynamic>>[
+          validExercise(),
+          validExercise(id: 'skipped_01', type: 'somethingNewer'),
+        ]),
+      );
+
+      expect(
+        library.toString(),
+        allOf(contains('1 exercise'), contains('1 skipped')),
+      );
+      expect(
+        Exercise.fromJson(validExercise()).toString(),
+        allOf(
+          contains('sample_text_01'),
+          contains('text'),
+          contains('30'),
+        ),
+      );
+    });
+
+    test('byId finds what is there and returns nothing for what is not', () {
+      final ExerciseLibrary library = ExerciseLibrary.fromJson(
+        fileWith(<Map<String, dynamic>>[
+          validExercise(),
+          validExercise(id: 'second_01'),
+        ]),
+      );
+
+      expect(library.byId('second_01')?.id, 'second_01');
+      expect(library.byId('sample_text_01')?.id, 'sample_text_01');
+      expect(library.byId('not_here_01'), isNull);
+    });
+  });
+
   group('value semantics', () {
     test('two exercises with the same content are equal', () {
       final Exercise a = Exercise.fromJson(validExercise());
