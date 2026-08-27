@@ -356,6 +356,60 @@ void main() {
     });
   });
 
+  group('a count of zero is rejected wherever it renders as nothing', () {
+    test('a letter ladder and a tongue twister both need one repetition', () {
+      // Zero repetitions is valid JSON and a valid integer, so only the
+      // minimum stops it. Without it the exercise opens and immediately ends.
+      expect(
+        () => LetterConfig.fromJson(<String, dynamic>{
+          'letterKey': 'r',
+          'repetitions': 0,
+        }, ownerId: owner),
+        throwsA(
+          isA<FormatException>().having(
+            (FormatException e) => e.message,
+            'message',
+            allOf(contains('at least 1'), contains('repetitions')),
+          ),
+        ),
+      );
+      expect(
+        () => TongueTwisterConfig.fromJson(<String, dynamic>{
+          'tongueTwisterIds': <dynamic>['tt_r_01'],
+          'repetitions': 0,
+        }, ownerId: owner),
+        throwsA(
+          isA<FormatException>().having(
+            (FormatException e) => e.message,
+            'message',
+            contains('at least 1'),
+          ),
+        ),
+      );
+    });
+  });
+
+  group('a pause index past the end is rejected too', () {
+    test('the same rule as emphasis and intonation', () {
+      // Each of the three text markup configs checks its own indexes, so each
+      // needs its own test; a shared base class is not a shared test.
+      expect(
+        () => PauseConfig.fromJson(<String, dynamic>{
+          'text': 'bir iki',
+          'pauseAfterWordIndexes': <dynamic>[0, 5],
+          'pauseMilliseconds': 400,
+        }, ownerId: owner),
+        throwsA(
+          isA<FormatException>().having(
+            (FormatException e) => e.message,
+            'message',
+            allOf(contains('past the end'), contains(owner)),
+          ),
+        ),
+      );
+    });
+  });
+
   group('timed reading', () {
     test('counts its own words rather than trusting a stored count', () {
       const TimedReadingConfig config = TimedReadingConfig(
@@ -373,6 +427,332 @@ void main() {
           'targetWordsPerMinute': 0,
         }, ownerId: owner),
         throwsFormatException,
+      );
+    });
+
+    test('a valid object reads back both fields', () {
+      // The rejection test above never reaches the constructor, so without
+      // this one nothing proves the reader wires the two fields at all, let
+      // alone in the right order.
+      final TimedReadingConfig config = TimedReadingConfig.fromJson(
+        <String, dynamic>{'text': 'bir iki üç', 'targetWordsPerMinute': 140},
+        ownerId: owner,
+      );
+
+      expect(config.text, 'bir iki üç');
+      expect(config.targetWordsPerMinute, 140);
+      expect(config.wordCount, 3);
+    });
+  });
+
+  group('intonation points compare by content', () {
+    test('same index and direction are equal, either difference is not', () {
+      const IntonationPoint a = IntonationPoint(
+        wordIndex: 1,
+        direction: ContourDirection.rise,
+      );
+
+      expect(
+        a,
+        const IntonationPoint(wordIndex: 1, direction: ContourDirection.rise),
+      );
+      expect(
+        a.hashCode,
+        const IntonationPoint(
+          wordIndex: 1,
+          direction: ContourDirection.rise,
+        ).hashCode,
+      );
+      expect(
+        a,
+        isNot(
+          const IntonationPoint(
+            wordIndex: 2,
+            direction: ContourDirection.rise,
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          const IntonationPoint(
+            wordIndex: 1,
+            direction: ContourDirection.fall,
+          ),
+        ),
+      );
+    });
+
+    test('an intonation config compares its text and its contour', () {
+      const IntonationConfig a = IntonationConfig(
+        text: 'bir iki',
+        contour: <IntonationPoint>[
+          IntonationPoint(wordIndex: 0, direction: ContourDirection.rise),
+        ],
+      );
+
+      expect(
+        a,
+        const IntonationConfig(
+          text: 'bir iki',
+          contour: <IntonationPoint>[
+            IntonationPoint(wordIndex: 0, direction: ContourDirection.rise),
+          ],
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          const IntonationConfig(
+            text: 'baska metin',
+            contour: <IntonationPoint>[
+              IntonationPoint(wordIndex: 0, direction: ContourDirection.rise),
+            ],
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          const IntonationConfig(
+            text: 'bir iki',
+            contour: <IntonationPoint>[
+              IntonationPoint(wordIndex: 1, direction: ContourDirection.rise),
+            ],
+          ),
+        ),
+      );
+    });
+
+    test('a tongue twister config hashes its ids and its repetitions', () {
+      const TongueTwisterConfig a = TongueTwisterConfig(
+        tongueTwisterIds: <String>['tt_r_01'],
+        repetitions: 2,
+      );
+
+      expect(
+        a.hashCode,
+        const TongueTwisterConfig(
+          tongueTwisterIds: <String>['tt_r_01'],
+          repetitions: 2,
+        ).hashCode,
+      );
+      expect(
+        a.hashCode,
+        isNot(
+          const TongueTwisterConfig(
+            tongueTwisterIds: <String>['tt_r_01'],
+            repetitions: 3,
+          ).hashCode,
+        ),
+      );
+    });
+
+    test('the last field of each comparison still counts', () {
+      // Equality short circuits on the first difference, so a test that only
+      // ever varies the first field leaves the last one unchecked. These vary
+      // the last.
+      expect(
+        const TongueTwisterConfig(
+          tongueTwisterIds: <String>['tt_r_01'],
+          repetitions: 2,
+        ),
+        isNot(
+          const TongueTwisterConfig(
+            tongueTwisterIds: <String>['tt_r_01'],
+            repetitions: 3,
+          ),
+        ),
+      );
+      expect(
+        const IntonationConfig(
+          text: 'bir iki',
+          contour: <IntonationPoint>[
+            IntonationPoint(wordIndex: 0, direction: ContourDirection.rise),
+          ],
+        ).hashCode,
+        const IntonationConfig(
+          text: 'bir iki',
+          contour: <IntonationPoint>[
+            IntonationPoint(wordIndex: 0, direction: ContourDirection.rise),
+          ],
+        ).hashCode,
+      );
+      expect(
+        const MediaReference(kind: MediaKind.audio, key: 'bir'),
+        isNot(const MediaReference(kind: MediaKind.audio, key: 'iki')),
+      );
+      expect(
+        const MediaReference(
+          kind: MediaKind.rive,
+          key: 'ux_lips',
+          stateMachine: 'LipStates',
+        ),
+        isNot(
+          const MediaReference(
+            kind: MediaKind.rive,
+            key: 'ux_lips',
+            stateMachine: 'JawStates',
+          ),
+        ),
+      );
+    });
+
+    test('different configs do not collapse onto one hash', () {
+      // "equal values hash equally" is also true of a hash that returns a
+      // constant, and a constant hash turns every map and set of these into a
+      // linear scan. This checks the other half of the contract.
+      const List<Object> distinct = <Object>[
+        BreathingConfig(
+          inhaleSeconds: 4,
+          holdSeconds: 2,
+          exhaleSeconds: 6,
+          cycles: 5,
+        ),
+        BreathingConfig(
+          inhaleSeconds: 5,
+          holdSeconds: 2,
+          exhaleSeconds: 6,
+          cycles: 5,
+        ),
+        LetterConfig(letterKey: 'r', repetitions: 3),
+        LetterConfig(letterKey: 's', repetitions: 3),
+        TongueTwisterConfig(
+          tongueTwisterIds: <String>['tt_r_01'],
+          repetitions: 2,
+        ),
+        TongueTwisterConfig(
+          tongueTwisterIds: <String>['tt_r_02'],
+          repetitions: 2,
+        ),
+        EmphasisConfig(text: 'bir iki', wordIndexes: <int>[0]),
+        EmphasisConfig(text: 'bir iki', wordIndexes: <int>[1]),
+        IntonationConfig(
+          text: 'bir iki',
+          contour: <IntonationPoint>[
+            IntonationPoint(wordIndex: 0, direction: ContourDirection.rise),
+          ],
+        ),
+        IntonationConfig(
+          text: 'bir iki',
+          contour: <IntonationPoint>[
+            IntonationPoint(wordIndex: 1, direction: ContourDirection.fall),
+          ],
+        ),
+        IntonationPoint(wordIndex: 0, direction: ContourDirection.rise),
+        IntonationPoint(wordIndex: 1, direction: ContourDirection.fall),
+        PauseConfig(
+          text: 'bir iki',
+          pauseAfterWordIndexes: <int>[0],
+          pauseMilliseconds: 400,
+        ),
+        PauseConfig(
+          text: 'bir iki',
+          pauseAfterWordIndexes: <int>[0],
+          pauseMilliseconds: 500,
+        ),
+        TimedReadingConfig(text: 'bir iki', targetWordsPerMinute: 140),
+        TimedReadingConfig(text: 'bir iki', targetWordsPerMinute: 150),
+        SpeakingChallengeConfig(challengeId: 'sc_intro_60'),
+        SpeakingChallengeConfig(challengeId: 'sc_intro_90'),
+        MediaReference(kind: MediaKind.audio, key: 'bir'),
+        MediaReference(kind: MediaKind.audio, key: 'iki'),
+        MediaReference(
+          kind: MediaKind.rive,
+          key: 'ux_lips',
+          stateMachine: 'LipStates',
+        ),
+        MediaReference(
+          kind: MediaKind.rive,
+          key: 'ux_lips',
+          stateMachine: 'JawStates',
+        ),
+      ];
+
+      expect(
+        distinct.map((Object c) => c.hashCode).toSet(),
+        hasLength(distinct.length),
+      );
+    });
+  });
+
+  group('descriptions', () {
+    test('each config says what it is', () {
+      // Diagnostics, but this is what a log line carries when a renderer was
+      // handed something it did not expect.
+      expect(
+        const BreathingConfig(
+          inhaleSeconds: 4,
+          holdSeconds: 2,
+          exhaleSeconds: 6,
+          cycles: 5,
+        ).toString(),
+        allOf(contains('4'), contains('2'), contains('6'), contains('5')),
+      );
+      expect(
+        const LetterConfig(letterKey: 'r', repetitions: 3).toString(),
+        allOf(contains('r'), contains('3')),
+      );
+      expect(
+        const TongueTwisterConfig(
+          tongueTwisterIds: <String>['tt_r_01'],
+          repetitions: 2,
+        ).toString(),
+        contains('tt_r_01'),
+      );
+      expect(
+        const EmphasisConfig(
+          text: 'bir iki',
+          wordIndexes: <int>[1],
+        ).toString(),
+        contains('1'),
+      );
+      expect(
+        const IntonationConfig(
+          text: 'bir iki',
+          contour: <IntonationPoint>[
+            IntonationPoint(wordIndex: 0, direction: ContourDirection.rise),
+          ],
+        ).toString(),
+        contains('1 points'),
+      );
+      expect(
+        const IntonationPoint(
+          wordIndex: 0,
+          direction: ContourDirection.rise,
+        ).toString(),
+        allOf(contains('0'), contains('rise')),
+      );
+      expect(
+        const PauseConfig(
+          text: 'bir iki',
+          pauseAfterWordIndexes: <int>[0],
+          pauseMilliseconds: 400,
+        ).toString(),
+        allOf(contains('0'), contains('400')),
+      );
+      expect(
+        const TimedReadingConfig(
+          text: 'bir iki',
+          targetWordsPerMinute: 140,
+        ).toString(),
+        contains('140'),
+      );
+      expect(
+        const SpeakingChallengeConfig(challengeId: 'sc_intro_60').toString(),
+        contains('sc_intro_60'),
+      );
+      expect(
+        const MediaReference(
+          kind: MediaKind.rive,
+          key: 'ux_lips',
+          stateMachine: 'LipStates',
+        ).toString(),
+        allOf(contains('rive'), contains('ux_lips'), contains('LipStates')),
+      );
+      expect(
+        const MediaReference(kind: MediaKind.audio, key: 'intro').toString(),
+        allOf(contains('audio'), contains('intro'), isNot(contains(', ,'))),
       );
     });
   });
