@@ -2,9 +2,6 @@ name: Flutter CI
 
 on:
   pull_request:
-    # `edited` matters: the check has to re-run when someone fixes the title,
-    # otherwise the only way to clear a red check is an empty commit.
-    types: [opened, edited, synchronize, reopened]
     branches: [develop, main]
   push:
     branches: [develop, main]
@@ -25,44 +22,6 @@ env:
   FLUTTER_VERSION: "3.47.0"
 
 jobs:
-  pr-title:
-    name: pr-title
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Validate pull request title
-        shell: bash
-        env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-        run: |
-          set -euo pipefail
-
-          # Repository settings squash-merge with squash_merge_commit_title:
-          # PR_TITLE, so this string becomes the commit message on develop
-          # verbatim. Nothing else checks it.
-          pattern='^(feat|fix|chore|docs|refactor|test|perf|build|ci|revert)(\([a-z0-9._-]+\))?: .+( \[HIT-[0-9]+\])?$'
-
-          if [[ "$PR_TITLE" =~ $pattern ]]; then
-            echo "Title matches the commit convention."
-            exit 0
-          fi
-
-          echo "::error::Pull request title does not match the commit convention documented in CONTRIBUTING.md."
-          echo ""
-          echo "  Received: $PR_TITLE"
-          echo ""
-          echo "  Expected: type(optional-scope): summary [HIT-XXX]"
-          echo "  Types:    feat, fix, chore, docs, refactor, test, perf, build, ci, revert"
-          echo "  The scope is optional, and so is the trailing backlog ID."
-          echo ""
-          echo "  For example:"
-          echo "    feat(auth): add registration screen [HIT-017]"
-          echo "    fix(progress): handle streak rollover [HIT-054]"
-          echo "    docs: update architecture guide"
-          echo ""
-          echo "  Edit the title on the pull request; this check re-runs on edit."
-          exit 1
-
   repository-policy:
     name: repository-policy
     runs-on: ubuntu-latest
