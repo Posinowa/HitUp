@@ -39,9 +39,14 @@ class Exercise {
     // name the exercise it came from.
     final String id = json.requireString('id', ownerId: '<exercise>');
 
+    // Through the reader, and after the id is read, so a wrong type names
+    // both the field and the exercise. Absent and unrecognised are the
+    // forward-compatibility case and land on `unknown`, which gets the
+    // exercise skipped rather than failing the whole file; a wrong type is a
+    // content bug and should say so.
     final ExercisePresentationType presentationType =
         ExercisePresentationType.fromWireName(
-      json['presentationType'] as String?,
+      json.optionalString('presentationType', ownerId: id),
     );
 
     final Map<String, dynamic>? mediaJson = json.optionalObject(

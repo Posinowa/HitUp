@@ -214,6 +214,24 @@ void main() {
   });
 
   group('a malformed exercise', () {
+    test('a presentationType that is not a string names the exercise', () {
+      // Absent and unrecognised are the forward-compatibility case: the
+      // exercise gets an unknown type and is skipped, and the rest of the file
+      // still reads. A wrong type is a content bug, and read with a bare cast
+      // it threw "type 'int' is not a subtype of type 'String?'", which names
+      // neither the field nor which of thirteen exercises carries it.
+      expect(
+        () => Exercise.fromJson(validExercise()..['presentationType'] = 5),
+        throwsA(
+          isA<FormatException>().having(
+            (FormatException e) => e.message,
+            'message',
+            allOf(contains('presentationType'), contains('sample_text_01')),
+          ),
+        ),
+      );
+    });
+
     test('a missing required field names the field and the exercise', () {
       final Map<String, dynamic> json = validExercise()..remove('instructions');
 
