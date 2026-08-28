@@ -204,7 +204,12 @@ class IntonationPoint {
   }) =>
       IntonationPoint(
         wordIndex: json.requireIntAtLeast('wordIndex', 0, ownerId: ownerId),
-        direction: ContourDirection.fromWireName(json['direction'] as String?),
+        // Through the reader, like every other field. A bare cast turns a
+        // wrong type into "type 'int' is not a subtype of type 'String?'",
+        // which names neither the field nor the exercise it came from.
+        direction: ContourDirection.fromWireName(
+          json.optionalString('direction', ownerId: ownerId),
+        ),
       );
 
   /// Zero based index into the whitespace split of the owning text.

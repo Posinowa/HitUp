@@ -105,6 +105,27 @@ void main() {
       );
     });
 
+    test('a kind that is not a string is an error, not an unknown', () {
+      // Absent and unrecognised both mean unknown; that is forward
+      // compatibility. A wrong type is a content bug and has to name the field
+      // and the owner like every other reader does. Read with a bare cast this
+      // threw "type 'int' is not a subtype of type 'String?'", which names
+      // neither.
+      expect(
+        () => MediaReference.fromJson(<String, dynamic>{
+          'kind': 3,
+          'key': 'sample',
+        }, ownerId: owner),
+        throwsA(
+          isA<FormatException>().having(
+            (FormatException e) => e.message,
+            'message',
+            allOf(contains('kind'), contains(owner)),
+          ),
+        ),
+      );
+    });
+
     test('a key carrying a folder or an extension is rejected', () {
       // The key indirection is what lets media delivery change without
       // touching curriculum or screens. A path in a content file quietly
@@ -331,6 +352,29 @@ void main() {
       );
 
       expect(config.contour.single.direction, ContourDirection.unknown);
+    });
+
+    test('a direction that is not a string is an error, not an unknown', () {
+      // Same rule as every other enum field: unknown covers absent and
+      // unrecognised, a wrong type is a content mistake that names itself.
+      expect(
+        () => IntonationConfig.fromJson(
+          <String, dynamic>{
+            'text': 'bir iki',
+            'contour': <dynamic>[
+              <String, dynamic>{'wordIndex': 0, 'direction': 7},
+            ],
+          },
+          ownerId: owner,
+        ),
+        throwsA(
+          isA<FormatException>().having(
+            (FormatException e) => e.message,
+            'message',
+            contains('direction'),
+          ),
+        ),
+      );
     });
 
     test('a pause config carries its indexes and a real duration', () {

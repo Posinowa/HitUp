@@ -72,7 +72,11 @@ class MediaReference {
     }
 
     return MediaReference(
-      kind: MediaKind.fromWireName(json['kind'] as String?),
+      // Through the reader, so a wrong type names the field and the owner
+      // instead of surfacing a Dart cast error that names neither.
+      kind: MediaKind.fromWireName(
+        json.optionalString('kind', ownerId: ownerId),
+      ),
       key: key,
       stateMachine: json.optionalString('stateMachine', ownerId: ownerId),
     );
