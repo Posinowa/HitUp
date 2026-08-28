@@ -88,9 +88,20 @@ class AssetCurriculumRepository implements CurriculumRepository {
     try {
       return await pending;
     } on Object {
-      _cache.remove(fileName);
+      _forget(fileName);
       rethrow;
     }
+  }
+
+  /// Drops [fileName] from the cache.
+  ///
+  /// Its own method because `Map.remove` hands back the value it dropped, and
+  /// here that value is a `Future`. Calling it inline inside an `async` method
+  /// discards a future silently, which is the shape a real mistake takes, so
+  /// the analyzer is right to object even though nothing is lost here: the
+  /// dropped future is the one already failing its way out through `rethrow`.
+  void _forget(String fileName) {
+    _cache.remove(fileName);
   }
 
   /// Loads and parses one file.
