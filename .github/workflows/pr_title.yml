@@ -1,0 +1,93 @@
+name: PR Title
+
+# Its own workflow, not a job inside Flutter CI, because this is the one check
+# that needs the `edited` event. `on.pull_request.types` is workflow level, so
+# adding `edited` to Flutter CI would re-run formatting, analysis, tests and
+# both platform builds every time somebody fixed a typo in a description: about
+# ten minutes of CI, one of them on a macOS runner, for a text edit, and the
+# pull request would drop out of its green state each time.
+#
+# `edited` is genuinely needed here: without it the only way to clear a red
+# title check is an empty commit.
+#
+# `synchronize` has to stay too, even though a push cannot change a title.
+# GitHub records a check run against a commit, so once this is a required
+# check, a head commit it never ran for has no result to report and the pull
+# request waits on it forever. One ubuntu job that finishes in seconds is a
+# cheap price for that not happening.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches: [develop, main]
+
+concurrency:
+  group: pr-title-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pr-title:
+    name: pr-title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate pull request title
+        shell: bash
+        env:
+          # Read through the environment rather than interpolated into the
+          # script, so a title containing shell metacharacters is data.
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -uo pipefail
+
+          # Repository settings squash-merge with squash_merge_commit_title:
+          # PR_TITLE, so this string becomes a commit message on develop
+          # verbatim. Nothing else checks it.
+
+          explain() {
+            echo "::error::$1"
+            echo ""
+            echo "  Received: $PR_TITLE"
+            echo ""
+            echo "  Expected: type(optional-scope): summary [HIT-XXX]"
+            echo "  Types:    feat, fix, chore, docs, refactor, test, perf, build, ci, revert"
+            echo "  Summary:  starts lowercase, at least 10 characters, no trailing period"
+            echo "  Backlog:  optional, and when present it must be exactly [HIT-<number>]"
+            echo ""
+            echo "  For example:"
+            echo "    feat(auth): add registration screen [HIT-017]"
+            echo "    fix(progress): handle streak rollover [HIT-054]"
+            echo "    docs: update the architecture guide"
+            echo ""
+            echo "  Edit the title on the pull request; this check re-runs on edit."
+            exit 1
+          }
+
+          # The backlog suffix is peeled off first rather than written as an
+          # optional group at the end of one pattern. In a single pattern the
+          # greedy subject can swallow " [HIT-017]" and the optional group then
+          # matches nothing, so it enforces its own shape only by accident:
+          # "[HIT-BOGUS]" and "[ANYTHING-99]" both pass that way. Peeling makes
+          # the check real.
+          core="$PR_TITLE"
+          if [[ "$core" =~ ^(.*)[[:space:]]\[HIT-[0-9]+\]$ ]]; then
+            core="${BASH_REMATCH[1]}"
+          elif [[ "$core" == *"]" ]]; then
+            explain "The title ends with a bracket that is not a backlog ID. Use [HIT-<number>] or drop it."
+          fi
+
+          # Subject rules, checked against the title with any backlog ID removed.
+          # 10 characters is short enough to never block a real title and long
+          # enough to reject "feat: x", which would become that commit subject
+          # on develop forever.
+          if ! [[ "$core" =~ ^(feat|fix|chore|docs|refactor|test|perf|build|ci|revert)(\([a-z0-9._-]+\))?:[[:space:]][a-z].{9,}$ ]]; then
+            explain "Pull request title does not match the commit convention documented in CONTRIBUTING.md."
+          fi
+
+          # Checked separately so the message can say which rule was broken.
+          if [[ "$core" == *. ]]; then
+            explain "A commit subject does not end with a period."
+          fi
+
+          echo "Title matches the commit convention."
