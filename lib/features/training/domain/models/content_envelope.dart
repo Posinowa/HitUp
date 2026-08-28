@@ -54,7 +54,16 @@ class ContentEnvelope {
       ContentEnvelope(
         schemaVersion: json.requireString('schemaVersion', ownerId: ownerId),
         contentVersion: json.requireString('contentVersion', ownerId: ownerId),
-        status: ContentStatus.fromWireName(json['status'] as String?),
+        // Through the reader like its siblings, not a bare cast. The three
+        // outcomes have to stay distinct: absent is allowed and means unknown,
+        // an unrecognised string is forward compatibility and also means
+        // unknown, and a wrong *type* is a content bug that should name the
+        // field. A cast collapses the third into a Dart type error that names
+        // nothing, and it does so while reading the header, before
+        // ensureSupported can produce a message anyone can act on.
+        status: ContentStatus.fromWireName(
+          json.optionalString('status', ownerId: ownerId),
+        ),
         locale: json.requireString('locale', ownerId: ownerId),
       );
 

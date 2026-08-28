@@ -538,6 +538,43 @@ void main() {
       expect(envelope.status, ContentStatus.unknown);
     });
 
+    test('an absent status is unknown too, but a wrong typed one is an error',
+        () {
+      // Three outcomes that must not collapse into each other. Absent and
+      // unrecognised are both the forward-compatibility case and both mean
+      // unknown. A wrong *type* is a content bug, and it has to name the field
+      // like every other reader does.
+      //
+      // Reading this one with a bare cast instead of the reader made the third
+      // case throw "type 'int' is not a subtype of type 'String?'", which is
+      // the exact message json_reader.dart exists to eliminate, and it threw it
+      // while reading the header, before ensureSupported could say anything
+      // useful.
+      final Map<String, dynamic> withoutStatus = envelopeJson()
+        ..remove('status');
+      expect(
+        ContentEnvelope.fromJson(
+          withoutStatus,
+          ownerId: 'exercises.json',
+        ).status,
+        ContentStatus.unknown,
+      );
+
+      expect(
+        () => ContentEnvelope.fromJson(
+          envelopeJson()..['status'] = 1,
+          ownerId: 'exercises.json',
+        ),
+        throwsA(
+          isA<FormatException>().having(
+            (FormatException e) => e.message,
+            'message',
+            allOf(contains('status'), contains('exercises.json')),
+          ),
+        ),
+      );
+    });
+
     test('the supported major version is accepted at any minor or patch', () {
       // Minor bumps are additive. Refusing them would make every field
       // addition a forced app update.
