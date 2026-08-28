@@ -157,6 +157,36 @@ class LocalNotificationService implements NotificationService {
     _initialized = true;
   }
 
+  /// Refuses to post a notification before [init] has run.
+  ///
+  /// Both callers need something [init] sets up, and without it each fails in a
+  /// way that says nothing about the cause.
+  ///
+  /// `scheduleDaily` reads `tz.local`, a late field inside the timezone
+  /// package. Untouched it throws
+  /// `LateInitializationError: Field '_local@...' has not been initialized`,
+  /// which names an obfuscated private field of a third party package and
+  /// nothing else.
+  ///
+  /// `showNow` is worse, because it does not throw at all. It posts to the
+  /// Android channel [init] creates, and posting to a channel the system has
+  /// never been told about is dropped silently. A reminder that never appears
+  /// and never errors is the hardest kind to find.
+  /// Both callers are `async` so this throw arrives as a rejected future
+  /// rather than synchronously. A method that returns a `Future` and then
+  /// throws before returning one cannot be handled with `catchError`, which is
+  /// exactly how a caller would expect to handle it.
+  void _requireInitialised(String method) {
+    if (_initialized) {
+      return;
+    }
+    throw StateError(
+      'NotificationService.$method was called before init(). '
+      'AppBootstrap does this at startup; code building the service directly, '
+      'such as a test or a preview, has to call init() itself.',
+    );
+  }
+
   /// Loads the timezone database and points `tz.local` at the device's zone.
   ///
   /// Without this, `tz.local` is UTC and every reminder fires at the wrong
@@ -255,14 +285,16 @@ class LocalNotificationService implements NotificationService {
     required String title,
     required String body,
     String? payload,
-  }) =>
-      _plugin.show(
-        id: id,
-        title: title,
-        body: body,
-        notificationDetails: _reminderDetails,
-        payload: payload,
-      );
+  }) async {
+    _requireInitialised('showNow');
+    await _plugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: _reminderDetails,
+      payload: payload,
+    );
+  }
 
   @override
   Future<void> scheduleDaily({
@@ -272,26 +304,28 @@ class LocalNotificationService implements NotificationService {
     required String title,
     required String body,
     String? payload,
-  }) =>
-      _plugin.zonedSchedule(
-        id: id,
-        scheduledDate: nextInstanceOfTime(hour, minute),
-        title: title,
-        body: body,
-        payload: payload,
-        notificationDetails: _reminderDetails,
-        // Inexact on purpose. Android reserves exact alarms for apps whose core
-        // function is precise timing, alarm clocks and calendars, and Google's own
-        // guidance is that everything else should schedule inexactly. A training
-        // reminder that arrives a few minutes late is not a defect; requesting the
-        // exact-alarm permission for it would be, and it puts the release at risk
-        // of a Play policy rejection. AllowWhileIdle is what stops the reminder
-        // from being swallowed entirely while the phone is in low-power idle,
-        // which is exactly the state a phone is in overnight.
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        // Repeat every day at the same wall-clock time.
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
+  }) async {
+    _requireInitialised('scheduleDaily');
+    await _plugin.zonedSchedule(
+      id: id,
+      scheduledDate: nextInstanceOfTime(hour, minute),
+      title: title,
+      body: body,
+      payload: payload,
+      notificationDetails: _reminderDetails,
+      // Inexact on purpose. Android reserves exact alarms for apps whose core
+      // function is precise timing, alarm clocks and calendars, and Google's own
+      // guidance is that everything else should schedule inexactly. A training
+      // reminder that arrives a few minutes late is not a defect; requesting the
+      // exact-alarm permission for it would be, and it puts the release at risk
+      // of a Play policy rejection. AllowWhileIdle is what stops the reminder
+      // from being swallowed entirely while the phone is in low-power idle,
+      // which is exactly the state a phone is in overnight.
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      // Repeat every day at the same wall-clock time.
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
 
   static const NotificationDetails _reminderDetails = NotificationDetails(
     android: AndroidNotificationDetails(

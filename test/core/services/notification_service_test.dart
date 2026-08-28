@@ -157,6 +157,85 @@ void main() {
       messenger.setMockMethodCallHandler(_timezoneChannel, null);
     });
 
+    test('posting before init fails with a message that names the fix',
+        () async {
+      // Observed before this guard existed: scheduleDaily threw
+      // `LateInitializationError: Field '_local@133310200' has not been
+      // initialized` from inside the timezone package, naming an obfuscated
+      // private field and nothing about the cause. showNow was worse, it threw
+      // nothing at all and posted to an Android channel init had not created
+      // yet, which the system drops silently.
+      for (final String method in <String>['scheduleDaily', 'showNow']) {
+        await expectLater(
+          method == 'scheduleDaily'
+              ? service.scheduleDaily(
+                  id: 1,
+                  hour: 9,
+                  minute: 0,
+                  title: 'Antrenman zamanı',
+                  body: 'Bugünün antrenmanı seni bekliyor.',
+                )
+              : service.showNow(
+                  id: 1,
+                  title: 'Antrenman zamanı',
+                  body: 'Bugünün antrenmanı seni bekliyor.',
+                ),
+          throwsA(
+            isA<StateError>().having(
+              (StateError e) => e.message,
+              'message',
+              allOf(contains(method), contains('init()')),
+            ),
+          ),
+        );
+      }
+
+      expect(
+        calls,
+        isEmpty,
+        reason: 'nothing should have reached the platform',
+      );
+    });
+
+    test('the guard lifts once init has run', () async {
+      // The point is to catch a missing init, not to make the service harder to
+      // use. Everything works normally afterwards.
+      await service.init();
+
+      await service.showNow(id: 1, title: 'a', body: 'b');
+      await service.scheduleDaily(
+        id: 2,
+        hour: 9,
+        minute: 0,
+        title: 'a',
+        body: 'b',
+      );
+
+      expect(
+        calls.map((MethodCall call) => call.method),
+        containsAll(<String>['show', 'zonedSchedule']),
+      );
+    });
+
+    test('the methods that do not post are left alone', () async {
+      // Cancelling and asking about permission need nothing init sets up, and
+      // guarding them would only make the service harder to use for no gain.
+      await service.cancel(1);
+      await service.cancelAll();
+      await service.requestPermission();
+      await service.areNotificationsEnabled();
+
+      expect(
+        calls.map((MethodCall call) => call.method),
+        containsAll(<String>[
+          'cancel',
+          'cancelAll',
+          'requestNotificationsPermission',
+          'areNotificationsEnabled',
+        ]),
+      );
+    });
+
     test('init creates the reminder channel', () async {
       await service.init();
 
@@ -385,6 +464,38 @@ void main() {
       messenger.setMockMethodCallHandler(_timezoneChannel, null);
       // Left set, every later test in the process would think it is on iOS.
       debugDefaultTargetPlatformOverride = null;
+    });
+
+    test('startup does not ask iOS for anything', () async {
+      // The four request flags on DarwinInitializationSettings are false on
+      // purpose. Passing true makes iOS show the permission dialog during
+      // startup, before the user has seen a word about reminders, which is the
+      // reliable way to have it refused for good.
+      //
+      // The Android test above cannot see this. With the Android
+      // implementation registered, `initialize` carries only the Android
+      // settings and the Darwin flags never reach the channel, so a flag
+      // flipped to true would go unnoticed there.
+      await service.init();
+
+      final MethodCall initialize = calls.singleWhere(
+        (MethodCall call) => call.method == 'initialize',
+      );
+      final Map<dynamic, dynamic> arguments =
+          initialize.arguments as Map<dynamic, dynamic>;
+
+      for (final String flag in <String>[
+        'requestAlertPermission',
+        'requestSoundPermission',
+        'requestBadgePermission',
+        'requestProvisionalPermission',
+      ]) {
+        expect(
+          arguments[flag],
+          isFalse,
+          reason: '$flag must stay off until the user turns reminders on',
+        );
+      }
     });
 
     test('the permission prompt asks for alert, badge and sound', () async {
