@@ -20,13 +20,15 @@ permissions:
 # validation ran on another, so the first failure would appear on a release
 # pull request and look like the release changed something.
 #
-# `release-metadata` checks that file. flutter_ci runs the same check, but it
-# cannot stand in for this one: this workflow also runs on `v*` tags, and a tag
-# can be created on any commit, including one that never went through
-# flutter_ci. The check runs alongside the build jobs rather than ahead of them,
-# so a broken file shows up as a failed run rather than as skipped builds; on a
-# pull request that is enough to block the merge, and on a tag it is what turns
-# the run red.
+# `release-metadata` runs the same check flutter_ci does. On pull requests the
+# merge is already blocked by `repository-policy`, which is a required status
+# check in both rulesets; `release-metadata` is not, so it gates nothing on its
+# own. This call exists for `v*` tags, where nothing else runs the check and a
+# tag can be created on any commit, including one that never went through
+# flutter_ci.
+#
+# It runs alongside the build jobs rather than ahead of them, so a broken file
+# turns the run red rather than skipping the builds.
 
 jobs:
   release-metadata:
