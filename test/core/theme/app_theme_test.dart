@@ -53,16 +53,22 @@ void main() {
     final theme = AppTheme.light();
 
     test('headings use the heading family, body uses the body family', () {
-      expect(theme.textTheme.titleLarge?.fontFamily,
-          AppTypography.headingFontFamily);
+      expect(
+        theme.textTheme.titleLarge?.fontFamily,
+        AppTypography.headingFontFamily,
+      );
       expect(
         theme.textTheme.headlineMedium?.fontFamily,
         AppTypography.headingFontFamily,
       );
       expect(
-          theme.textTheme.bodyLarge?.fontFamily, AppTypography.bodyFontFamily);
+        theme.textTheme.bodyLarge?.fontFamily,
+        AppTypography.bodyFontFamily,
+      );
       expect(
-          theme.textTheme.labelLarge?.fontFamily, AppTypography.bodyFontFamily);
+        theme.textTheme.labelLarge?.fontFamily,
+        AppTypography.bodyFontFamily,
+      );
     });
 
     test('the button radius comes from the radius scale', () {

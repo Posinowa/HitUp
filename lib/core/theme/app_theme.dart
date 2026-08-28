@@ -11,7 +11,7 @@ import 'app_typography.dart';
 /// because the lighter container swatch fails contrast with white text.
 abstract final class AppTheme {
   static ThemeData light() {
-    final colorScheme = ColorScheme.light(
+    final colorScheme = const ColorScheme.light(
       primary: AppColors.primary,
       onPrimary: Colors.white,
       primaryContainer: AppColors.primaryContainer,
