@@ -186,5 +186,66 @@ void main() {
       expect(retried, 1);
       expect(find.text(copyFor(offline)), findsNothing);
     });
+
+    testWidgets('the dialog is painted with the same pair as the snack bar', (
+      tester,
+    ) async {
+      // Same trick as the snack bar test above: a scheme whose error roles are
+      // visibly unlike Material's defaults, so falling back to a default
+      // dialog surface cannot pass by coincidence.
+      //
+      // This is the promise the branch makes. All three ways a failure reaches
+      // the user sit on the error surface with the error text colour on it, so
+      // a problem is recognisable before the sentence is read. Left untested,
+      // the dialog is the one that would silently drift.
+      const ColorScheme scheme = ColorScheme.light(
+        errorContainer: Color(0xFF7A0010),
+        onErrorContainer: Color(0xFFFFDAD6),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(useMaterial3: true, colorScheme: scheme),
+          home: Scaffold(
+            body: Builder(
+              builder: (BuildContext context) => TextButton(
+                onPressed: () =>
+                    showFailureDialog(context, offline, onRetry: () {}),
+                child: const Text('trigger'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await trigger(tester);
+
+      final AlertDialog dialog = tester.widget<AlertDialog>(
+        find.byType(AlertDialog),
+      );
+      expect(dialog.backgroundColor, scheme.errorContainer);
+
+      final Text message = tester.widget<Text>(find.text(copyFor(offline)));
+      expect(
+        message.style?.color,
+        scheme.onErrorContainer,
+        reason: 'the message must pair with the surface it sits on',
+      );
+
+      // The retry button inverts the pair so it reads as the primary action
+      // without leaving the error surface. Swapped, it would be the error text
+      // colour on the error text colour.
+      final FilledButton retry = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, FailureLabelsTr.retry),
+      );
+      final ButtonStyle? style = retry.style;
+      expect(
+        style?.backgroundColor?.resolve(<WidgetState>{}),
+        scheme.onErrorContainer,
+      );
+      expect(
+        style?.foregroundColor?.resolve(<WidgetState>{}),
+        scheme.errorContainer,
+      );
+    });
   });
 }

@@ -185,6 +185,64 @@ void main() {
       expect(failure, isA<UnknownFailure>());
       expect(failure.code, FailureCode.unknown);
     });
+
+    test('a code from a family this build does not know keeps its code', () {
+      // The families above are the ones that exist today. A later release adds
+      // one, and an exception carrying it reaches this build through stored
+      // data or a shared package. Falling back to UnknownFailure is right;
+      // throwing the code away is not, because the code is what logs and
+      // analytics key off, and dropping it turns a specific report into an
+      // unattributable one.
+      final failure = mapErrorToFailure(
+        AppException('thrown by a newer layer', code: 'billing.card_declined'),
+      );
+
+      expect(failure, isA<UnknownFailure>());
+      expect(failure.code, 'billing.card_declined');
+      expect(failure.code, isNot(FailureCode.unknown));
+    });
+  });
+
+  group('retryability', () {
+    // Whether the error surface offers a "try again" button is decided here and
+    // nowhere else, so each failure kind needs its own case. Three of the six
+    // were covered through the mapper tests above; these are the rest.
+    test('each failure kind decides for itself', () {
+      const cases = <Failure, bool>{
+        AuthFailure(code: FailureCode.authInvalidEmail): false,
+        NetworkFailure(code: FailureCode.networkOffline): true,
+        PermissionFailure(code: FailureCode.permissionDenied): false,
+        ContentFailure(code: FailureCode.contentMalformed): false,
+        DataFailure(code: FailureCode.dataNotFound): true,
+        UnknownFailure(): true,
+      };
+
+      cases.forEach((Failure failure, bool retryable) {
+        expect(
+          failure.isRetryable,
+          retryable,
+          reason: '${failure.runtimeType} should '
+              '${retryable ? '' : 'not '}offer a retry',
+        );
+      });
+    });
+
+    test('a data problem is worth retrying but a content one is not', () {
+      // Stored data can succeed on a second attempt; the bundle ships with the
+      // app, so re-reading it reads the same broken file.
+      expect(
+        mapErrorToFailure(
+          AppException('write failed', code: FailureCode.dataUnknown),
+        ).isRetryable,
+        isTrue,
+      );
+      expect(
+        mapErrorToFailure(
+          AppException('bad json', code: FailureCode.contentMalformed),
+        ).isRetryable,
+        isFalse,
+      );
+    });
   });
 
   group('totality', () {
