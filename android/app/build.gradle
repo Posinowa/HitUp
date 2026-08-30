@@ -11,12 +11,18 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        // Core library desugaring is required by flutter_local_notifications
+        // (HIT-057): the plugin compiles against java.time, which does not
+        // exist on older Android versions, and desugaring is what backports it.
+        // The plugin builds itself with Java 17 and desugaring on; an app module
+        // on Java 8 without desugaring fails to link against it.
+        coreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = JavaVersion.VERSION_17
     }
 
     defaultConfig {
@@ -51,4 +57,9 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Version matches the one flutter_local_notifications declares for itself.
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"
 }

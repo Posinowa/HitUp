@@ -14,6 +14,7 @@
 | Curriculum | Local JSON assets | HIT-012 |
 | Large media | Cloudflare R2 read-only (optional) | HIT-013 |
 | Animations | Rive (prefer local for MVP) | HIT-032 |
+| Reminders | On-device local notifications, **no FCM** | HIT-057 |
 
 ## Layering
 
@@ -57,7 +58,7 @@ Larger features may use `data/`, `domain/`, `presentation/` internally. Tiny fea
 | Platform | Floor | Set in |
 |---|---|---|
 | Android | API 24 (7.0) | `android/app/build.gradle` |
-| iOS | 12.0 | `ios/Runner.xcodeproj`, `ios/Flutter/AppFrameworkInfo.plist` |
+| iOS | 13.0 | `ios/Runner.xcodeproj`, `ios/Flutter/AppFrameworkInfo.plist` |
 
 Both are written as **explicit literals**, never derived from
 `flutter.minSdkVersion` or any other toolchain default. The floor is visible to
@@ -67,7 +68,9 @@ a Flutter SDK upgrade does quietly on a day nobody touched the setting.
 
 Raising a floor is its own change, with its own reasoning, in its own PR. The
 Android floor moved 23 to 24 because `flutter_local_notifications` (HIT-057)
-declares `minSdkVersion 24` and will not link below it.
+declares `minSdkVersion 24` and will not link below it. The iOS floor moved
+12.0 to 13.0 for the same dependency, whose podspec sets
+`ios.deployment_target = '13.0'`.
 
 ## Package identifiers
 
@@ -85,5 +88,6 @@ Local curriculum JSON must remain usable without network. Firestore sync may req
 - `ERROR_HANDLING.md`
 - `FIRESTORE_MODEL.md`
 - `R2_MEDIA.md`
+- `NOTIFICATIONS.md`
 - `../design/IDENTITY.md`
 - `../development/ISSUE_EXECUTION_ORDER.md`
