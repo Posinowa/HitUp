@@ -442,6 +442,22 @@ void main() {
       );
     });
 
+    test('a category that is not a string is still an error', () {
+      // The same rule, on the other enum this record reads. Both go through
+      // the reader rather than a bare cast, and both need a test saying so:
+      // without one, either could quietly go back to a cast, and a wrong type
+      // would then surface as a Dart error naming neither the field nor the
+      // twister it came from.
+      expect(
+        () => TongueTwisterLibrary.fromJson(
+          fileWith('tongueTwisters', <Map<String, dynamic>>[
+            validTwister()..['category'] = 3,
+          ]),
+        ),
+        throwsFormatException,
+      );
+    });
+
     test('a null targetLetter is read as absent, not as an error', () {
       final TongueTwisterLibrary library = TongueTwisterLibrary.fromJson(
         fileWith('tongueTwisters', <Map<String, dynamic>>[
