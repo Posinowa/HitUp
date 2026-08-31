@@ -5,6 +5,15 @@ import 'exercise_presentation_type.dart';
 import 'json_reader.dart';
 import 'media_reference.dart';
 
+/// Reads one type specific config block.
+///
+/// Every `fromJson` on an [ExerciseConfig] subclass already has this shape, so
+/// the table below can name them directly instead of restating the call.
+typedef _ConfigReader = ExerciseConfig Function(
+  Map<String, dynamic> json, {
+  required String ownerId,
+});
+
 /// One exercise, as defined in `assets/content/exercises.json`.
 ///
 /// An exercise says what to show, for how long, and how to present it. It never
@@ -82,16 +91,36 @@ class Exercise {
     required String id,
     required ExercisePresentationType presentationType,
   }) {
-    const Map<String, ExercisePresentationType> blocks =
-        <String, ExercisePresentationType>{
-      'breathing': ExercisePresentationType.breathing,
-      'letter': ExercisePresentationType.letter,
-      'tongueTwister': ExercisePresentationType.tongueTwister,
-      'emphasis': ExercisePresentationType.emphasis,
-      'intonation': ExercisePresentationType.intonation,
-      'pause': ExercisePresentationType.pause,
-      'timedReading': ExercisePresentationType.timedReading,
-      'speakingChallenge': ExercisePresentationType.speakingChallenge,
+    // One entry per config block: the field name, the presentation type it
+    // belongs to, and how to read it. All three are written once, on one line,
+    // because they are one fact. Splitting the reader into a switch elsewhere
+    // would let a ninth block be added here and nowhere else, and the compiler
+    // could not say so; it would surface at runtime, on real content.
+    const Map<String, (ExercisePresentationType, _ConfigReader)> blocks =
+        <String, (ExercisePresentationType, _ConfigReader)>{
+      'breathing': (
+        ExercisePresentationType.breathing,
+        BreathingConfig.fromJson,
+      ),
+      'letter': (ExercisePresentationType.letter, LetterConfig.fromJson),
+      'tongueTwister': (
+        ExercisePresentationType.tongueTwister,
+        TongueTwisterConfig.fromJson,
+      ),
+      'emphasis': (ExercisePresentationType.emphasis, EmphasisConfig.fromJson),
+      'intonation': (
+        ExercisePresentationType.intonation,
+        IntonationConfig.fromJson,
+      ),
+      'pause': (ExercisePresentationType.pause, PauseConfig.fromJson),
+      'timedReading': (
+        ExercisePresentationType.timedReading,
+        TimedReadingConfig.fromJson,
+      ),
+      'speakingChallenge': (
+        ExercisePresentationType.speakingChallenge,
+        SpeakingChallengeConfig.fromJson,
+      ),
     };
 
     final List<String> present =
@@ -112,7 +141,8 @@ class Exercise {
     }
 
     final String field = present.single;
-    final ExercisePresentationType expected = blocks[field]!;
+    final (ExercisePresentationType expected, _ConfigReader read) =
+        blocks[field]!;
     if (expected != presentationType) {
       throw FormatException(
         'Config block "$field" belongs to ${expected.wireName}, '
@@ -120,42 +150,7 @@ class Exercise {
       );
     }
 
-    final Map<String, dynamic> block = json.requireObject(field, ownerId: id);
-    return switch (expected) {
-      ExercisePresentationType.breathing => BreathingConfig.fromJson(
-          block,
-          ownerId: id,
-        ),
-      ExercisePresentationType.letter => LetterConfig.fromJson(
-          block,
-          ownerId: id,
-        ),
-      ExercisePresentationType.tongueTwister => TongueTwisterConfig.fromJson(
-          block,
-          ownerId: id,
-        ),
-      ExercisePresentationType.emphasis => EmphasisConfig.fromJson(
-          block,
-          ownerId: id,
-        ),
-      ExercisePresentationType.intonation => IntonationConfig.fromJson(
-          block,
-          ownerId: id,
-        ),
-      ExercisePresentationType.pause => PauseConfig.fromJson(
-          block,
-          ownerId: id,
-        ),
-      ExercisePresentationType.timedReading => TimedReadingConfig.fromJson(
-          block,
-          ownerId: id,
-        ),
-      ExercisePresentationType.speakingChallenge =>
-        SpeakingChallengeConfig.fromJson(block, ownerId: id),
-      // Every key in `blocks` is covered above. The map is the only source of
-      // `expected`, so this arm is unreachable rather than a silent fallback.
-      _ => throw StateError('Unhandled config block "$field" in "$id"'),
-    };
+    return read(json.requireObject(field, ownerId: id), ownerId: id);
   }
 
   /// Stable identifier. Never renamed, never reused; completion records point
