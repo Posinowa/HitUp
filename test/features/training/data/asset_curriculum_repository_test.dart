@@ -181,7 +181,9 @@ void main() {
       bundle.failOnce.add(assetKey('exercises.json'));
 
       await expectLater(
-          repository.loadExercises(), throwsA(isA<FlutterError>()));
+        repository.loadExercises(),
+        throwsA(isA<FlutterError>()),
+      );
 
       final ExerciseLibrary retried = await repository.loadExercises();
       expect(retried.exercises, isNotEmpty);
