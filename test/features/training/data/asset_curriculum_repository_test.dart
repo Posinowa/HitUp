@@ -306,6 +306,31 @@ void main() {
       expect(AssetCurriculumRepository(), isA<CurriculumRepository>());
     });
 
+    test('reads the real shipped curriculum through that default', () async {
+      // Every other test in this file hands over a fake bundle, so none of them
+      // touches the path production actually takes. If the default bundle or
+      // the asset directory stopped lining up with what ships, all of them
+      // would still pass and the app would find nothing at runtime.
+      TestWidgetsFlutterBinding.ensureInitialized();
+      final CurriculumRepository repository = AssetCurriculumRepository();
+
+      final TrainingProgram program = await repository.loadProgram();
+      final ExerciseLibrary exercises = await repository.loadExercises();
+
+      expect(program.days, isNotEmpty);
+      expect(exercises.exercises, isNotEmpty);
+
+      // The cross file reference, read the way the app will read it rather
+      // than from two files a test opened itself.
+      for (final ProgramDay day in program.days) {
+        expect(
+          day.resolve(exercises).missingIds,
+          isEmpty,
+          reason: 'day ${day.day} names an exercise the bundle does not have',
+        );
+      }
+    });
+
     test('the asset directory matches what pubspec declares', () {
       // The path is written once here and once in pubspec.yaml. They have to
       // agree, and the failure if they do not is a missing asset at runtime on
