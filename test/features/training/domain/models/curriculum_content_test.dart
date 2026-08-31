@@ -66,8 +66,11 @@ void main() {
       expect(library.ladders, isNotEmpty);
       for (final LetterLadder ladder in library.ladders) {
         expect(ladder.key, isNotEmpty, reason: 'a ladder needs a key');
-        expect(ladder.letter, isNotEmpty,
-            reason: '${ladder.key} needs a glyph');
+        expect(
+          ladder.letter,
+          isNotEmpty,
+          reason: '${ladder.key} needs a glyph',
+        );
         expect(
           ladder.syllables,
           isNotEmpty,
