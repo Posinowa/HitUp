@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hitup/features/training/domain/words_per_minute.dart';
 
@@ -217,11 +220,31 @@ void main() {
 
   group('end to end against a real exercise target', () {
     test('the shipped timed reading target is reachable and checkable', () {
-      // reading_timed_01 in the content targets 140 wpm. A reader finishing a
-      // 140 word passage in a minute should read as on target.
-      const int target = 140;
+      // The target is read out of the content rather than copied into this
+      // file. A copy would keep passing after someone changed the exercise,
+      // and this test would then be asserting something about a number that
+      // no longer ships while still calling itself end to end.
+      //
+      // Read as raw JSON on purpose: this calculation has no dependency on the
+      // exercise models, and reaching for them here would invent one.
+      final File file = File('assets/content/exercises.json');
+      expect(file.existsSync(), isTrue, reason: 'exercises.json must ship');
+      final Map<String, dynamic> content =
+          jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+
+      final Map<String, dynamic> exercise = (content['exercises']
+              as List<dynamic>)
+          .cast<Map<String, dynamic>>()
+          .firstWhere(
+            (Map<String, dynamic> e) => e['presentationType'] == 'timedReading',
+          );
+      final int target = (exercise['timedReading']
+          as Map<String, dynamic>)['targetWordsPerMinute'] as int;
+
+      // A reader finishing a passage of exactly `target` words in one minute
+      // is reading at exactly the target pace.
       final int? pace = wordsPerMinute(
-        wordCount: 140,
+        wordCount: target,
         elapsed: const Duration(minutes: 1),
       );
 
