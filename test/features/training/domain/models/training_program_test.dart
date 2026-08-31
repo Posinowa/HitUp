@@ -211,6 +211,34 @@ void main() {
       expect(a, isNot(ProgramDay.fromJson(validDay(minutes: 6))));
       expect(a, isNot(ProgramDay.fromJson(validDay(day: 2))));
     });
+
+    test('each field on its own is enough to break equality', () {
+      // The test above varies the day number through `validDay`, which also
+      // rewrites the title. So it passes whether or not `day` is part of `==`:
+      // the two objects still differ by title either way. These vary one field
+      // at a time, which is what actually pins the day number down.
+      Map<String, dynamic> dayJson({
+        int number = 1,
+        String title = 'Aynı başlık',
+        int minutes = 5,
+        List<String> ids = const <String>['a_01'],
+      }) =>
+          <String, dynamic>{
+            'day': number,
+            'title': title,
+            'estimatedMinutes': minutes,
+            'exerciseIds': ids,
+          };
+
+      final ProgramDay base = ProgramDay.fromJson(dayJson());
+
+      expect(base, ProgramDay.fromJson(dayJson()));
+      expect(base.hashCode, ProgramDay.fromJson(dayJson()).hashCode);
+      expect(base, isNot(ProgramDay.fromJson(dayJson(number: 2))));
+      expect(base, isNot(ProgramDay.fromJson(dayJson(title: 'Başka'))));
+      expect(base, isNot(ProgramDay.fromJson(dayJson(minutes: 6))));
+      expect(base, isNot(ProgramDay.fromJson(dayJson(ids: <String>['b_01']))));
+    });
   });
 
   group('resolving a day against the library', () {
@@ -360,6 +388,42 @@ void main() {
       expect(program.totalEstimatedDuration, const Duration(minutes: 12));
     });
 
+    test('lastDay is the highest day number, not how many days there are', () {
+      // A parsed program runs 1..N with no gaps, so `days.length` and
+      // `days.last.day` are the same number in every test above and either
+      // implementation passes them all. The constructor does not enforce the
+      // run, which is the one place the two can disagree.
+      final TrainingProgram real = TrainingProgram.fromJson(
+        readFile('program.json'),
+      );
+      final TrainingProgram sparse = TrainingProgram(
+        envelope: real.envelope,
+        programId: 'sparse',
+        title: 'Aralıklı',
+        days: const <ProgramDay>[
+          ProgramDay(
+            day: 5,
+            title: 'Beşinci gün',
+            estimatedMinutes: 5,
+            exerciseRefs: <DayExerciseRef>[],
+          ),
+        ],
+      );
+
+      expect(sparse.dayCount, 1);
+      expect(sparse.lastDay, 5);
+
+      final TrainingProgram empty = TrainingProgram(
+        envelope: real.envelope,
+        programId: 'empty',
+        title: 'Boş',
+        days: const <ProgramDay>[],
+      );
+
+      expect(empty.lastDay, 0,
+          reason: 'no days means no last day, not a crash');
+    });
+
     test('an unsupported schema version stops before any day is read', () {
       final Map<String, dynamic> json = programWith(<Map<String, dynamic>>[
         validDay(),
@@ -418,6 +482,15 @@ void main() {
         a,
         isNot(resolveIds(<String>['intro_text_01', 'no_such_99'])),
         reason: 'the missing ids are part of the result',
+      );
+
+      // Equal objects having equal hashes is satisfied by returning a
+      // constant, so it says nothing on its own. Unequal ones needing
+      // different hashes is what makes this a Map key that works.
+      expect(a.hashCode, isNot(resolveIds(<String>['letter_r_01']).hashCode));
+      expect(
+        a.hashCode,
+        isNot(resolveIds(<String>['intro_text_01', 'no_such_99']).hashCode),
       );
     });
   });
