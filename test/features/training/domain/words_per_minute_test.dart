@@ -7,6 +7,17 @@ import 'package:hitup/features/training/domain/words_per_minute.dart';
 /// be covered and documented. Each of those has its own group below.
 void main() {
   group('the normal case', () {
+    test('the worked example from the issue: 100 words in 45 seconds', () {
+      // The issue names this case by number, so it is asserted by number
+      // rather than left to follow from the rules below. 45 seconds is three
+      // quarters of a minute, so the exact answer is 133.33..., and the
+      // rounding rule takes it to 133.
+      expect(
+        wordsPerMinute(wordCount: 100, elapsed: const Duration(seconds: 45)),
+        133,
+      );
+    });
+
     test('a minute of reading is the word count itself', () {
       expect(
         wordsPerMinute(wordCount: 150, elapsed: const Duration(minutes: 1)),
