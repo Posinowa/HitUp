@@ -131,7 +131,9 @@ void main() {
         3,
       ]);
       expect(
-          day.exerciseRefs.map((DayExerciseRef r) => r.index), <int>[0, 1, 2]);
+        day.exerciseRefs.map((DayExerciseRef r) => r.index),
+        <int>[0, 1, 2],
+      );
       expect(day.exerciseIds, <String>['a_01', 'b_01', 'c_01']);
       expect(day.exerciseCount, 3);
     });
@@ -420,8 +422,11 @@ void main() {
         days: const <ProgramDay>[],
       );
 
-      expect(empty.lastDay, 0,
-          reason: 'no days means no last day, not a crash');
+      expect(
+        empty.lastDay,
+        0,
+        reason: 'no days means no last day, not a crash',
+      );
     });
 
     test('an unsupported schema version stops before any day is read', () {
@@ -442,8 +447,10 @@ void main() {
     });
 
     test('programs compare by content', () {
-      TrainingProgram build(
-              {String id = 'hitup_mvp', String title = 'Program'}) =>
+      TrainingProgram build({
+        String id = 'hitup_mvp',
+        String title = 'Program',
+      }) =>
           TrainingProgram.fromJson(
             programWith(<Map<String, dynamic>>[validDay()])
               ..['programId'] = id
