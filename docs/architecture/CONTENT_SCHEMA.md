@@ -171,10 +171,19 @@ These must resolve, and the schema test enforces all four:
 - `media.kind`: `rive`, `audio`, `image`
 - `contour[].direction`: `rise`, `fall`, `flat`
 
-## Dart model plan
+## Dart models
 
-Models are **not** implemented here. HIT-022 implements them against this schema. The plan they should
-follow:
+**Implemented by HIT-022** in `lib/features/training/domain/models/`, following the plan below.
+`models.dart` re-exports the set, so a caller imports one file.
+
+What landed there is the exercise side only: `Exercise`, `ExercisePresentationType`,
+`MediaReference`, the eight config classes, and `ContentEnvelope`. `ExerciseLibrary` parses
+`exercises.json` as a whole, given an already decoded map, so the schema version guard has an owner
+and nothing in the model layer touches the asset bundle. Reading the bytes is HIT-024's job.
+`TrainingProgram` and the day plan belong to HIT-023; the letter, twister and challenge entities are
+referenced by id here and modelled where their consumers land.
+
+The plan those models follow:
 
 - Immutable classes with `const` constructors and `final` fields.
 - Hand written `factory X.fromJson(Map<String, dynamic>)`. **No codegen package.**
