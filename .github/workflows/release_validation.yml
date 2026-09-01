@@ -6,6 +6,17 @@ on:
   push:
     tags:
       - "v*"
+  # Without this, the only way to run this file is to open a release pull
+  # request or push a `v*` tag. Every ordinary pull request targets `develop`,
+  # so a change to this workflow could merge with a full set of green checks,
+  # none of which came from the workflow it changed. That is what happened with
+  # HIT-090: it moved both platform jobs from debug to release builds, and the
+  # new commands had never executed anywhere when it merged.
+  #
+  # Release mode is where R8, minification and tree shaking first run, so it is
+  # the part most likely to fail in a way nothing else predicts. A button that
+  # lets someone run this on demand is what turns "probably fine" into a result.
+  workflow_dispatch:
 
 concurrency:
   group: release-validation-${{ github.ref }}
