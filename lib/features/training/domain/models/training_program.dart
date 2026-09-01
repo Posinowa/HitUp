@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 
 import 'content_envelope.dart';
@@ -92,6 +94,11 @@ class ResolvedDay {
 @immutable
 class ProgramDay {
   /// Creates a day.
+  ///
+  /// Prefer [ProgramDay.fromJson] for content. This constructor is for tests
+  /// and fixtures: it does not reject the same exercise id appearing twice,
+  /// and it does not number the positions, so a caller passing its own
+  /// [exerciseRefs] owns both.
   const ProgramDay({
     required this.day,
     required this.title,
@@ -212,6 +219,11 @@ class ProgramDay {
 @immutable
 class TrainingProgram {
   /// Creates a program.
+  ///
+  /// Prefer [TrainingProgram.fromJson] for content. This constructor is for
+  /// tests and fixtures: it does not sort [days], and does not check that the
+  /// day numbers run from one without gaps or repeats. Those are what parsing
+  /// enforces, and what [days] describes.
   const TrainingProgram({
     required this.envelope,
     required this.programId,
@@ -282,8 +294,14 @@ class TrainingProgram {
   /// How many days the program runs for.
   int get dayCount => days.length;
 
-  /// The last day number in the program.
-  int get lastDay => days.isEmpty ? 0 : days.last.day;
+  /// The highest day number in the program.
+  ///
+  /// Computed rather than read off [days] `.last`, which is the same answer
+  /// only while the list is sorted. Parsing sorts it; the constructor does
+  /// not, and a getter called "last day" returning 2 for a program that
+  /// contains day 3 would be wrong by any reading of the name.
+  int get lastDay =>
+      days.isEmpty ? 0 : days.map((ProgramDay d) => d.day).reduce(max);
 
   /// How long the whole program is expected to take, as authored.
   Duration get totalEstimatedDuration => days.fold(

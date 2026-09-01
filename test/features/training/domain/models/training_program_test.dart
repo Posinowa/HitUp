@@ -415,6 +415,38 @@ void main() {
       expect(sparse.dayCount, 1);
       expect(sparse.lastDay, 5);
 
+      // And it is the highest, not whichever day happens to sit last in the
+      // list. Parsing sorts; the constructor does not, so an unsorted program
+      // is the case where "last element" and "highest number" disagree.
+      final TrainingProgram unsorted = TrainingProgram(
+        envelope: real.envelope,
+        programId: 'unsorted',
+        title: 'Sırasız',
+        days: <ProgramDay>[
+          const ProgramDay(
+            day: 3,
+            title: 'Üçüncü',
+            estimatedMinutes: 5,
+            exerciseRefs: <DayExerciseRef>[],
+          ),
+          const ProgramDay(
+            day: 1,
+            title: 'Birinci',
+            estimatedMinutes: 5,
+            exerciseRefs: <DayExerciseRef>[],
+          ),
+          const ProgramDay(
+            day: 2,
+            title: 'İkinci',
+            estimatedMinutes: 5,
+            exerciseRefs: <DayExerciseRef>[],
+          ),
+        ],
+      );
+
+      expect(unsorted.days.last.day, 2, reason: 'the list really is unsorted');
+      expect(unsorted.lastDay, 3);
+
       final TrainingProgram empty = TrainingProgram(
         envelope: real.envelope,
         programId: 'empty',
