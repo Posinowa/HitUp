@@ -36,6 +36,13 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+# The widget preview tool generates a whole scaffold project here: its own
+# .dart_tool, its own build output, an IDE module file. It is 15 MB of
+# generated content and it appears the first time anyone opens a preview, so
+# it has to be listed rather than left to the entries above. `.dart_tool/` and
+# `/build/` do not reach it: the first is unanchored but the second is, and
+# neither covers a nested project root.
+.widget_preview/
 
 # Symbolication related
 app.*.symbols
