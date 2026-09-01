@@ -66,8 +66,13 @@ users: raising it stops updates reaching devices below it. That has to be a
 change someone makes deliberately and a reviewer sees in a diff, not something
 a Flutter SDK upgrade does quietly on a day nobody touched the setting.
 
-Raising a floor is its own change, with its own reasoning, in its own PR. The
-Android floor moved 23 to 24 because `flutter_local_notifications` (HIT-057)
+Raising a floor is a deliberate, reviewed change: the new value goes in as an
+explicit literal, the reason goes in this table, and a CODEOWNER approves it. It
+may land with the dependency that requires it, which is usually clearer than
+moving the floor ahead of anything that needs it, but it is never a side effect
+of a toolchain upgrade.
+
+The Android floor moved 23 to 24 because `flutter_local_notifications` (HIT-057)
 declares `minSdkVersion 24` and will not link below it. The iOS floor moved
 12.0 to 13.0 for the same dependency, whose podspec sets
 `ios.deployment_target = '13.0'`.
