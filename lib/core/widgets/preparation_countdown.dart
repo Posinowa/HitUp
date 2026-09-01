@@ -59,7 +59,9 @@ class PreparationCountdownController extends ChangeNotifier {
   /// component entirely rather than render something that finishes instantly.
   PreparationCountdownController({required this.seconds})
       : assert(
-            seconds > 0, 'A preparation countdown needs at least one second'),
+          seconds > 0,
+          'A preparation countdown needs at least one second',
+        ),
         _secondsRemaining = seconds;
 
   /// How long the countdown runs for.

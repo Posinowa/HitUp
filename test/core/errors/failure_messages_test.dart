@@ -86,10 +86,16 @@ void main() {
       final enDash = String.fromCharCode(0x2013);
 
       failureMessagesTr.forEach((code, message) {
-        expect(message, isNot(contains(emDash)),
-            reason: '$code has an em dash');
-        expect(message, isNot(contains(enDash)),
-            reason: '$code has an en dash');
+        expect(
+          message,
+          isNot(contains(emDash)),
+          reason: '$code has an em dash',
+        );
+        expect(
+          message,
+          isNot(contains(enDash)),
+          reason: '$code has an en dash',
+        );
       });
     });
   });
@@ -97,8 +103,10 @@ void main() {
   group('lookup', () {
     test('a known code returns its own message', () {
       const failure = NetworkFailure(code: FailureCode.networkOffline);
-      expect(failureMessage(failure),
-          failureMessagesTr[FailureCode.networkOffline]);
+      expect(
+        failureMessage(failure),
+        failureMessagesTr[FailureCode.networkOffline],
+      );
     });
 
     test('an unmapped code falls back instead of failing', () {

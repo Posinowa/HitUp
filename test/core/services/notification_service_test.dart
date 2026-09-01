@@ -241,7 +241,8 @@ void main() {
 
       final createChannel = calls
           .where(
-              (MethodCall call) => call.method == 'createNotificationChannel')
+            (MethodCall call) => call.method == 'createNotificationChannel',
+          )
           .toList();
 
       expect(createChannel, hasLength(1));

@@ -242,7 +242,16 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: flutter analyze
+      # The threshold is stated rather than inherited. `flutter analyze` turns
+      # both of these on by default today, so they change nothing right now;
+      # they are written out because a tool default is not a promise, and a
+      # release that changed its mind would silently stop this job from gating.
+      #
+      # `dart analyze` is a different command and does not treat infos as fatal
+      # at all. That is why analysis_options.yaml raises the lints that describe
+      # real defects to error severity rather than relying on this threshold:
+      # error is the one severity both commands stop on.
+      - run: flutter analyze --fatal-infos --fatal-warnings
 
   flutter-test:
     name: flutter-test
