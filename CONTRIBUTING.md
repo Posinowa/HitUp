@@ -121,11 +121,22 @@ because everything reads that one file, nothing else has to be remembered.
 
 ```bash
 dart format .
-flutter analyze
+flutter analyze --fatal-infos --fatal-warnings
 flutter test
 ```
 
 All must pass. Existing tests must not fail.
+
+The analyzer flags are the ones CI uses. `flutter analyze` turns both on by
+default today, so they change nothing on their own; they are written out so a
+change in that default cannot quietly stop CI from gating.
+
+`dart analyze` is the one to watch. It is a different command and does not treat
+infos as fatal, so running it instead can show a clean tree for a change CI will
+reject, and the failure then reads as though CI is being difficult. That is why
+the lints describing real defects are raised to error severity in
+`analysis_options.yaml`: error is the one severity both commands stop on. Every
+rule in that file carries a line saying why it is on.
 
 Tests are written alongside the code they cover, in the same PR, not added afterward. A piece of work is not done until its tests exist.
 

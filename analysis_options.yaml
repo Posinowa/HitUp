@@ -1,28 +1,79 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
+# Analyzer configuration.
 #
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
+# Two ideas, kept separate on purpose.
+#
+# `analyzer.errors` raises the lints that describe a real defect to error
+# severity. Those are not style opinions: each one names something that breaks
+# at runtime or hides a failure, and an editor should draw them the way it draws
+# a type error rather than as a suggestion.
+#
+# `linter.rules` is deliberately short. A long list nobody agrees with gets
+# `// ignore`d, and the first ignored rule teaches every later contributor that
+# rules here are optional. Every rule below has a reason next to it, and the
+# tree is clean under all of them.
+#
+# CI runs `flutter analyze --fatal-infos --fatal-warnings`, so the threshold is
+# stated rather than inherited from whatever the tool defaults to this release.
 
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
-linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
-  rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+analyzer:
+  # Generated and platform code is not ours to lint. Flutter's own migrator
+  # writes this block on `pub get` when it is missing, which is why it kept
+  # reappearing as an uncommitted change; declaring it here settles that too.
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - linux/**
+    - macos/**
+    - web/**
+    - windows/**
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+  errors:
+    # These describe defects, not preferences.
+    avoid_dynamic_calls: error
+    cancel_subscriptions: error
+    close_sinks: error
+    test_types_in_equals: error
+    throw_in_finally: error
+    unawaited_futures: error
+    unnecessary_statements: error
+
+linter:
+  rules:
+    # --- correctness -------------------------------------------------------
+    # A call on `dynamic` is a crash the compiler cannot see coming.
+    - avoid_dynamic_calls
+    # A stream subscription that is never cancelled outlives whatever owned it.
+    - cancel_subscriptions
+    # Same for a sink that is never closed.
+    - close_sinks
+    # An `==` that does not check the other object's type throws when handed a
+    # foreign one, which is exactly what a Set or a Map will eventually do.
+    - test_types_in_equals
+    # Throwing inside `finally` discards the exception that was already on its
+    # way out, so the original cause is lost.
+    - throw_in_finally
+    # A dropped future is a race, or a swallowed error, or both. `unawaited()`
+    # is how you say the drop was deliberate.
+    - unawaited_futures
+    # A statement with no effect is almost always half of an edit.
+    - unnecessary_statements
+
+    # --- conventions this project already follows --------------------------
+    # `print` survives into a release build. `debugPrint` does not, and it is
+    # what the code already uses.
+    - avoid_print
+    # An inferred return type changes silently when the body changes; a written
+    # one makes that a compile error at the boundary instead.
+    - always_declare_return_types
+    # One quote style, so nobody has to decide per file.
+    - prefer_single_quotes
+
+    # --- small, and worth the churn once ------------------------------------
+    # A non-const widget rebuilds when it did not have to.
+    - prefer_const_constructors
+    # A trailing comma keeps a diff to the line that actually changed, instead
+    # of dragging the closing bracket into it.
+    - require_trailing_commas

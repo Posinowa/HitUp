@@ -74,11 +74,14 @@ void main() {
 
   group('media references', () {
     test('reads a rive reference with its state machine', () {
-      final MediaReference media = MediaReference.fromJson(<String, dynamic>{
-        'kind': 'rive',
-        'key': 'ux_lips',
-        'stateMachine': 'LipStates',
-      }, ownerId: owner);
+      final MediaReference media = MediaReference.fromJson(
+        <String, dynamic>{
+          'kind': 'rive',
+          'key': 'ux_lips',
+          'stateMachine': 'LipStates',
+        },
+        ownerId: owner,
+      );
 
       expect(media.kind, MediaKind.rive);
       expect(media.key, 'ux_lips');
@@ -86,21 +89,26 @@ void main() {
     });
 
     test('a state machine is optional', () {
-      final MediaReference media = MediaReference.fromJson(<String, dynamic>{
-        'kind': 'audio',
-        'key': 'placeholder_sample',
-      }, ownerId: owner);
+      final MediaReference media = MediaReference.fromJson(
+        <String, dynamic>{
+          'kind': 'audio',
+          'key': 'placeholder_sample',
+        },
+        ownerId: owner,
+      );
 
       expect(media.stateMachine, isNull);
     });
 
     test('an unknown kind falls back rather than throwing', () {
       expect(
-        MediaReference.fromJson(<String, dynamic>{
-          'kind': 'hologram',
-          'key': 'sample',
-        }, ownerId: owner)
-            .kind,
+        MediaReference.fromJson(
+          <String, dynamic>{
+            'kind': 'hologram',
+            'key': 'sample',
+          },
+          ownerId: owner,
+        ).kind,
         MediaKind.unknown,
       );
     });
@@ -112,10 +120,13 @@ void main() {
       // threw "type 'int' is not a subtype of type 'String?'", which names
       // neither.
       expect(
-        () => MediaReference.fromJson(<String, dynamic>{
-          'kind': 3,
-          'key': 'sample',
-        }, ownerId: owner),
+        () => MediaReference.fromJson(
+          <String, dynamic>{
+            'kind': 3,
+            'key': 'sample',
+          },
+          ownerId: owner,
+        ),
         throwsA(
           isA<FormatException>().having(
             (FormatException e) => e.message,
@@ -136,10 +147,13 @@ void main() {
         'assets/audio/intro.mp3',
       ]) {
         expect(
-          () => MediaReference.fromJson(<String, dynamic>{
-            'kind': 'rive',
-            'key': bad,
-          }, ownerId: owner),
+          () => MediaReference.fromJson(
+            <String, dynamic>{
+              'kind': 'rive',
+              'key': bad,
+            },
+            ownerId: owner,
+          ),
           throwsA(
             isA<FormatException>().having(
               (FormatException e) => e.message,
@@ -176,12 +190,15 @@ void main() {
 
   group('breathing', () {
     test('reads a full cycle and derives its totals', () {
-      final BreathingConfig config = BreathingConfig.fromJson(<String, dynamic>{
-        'inhaleSeconds': 4,
-        'holdSeconds': 2,
-        'exhaleSeconds': 6,
-        'cycles': 5,
-      }, ownerId: owner);
+      final BreathingConfig config = BreathingConfig.fromJson(
+        <String, dynamic>{
+          'inhaleSeconds': 4,
+          'holdSeconds': 2,
+          'exhaleSeconds': 6,
+          'cycles': 5,
+        },
+        ownerId: owner,
+      );
 
       expect(config.cycleDuration, const Duration(seconds: 12));
       expect(config.totalDuration, const Duration(seconds: 60));
@@ -191,34 +208,42 @@ void main() {
       // Not every breathing pattern pauses at the top. A phase of zero
       // seconds for inhale or exhale is not a pattern, it is a mistake.
       expect(
-        BreathingConfig.fromJson(<String, dynamic>{
-          'inhaleSeconds': 4,
-          'holdSeconds': 0,
-          'exhaleSeconds': 6,
-          'cycles': 5,
-        }, ownerId: owner)
-            .holdSeconds,
+        BreathingConfig.fromJson(
+          <String, dynamic>{
+            'inhaleSeconds': 4,
+            'holdSeconds': 0,
+            'exhaleSeconds': 6,
+            'cycles': 5,
+          },
+          ownerId: owner,
+        ).holdSeconds,
         0,
       );
       expect(
-        () => BreathingConfig.fromJson(<String, dynamic>{
-          'inhaleSeconds': 0,
-          'holdSeconds': 2,
-          'exhaleSeconds': 6,
-          'cycles': 5,
-        }, ownerId: owner),
+        () => BreathingConfig.fromJson(
+          <String, dynamic>{
+            'inhaleSeconds': 0,
+            'holdSeconds': 2,
+            'exhaleSeconds': 6,
+            'cycles': 5,
+          },
+          ownerId: owner,
+        ),
         throwsFormatException,
       );
     });
 
     test('zero cycles is rejected', () {
       expect(
-        () => BreathingConfig.fromJson(<String, dynamic>{
-          'inhaleSeconds': 4,
-          'holdSeconds': 2,
-          'exhaleSeconds': 6,
-          'cycles': 0,
-        }, ownerId: owner),
+        () => BreathingConfig.fromJson(
+          <String, dynamic>{
+            'inhaleSeconds': 4,
+            'holdSeconds': 2,
+            'exhaleSeconds': 6,
+            'cycles': 0,
+          },
+          ownerId: owner,
+        ),
         throwsFormatException,
       );
     });
@@ -226,10 +251,13 @@ void main() {
 
   group('pointers into the other content files', () {
     test('a letter config carries the key and a repetition count', () {
-      final LetterConfig config = LetterConfig.fromJson(<String, dynamic>{
-        'letterKey': 'r',
-        'repetitions': 3,
-      }, ownerId: owner);
+      final LetterConfig config = LetterConfig.fromJson(
+        <String, dynamic>{
+          'letterKey': 'r',
+          'repetitions': 3,
+        },
+        ownerId: owner,
+      );
 
       expect(config.letterKey, 'r');
       expect(config.repetitions, 3);
@@ -250,20 +278,25 @@ void main() {
     test('an empty twister list is rejected', () {
       // It would render as an exercise that does nothing.
       expect(
-        () => TongueTwisterConfig.fromJson(<String, dynamic>{
-          'tongueTwisterIds': <dynamic>[],
-          'repetitions': 2,
-        }, ownerId: owner),
+        () => TongueTwisterConfig.fromJson(
+          <String, dynamic>{
+            'tongueTwisterIds': <dynamic>[],
+            'repetitions': 2,
+          },
+          ownerId: owner,
+        ),
         throwsFormatException,
       );
     });
 
     test('a speaking challenge config carries one id', () {
       expect(
-        SpeakingChallengeConfig.fromJson(<String, dynamic>{
-          'challengeId': 'sc_intro_60',
-        }, ownerId: owner)
-            .challengeId,
+        SpeakingChallengeConfig.fromJson(
+          <String, dynamic>{
+            'challengeId': 'sc_intro_60',
+          },
+          ownerId: owner,
+        ).challengeId,
         'sc_intro_60',
       );
     });
@@ -299,10 +332,13 @@ void main() {
       // An index past the end silently marks nothing, which reads as a
       // renderer bug rather than the content mistake it is.
       expect(
-        () => EmphasisConfig.fromJson(<String, dynamic>{
-          'text': 'bir iki üç',
-          'emphasisWordIndexes': <dynamic>[0, 9],
-        }, ownerId: owner),
+        () => EmphasisConfig.fromJson(
+          <String, dynamic>{
+            'text': 'bir iki üç',
+            'emphasisWordIndexes': <dynamic>[0, 9],
+          },
+          ownerId: owner,
+        ),
         throwsA(
           isA<FormatException>().having(
             (FormatException e) => e.message,
@@ -330,12 +366,15 @@ void main() {
       expect(config.contour.last.direction, ContourDirection.fall);
 
       expect(
-        () => IntonationConfig.fromJson(<String, dynamic>{
-          'text': 'bir iki',
-          'contour': <dynamic>[
-            <String, dynamic>{'wordIndex': 7, 'direction': 'rise'},
-          ],
-        }, ownerId: owner),
+        () => IntonationConfig.fromJson(
+          <String, dynamic>{
+            'text': 'bir iki',
+            'contour': <dynamic>[
+              <String, dynamic>{'wordIndex': 7, 'direction': 'rise'},
+            ],
+          },
+          ownerId: owner,
+        ),
         throwsFormatException,
       );
     });
@@ -378,11 +417,14 @@ void main() {
     });
 
     test('a pause config carries its indexes and a real duration', () {
-      final PauseConfig config = PauseConfig.fromJson(<String, dynamic>{
-        'text': 'bir iki üç dört',
-        'pauseAfterWordIndexes': <dynamic>[1],
-        'pauseMilliseconds': 400,
-      }, ownerId: owner);
+      final PauseConfig config = PauseConfig.fromJson(
+        <String, dynamic>{
+          'text': 'bir iki üç dört',
+          'pauseAfterWordIndexes': <dynamic>[1],
+          'pauseMilliseconds': 400,
+        },
+        ownerId: owner,
+      );
 
       expect(config.pauseAfterWordIndexes, <int>[1]);
       expect(config.pauseDuration, const Duration(milliseconds: 400));
@@ -390,11 +432,14 @@ void main() {
 
     test('a pause of zero milliseconds is rejected', () {
       expect(
-        () => PauseConfig.fromJson(<String, dynamic>{
-          'text': 'bir iki',
-          'pauseAfterWordIndexes': <dynamic>[0],
-          'pauseMilliseconds': 0,
-        }, ownerId: owner),
+        () => PauseConfig.fromJson(
+          <String, dynamic>{
+            'text': 'bir iki',
+            'pauseAfterWordIndexes': <dynamic>[0],
+            'pauseMilliseconds': 0,
+          },
+          ownerId: owner,
+        ),
         throwsFormatException,
       );
     });
@@ -405,10 +450,13 @@ void main() {
       // Zero repetitions is valid JSON and a valid integer, so only the
       // minimum stops it. Without it the exercise opens and immediately ends.
       expect(
-        () => LetterConfig.fromJson(<String, dynamic>{
-          'letterKey': 'r',
-          'repetitions': 0,
-        }, ownerId: owner),
+        () => LetterConfig.fromJson(
+          <String, dynamic>{
+            'letterKey': 'r',
+            'repetitions': 0,
+          },
+          ownerId: owner,
+        ),
         throwsA(
           isA<FormatException>().having(
             (FormatException e) => e.message,
@@ -418,10 +466,13 @@ void main() {
         ),
       );
       expect(
-        () => TongueTwisterConfig.fromJson(<String, dynamic>{
-          'tongueTwisterIds': <dynamic>['tt_r_01'],
-          'repetitions': 0,
-        }, ownerId: owner),
+        () => TongueTwisterConfig.fromJson(
+          <String, dynamic>{
+            'tongueTwisterIds': <dynamic>['tt_r_01'],
+            'repetitions': 0,
+          },
+          ownerId: owner,
+        ),
         throwsA(
           isA<FormatException>().having(
             (FormatException e) => e.message,
@@ -438,11 +489,14 @@ void main() {
       // Each of the three text markup configs checks its own indexes, so each
       // needs its own test; a shared base class is not a shared test.
       expect(
-        () => PauseConfig.fromJson(<String, dynamic>{
-          'text': 'bir iki',
-          'pauseAfterWordIndexes': <dynamic>[0, 5],
-          'pauseMilliseconds': 400,
-        }, ownerId: owner),
+        () => PauseConfig.fromJson(
+          <String, dynamic>{
+            'text': 'bir iki',
+            'pauseAfterWordIndexes': <dynamic>[0, 5],
+            'pauseMilliseconds': 400,
+          },
+          ownerId: owner,
+        ),
         throwsA(
           isA<FormatException>().having(
             (FormatException e) => e.message,
@@ -466,10 +520,13 @@ void main() {
 
     test('a target of zero is rejected', () {
       expect(
-        () => TimedReadingConfig.fromJson(<String, dynamic>{
-          'text': 'bir iki',
-          'targetWordsPerMinute': 0,
-        }, ownerId: owner),
+        () => TimedReadingConfig.fromJson(
+          <String, dynamic>{
+            'text': 'bir iki',
+            'targetWordsPerMinute': 0,
+          },
+          ownerId: owner,
+        ),
         throwsFormatException,
       );
     });

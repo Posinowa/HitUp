@@ -268,7 +268,7 @@ void main() {
       for (final Object bad in <Object>[
         'x',
         5,
-        <String, dynamic>{'k': 1}
+        <String, dynamic>{'k': 1},
       ]) {
         final Map<String, dynamic> json = <String, dynamic>{'a': bad};
 
@@ -371,7 +371,7 @@ void main() {
       expect(
         () => <String, dynamic>{
           'contour': <dynamic>[
-            <dynamic, dynamic>{'wordIndex': 0}
+            <dynamic, dynamic>{'wordIndex': 0},
           ],
         }.requireObjectList('contour', ownerId: owner),
         throwsFormatException,

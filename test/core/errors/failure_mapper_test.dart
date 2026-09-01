@@ -181,7 +181,7 @@ void main() {
     });
 
     test('an exception without a code is not guessed at', () {
-      final failure = mapErrorToFailure(AppException('something broke'));
+      final failure = mapErrorToFailure(const AppException('something broke'));
       expect(failure, isA<UnknownFailure>());
       expect(failure.code, FailureCode.unknown);
     });
@@ -194,7 +194,10 @@ void main() {
       // analytics key off, and dropping it turns a specific report into an
       // unattributable one.
       final failure = mapErrorToFailure(
-        AppException('thrown by a newer layer', code: 'billing.card_declined'),
+        const AppException(
+          'thrown by a newer layer',
+          code: 'billing.card_declined',
+        ),
       );
 
       expect(failure, isA<UnknownFailure>());
@@ -232,13 +235,13 @@ void main() {
       // app, so re-reading it reads the same broken file.
       expect(
         mapErrorToFailure(
-          AppException('write failed', code: FailureCode.dataUnknown),
+          const AppException('write failed', code: FailureCode.dataUnknown),
         ).isRetryable,
         isTrue,
       );
       expect(
         mapErrorToFailure(
-          AppException('bad json', code: FailureCode.contentMalformed),
+          const AppException('bad json', code: FailureCode.contentMalformed),
         ).isRetryable,
         isFalse,
       );
