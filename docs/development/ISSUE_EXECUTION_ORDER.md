@@ -14,6 +14,10 @@ HIT-001 → HIT-078 → HIT-009
 Home (`HIT-021B`) is **M2**, not M1.  
 QA (`HIT-073` / `HIT-074`) feeds **into** Release Readiness (`HIT-076`), not the reverse.
 
+Phases are a sequence for feature work. **Phase A2** is not: it collects the
+repository and toolchain issues opened after the sequence was written, which
+run alongside everything else.
+
 ---
 
 ## Phase A — Repository Foundation
@@ -25,6 +29,80 @@ QA (`HIT-073` / `HIT-074`) feeds **into** Release Readiness (`HIT-076`), not the
 5. HIT-004 — Application Architecture
 6. HIT-005 — Configure Riverpod
 7. HIT-006 — Configure go_router
+
+## Phase A2 - Repository Governance & Toolchain
+
+Opened from 26 August 2026 onward, after the phases below were already under
+way. These do not block feature work and feature work does not block them; they
+are listed here because they extend Phase A, not because they run between A
+and B.
+
+Separator note: entries added in this section use a hyphen rather than the dash
+used above, matching the convention already adopted for issue templates.
+
+The `*(done)*` markers are true as of 31 August 2026. They are dated rather than
+bare because a status marker with no date stops being a claim about a moment and
+starts being a claim about now, which is the way this kind of list goes quietly
+wrong. Check the issue before relying on one.
+
+1. HIT-082 - Issue forms *(done)*
+2. HIT-084 - Presentation layer boundary enforced in CI *(done)*
+3. HIT-085 - Content-level secret scanning *(done)*
+4. HIT-086 - Pin the Flutter SDK version in CI *(done)*
+5. HIT-090 - Build in release mode during release validation *(done)*
+6. HIT-091 - Pin the Android and iOS floors *(done)*
+7. HIT-093 - Single source for the pinned Flutter version *(done)*
+8. HIT-083 - Commit convention enforced on PR titles *(code merged, gate not armed, see below)*
+9. HIT-089 - Harden the analyzer configuration
+10. HIT-094 - Allow release validation to run on demand
+11. HIT-087 - Enable auto-merge *(admin only)*
+12. HIT-088 - Disable rebase merging *(admin only)*
+13. HIT-092 - Keep this file current
+14. HIT-095 - Correct the OS floor rule in `ARCHITECTURE.md`
+
+### Dependencies that are real but not written in the issues
+
+- **HIT-091 gates HIT-057.** `flutter_local_notifications` declares
+  `minSdkVersion 24` in its own Gradle config and will not link below it.
+  `android/app/build.gradle` carries that floor as an explicit literal, put
+  there by HIT-091, and HIT-057 relies on it rather than setting it again.
+  The same plugin moves the iOS floor to 13.0.
+- **HIT-095 came out of those two floor moves.** It corrects the rule in
+  `ARCHITECTURE.md` that both of them departed from: HIT-091 raised the Android
+  floor in its own PR ahead of the dependency needing it, and HIT-057 moved the
+  iOS floor alongside the dependency that required it. Nothing blocks it, but it
+  is read best next to the entry above.
+- **HIT-093 depends on HIT-086** and edits the same two workflow files.
+  Anything else touching `flutter_ci.yml` at the same time will need rebasing
+  rather than merging.
+- **HIT-094 depends on HIT-090**, and its acceptance criterion cannot be met
+  before it merges: a `workflow_dispatch` button appears only once the trigger
+  exists on the default branch, which is `develop`.
+- **HIT-089 is best merged last of this group.** It enables lint rules on a
+  file that had none, and `flutter analyze` already stops on what they report,
+  so every open pull request goes red until it picks up the fixes. Landing it
+  while several are open costs a round of rebasing each, for no gain.
+- **HIT-086 constrains anything that regenerates `pubspec.lock`.** Pinning the
+  SDK is what makes a lock file reproducible; resolving dependencies on a
+  different Flutter can produce a different lock file, and the difference does
+  not announce itself.
+
+### What needs repository admin, and what that means
+
+Three items cannot be finished with write access alone.
+
+- **HIT-087** and **HIT-088** are repository settings and have no code at all.
+- **HIT-083** has code, and it is merged, but its check only reports. As of
+  31 August 2026 `pr-title` is in neither ruleset's required status checks, so
+  a pull request with a red title check can still be merged. The issue was
+  closed as completed on 28 August and reopened on 30 August for exactly this
+  reason, which is the case for writing the state down here rather than leaving
+  it in one issue's history. Arming it is a settings change on both
+  `develop-integration-protection` and `main-production-protection`.
+
+The distinction matters for anyone reading this file to find work: a
+contributor without admin can write the code for HIT-083, and did, but cannot
+make it enforce anything.
 
 ## Phase B — Brand & Design Foundation
 
