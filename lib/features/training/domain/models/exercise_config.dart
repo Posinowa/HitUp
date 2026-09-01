@@ -245,10 +245,12 @@ sealed class TextMarkupConfig extends ExerciseConfig {
   final String text;
 
   /// The sentence split on whitespace, which is what every index refers to.
-  List<String> get words => List<String>.unmodifiable(text.split(RegExp(r'\s+'))
-    ..removeWhere(
-      (String word) => word.isEmpty,
-    ));
+  List<String> get words => List<String>.unmodifiable(
+        text.split(RegExp(r'\s+'))
+          ..removeWhere(
+            (String word) => word.isEmpty,
+          ),
+      );
 
   /// Whether every index in [indexes] addresses a real word.
   ///
