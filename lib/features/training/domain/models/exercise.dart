@@ -123,6 +123,23 @@ class Exercise {
       ),
     };
 
+    if (presentationType == ExercisePresentationType.unknown) {
+      // Nothing below this line can protect anything. An exercise of an
+      // unknown type is skipped: it lands in `skippedIds`, `byId` returns null
+      // for it, and no renderer ever sees it. Validating which config a
+      // never-rendered exercise carries is not a check, it is a way to turn a
+      // forward-compatible content change into a fatal one.
+      //
+      // The case that matters is a newer type that brought a block this build
+      // *does* know, which content would do precisely to let older clients
+      // degrade gracefully: a new `breathingAdvanced` keeping its `breathing`
+      // block alongside. Falling through would compare `breathing` against
+      // `unknown`, throw, and take the whole file down with it through
+      // `ExerciseLibrary.fromJson`. One exercise the client was meant to skip
+      // would cost the entire day.
+      return null;
+    }
+
     final List<String> present =
         blocks.keys.where((String field) => json.containsKey(field)).toList();
 
@@ -134,9 +151,6 @@ class Exercise {
     }
 
     if (present.isEmpty) {
-      // An unknown type reaching this build may well have brought a config
-      // block this build has no name for. That is not a content error, it is
-      // the forward-compatibility case, and the caller skips the exercise.
       return null;
     }
 

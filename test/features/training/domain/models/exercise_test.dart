@@ -284,6 +284,43 @@ void main() {
       expect(library.byId('future_hologram_01'), isNull);
     });
 
+    test('an unknown type carrying a block this build knows is still skipped',
+        () {
+      // The test above passes an unknown type with no config at all, which is
+      // the easy half. The half that matters is a newer type that kept a block
+      // this build recognises, which is exactly what content would do to let
+      // older clients degrade gracefully: a new `breathingAdvanced` keeping
+      // its `breathing` block alongside.
+      //
+      // Comparing that block's type against `unknown` and throwing would take
+      // `ExerciseLibrary.fromJson` down with it, so one exercise the client
+      // was supposed to skip would cost the whole file. The well-intentioned
+      // content change is the one that would break.
+      final ExerciseLibrary library = ExerciseLibrary.fromJson(
+        fileWith(<Map<String, dynamic>>[
+          validExercise(),
+          <String, dynamic>{
+            ...validExercise(
+              id: 'future_breathing_01',
+              type: 'breathingAdvanced',
+            ),
+            'breathing': <String, dynamic>{
+              'inhaleSeconds': 4,
+              'holdSeconds': 2,
+              'exhaleSeconds': 6,
+              'cycles': 5,
+            },
+          },
+        ]),
+      );
+
+      expect(library.exercises.map((Exercise e) => e.id), <String>[
+        'sample_text_01',
+      ]);
+      expect(library.skippedIds, <String>['future_breathing_01']);
+      expect(library.byId('future_breathing_01'), isNull);
+    });
+
     test('a duplicate exercise id is rejected', () {
       // Completion records point at these ids, so two exercises sharing one
       // would share a history.
