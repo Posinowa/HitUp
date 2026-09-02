@@ -5,6 +5,14 @@ import '../../core/config/environment.dart';
 import '../../core/services/notification_service.dart';
 import '../../shared/providers/notification_providers.dart';
 
+/// Builds the notification service the app starts with.
+///
+/// A parameter rather than a hard-coded constructor call so the failure path
+/// below can be exercised. Whether startup survives a service that throws is a
+/// promise this file makes, and a promise nothing can test is one nobody finds
+/// out has been broken until a device breaks it.
+typedef NotificationServiceFactory = NotificationService Function();
+
 /// Application bootstrap for foundation initialization.
 ///
 /// Firebase client initialization belongs to HIT-009 once owner-provided
@@ -20,7 +28,13 @@ class AppBootstrap {
   /// then handed to Riverpod as an override. A provider body cannot await, so
   /// letting the provider build these itself would hand callers an instance
   /// that has not finished starting up.
-  static Future<List<Override>> init() async {
+  ///
+  /// [createNotificationService] exists for tests. `main` calls this with no
+  /// arguments and gets the real service.
+  static Future<List<Override>> init({
+    NotificationServiceFactory createNotificationService =
+        LocalNotificationService.new,
+  }) async {
     WidgetsFlutterBinding.ensureInitialized();
 
     // Environment is local/dev until a formal env strategy is wired (HIT-009+).
@@ -33,7 +47,9 @@ class AppBootstrap {
     // TODO(HIT-009): Initialize Firebase when firebase_options.dart is available.
     // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-    final NotificationService notifications = await _initNotifications();
+    final NotificationService notifications = await _initNotifications(
+      createNotificationService,
+    );
 
     return <Override>[
       notificationServiceProvider.overrideWithValue(notifications),
@@ -48,8 +64,15 @@ class AppBootstrap {
   /// still returned, so the reminder settings screen can report the real state
   /// through [NotificationService.areNotificationsEnabled] rather than the app
   /// pretending reminders work.
-  static Future<NotificationService> _initNotifications() async {
-    final LocalNotificationService service = LocalNotificationService();
+  ///
+  /// The service instance is returned even when [NotificationService.init]
+  /// threw. Returning null instead would move the decision to every caller,
+  /// and the reminder screen would have to ask "do I have a service" before it
+  /// could ask "do reminders work", which are not the same question.
+  static Future<NotificationService> _initNotifications(
+    NotificationServiceFactory create,
+  ) async {
+    final NotificationService service = create();
 
     try {
       await service.init();
