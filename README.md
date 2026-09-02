@@ -112,7 +112,7 @@ Do not invent:
 
 When access is available, use FlutterFire / Firebase console to register apps using package/bundle id:
 
-- Provisional: `com.posinowa.hitup` (HIT-078 — owner approval)
+- `com.posinowa.hitup`, settled by HIT-078. Registering the apps binds Firebase to it.
 
 Then initialize Firebase in `AppBootstrap` (see TODO in code).
 
