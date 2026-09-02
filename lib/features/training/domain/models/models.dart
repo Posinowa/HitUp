@@ -11,3 +11,4 @@ export 'exercise_config.dart';
 export 'exercise_library.dart';
 export 'exercise_presentation_type.dart';
 export 'media_reference.dart';
+export 'training_program.dart';
