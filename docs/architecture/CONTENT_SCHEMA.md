@@ -180,8 +180,20 @@ What landed there is the exercise side only: `Exercise`, `ExercisePresentationTy
 `MediaReference`, the eight config classes, and `ContentEnvelope`. `ExerciseLibrary` parses
 `exercises.json` as a whole, given an already decoded map, so the schema version guard has an owner
 and nothing in the model layer touches the asset bundle. Reading the bytes is HIT-024's job.
-`TrainingProgram` and the day plan belong to HIT-023; the letter, twister and challenge entities are
-referenced by id here and modelled where their consumers land.
+`TrainingProgram` and the day plan belong to HIT-023.
+
+The three entities an exercise references by id are modelled by **HIT-024**: `LetterLadder`,
+`TongueTwister` and `SpeakingChallenge`, each with a small library type that parses its own file the
+way `ExerciseLibrary` does. Two of their fields carry decisions worth repeating here, because both
+came out of the shipped content rather than from the shape a reader might assume:
+
+- `TongueTwister.targetLetter` is **optional**. A rhythm or breath twister trains pace or breath
+  control and is not about any single sound, so it carries no target letter. Two of the three
+  twisters that ship today leave it null.
+- `difficulty` and `category` fall back to `unknown` but the record is **kept**, unlike an unknown
+  presentation type, which makes an exercise unrenderable and gets it skipped. Neither field decides
+  whether the drill works, so a newer file that adds a level is still speakable on an older build.
+  An absent value is allowed; a wrong-typed one is still an error.
 
 The plan those models follow:
 
