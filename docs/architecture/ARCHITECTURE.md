@@ -79,9 +79,18 @@ declares `minSdkVersion 24` and will not link below it. The iOS floor moved
 
 ## Package identifiers
 
-**STATUS: OWNER DECISION REQUIRED (provisional selected)**
+- Android / iOS: `com.posinowa.hitup`
 
-- Android / iOS: `com.posinowa.hitup` (HIT-078)
+This is the identifier the project builds and ships under. HIT-078 (#9) closed
+on it, so it is no longer provisional and no longer waiting on anything.
+
+Where it stops being changeable is worth knowing before it happens. Registering
+the Firebase apps (HIT-009) binds them to it: changing it afterwards means
+re-registering both platforms and regenerating `google-services.json` and
+`GoogleService-Info.plist`. Publishing to Google Play binds it permanently,
+because a package name cannot be changed on a published listing at all. Until
+the Firebase apps exist, changing it costs an afternoon; after the first store
+release, it costs a new listing and every installed user.
 
 ## Offline
 

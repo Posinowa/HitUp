@@ -23,7 +23,7 @@ run alongside everything else.
 ## Phase A — Repository Foundation
 
 1. HIT-001 — Initialize Flutter Project *(bootstrap largely done on main)*
-2. HIT-078 — Package / Bundle Identifiers (`com.posinowa.hitup` provisional)
+2. HIT-078 — Package / Bundle Identifiers (`com.posinowa.hitup`) *(done)*
 3. HIT-002 — Git Workflow & Conventions *(CONTRIBUTING.md present — verify AC)*
 4. HIT-003 — Static Analysis / Lint
 5. HIT-004 — Application Architecture
