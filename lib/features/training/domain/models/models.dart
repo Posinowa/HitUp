@@ -10,5 +10,8 @@ export 'exercise.dart';
 export 'exercise_config.dart';
 export 'exercise_library.dart';
 export 'exercise_presentation_type.dart';
+export 'letter_ladder.dart';
 export 'media_reference.dart';
+export 'speaking_challenge.dart';
+export 'tongue_twister.dart';
 export 'training_program.dart';
