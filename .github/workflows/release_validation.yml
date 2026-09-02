@@ -103,6 +103,34 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      # The APK above is not the format the store takes. Google Play has
+      # required an App Bundle for new applications since August 2021, so
+      # `bundleRelease` is the Gradle path a release actually depends on, and
+      # until now nothing in this repository ran it. The first execution would
+      # have been on release day, which is the situation HIT-090 and HIT-094
+      # were opened to eliminate, one format over.
+      #
+      # It is also what the download size depends on. An APK carries every ABI;
+      # a bundle lets Play deliver one, and native libraries are around 90% of
+      # this app's uncompressed content, so that split dominates every other
+      # saving available. Measured on `develop`, a device fetches roughly a
+      # fifth of what the fat APK weighs.
+      #
+      # The ratio is quoted rather than the megabytes on purpose: the absolute
+      # numbers move with every dependency change, and a comment carrying stale
+      # figures is worse than one carrying none.
+      #
+      # Unsigned, like the APK: with no keystore configured Gradle falls back to
+      # the debug signing config. The artifact is not shippable and its name
+      # says so; what is being validated is that the bundle compiles at all.
+      - run: flutter build appbundle --release
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-aab-unsigned-validation-only
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: ignore
+          retention-days: 7
+
   release-ios:
     name: release-ios-build
     runs-on: macos-latest
