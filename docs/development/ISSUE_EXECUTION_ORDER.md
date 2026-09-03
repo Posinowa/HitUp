@@ -18,17 +18,27 @@ Phases are a sequence for feature work. **Phase A2** is not: it collects the
 repository and toolchain issues opened after the sequence was written, which
 run alongside everything else.
 
+An entry marked `*(done)*` had its issue closed as completed on or before
+3 September 2026. The marker is dated rather than bare because a status marker
+with no date stops being a claim about a moment and starts being a claim about
+now, which is the way this kind of list goes quietly wrong. GitHub is the
+authority; check the issue before relying on a marker here.
+
+An entry with no marker is open, or was closed after that date. Nothing is left
+unmarked to mean "in progress": this file records the order and the
+dependencies, and an issue's own state is where its progress lives.
+
 ---
 
 ## Phase A — Repository Foundation
 
-1. HIT-001 — Initialize Flutter Project *(bootstrap largely done on main)*
+1. HIT-001 — Initialize Flutter Project *(done)*
 2. HIT-078 — Package / Bundle Identifiers (`com.posinowa.hitup`) *(done)*
-3. HIT-002 — Git Workflow & Conventions *(CONTRIBUTING.md present — verify AC)*
-4. HIT-003 — Static Analysis / Lint
-5. HIT-004 — Application Architecture
-6. HIT-005 — Configure Riverpod
-7. HIT-006 — Configure go_router
+3. HIT-002 — Git Workflow & Conventions *(done)*
+4. HIT-003 — Static Analysis / Lint *(done)*
+5. HIT-004 — Application Architecture *(done)*
+6. HIT-005 — Configure Riverpod *(done)*
+7. HIT-006 — Configure go_router *(done)*
 
 ## Phase A2 - Repository Governance & Toolchain
 
@@ -40,11 +50,6 @@ and B.
 Separator note: entries added in this section use a hyphen rather than the dash
 used above, matching the convention already adopted for issue templates.
 
-The `*(done)*` markers are true as of 31 August 2026. They are dated rather than
-bare because a status marker with no date stops being a claim about a moment and
-starts being a claim about now, which is the way this kind of list goes quietly
-wrong. Check the issue before relying on one.
-
 1. HIT-082 - Issue forms *(done)*
 2. HIT-084 - Presentation layer boundary enforced in CI *(done)*
 3. HIT-085 - Content-level secret scanning *(done)*
@@ -53,12 +58,12 @@ wrong. Check the issue before relying on one.
 6. HIT-091 - Pin the Android and iOS floors *(done)*
 7. HIT-093 - Single source for the pinned Flutter version *(done)*
 8. HIT-083 - Commit convention enforced on PR titles *(code merged, gate not armed, see below)*
-9. HIT-089 - Harden the analyzer configuration
-10. HIT-094 - Allow release validation to run on demand
+9. HIT-089 - Harden the analyzer configuration *(done)*
+10. HIT-094 - Allow release validation to run on demand *(done)*
 11. HIT-087 - Enable auto-merge *(admin only)*
 12. HIT-088 - Disable rebase merging *(admin only)*
-13. HIT-092 - Keep this file current
-14. HIT-095 - Correct the OS floor rule in `ARCHITECTURE.md`
+13. HIT-092 - Keep this file current *(done)*
+14. HIT-095 - Correct the OS floor rule in `ARCHITECTURE.md` *(done)*
 
 ### Dependencies that are real but not written in the issues
 
@@ -93,7 +98,7 @@ Three items cannot be finished with write access alone.
 
 - **HIT-087** and **HIT-088** are repository settings and have no code at all.
 - **HIT-083** has code, and it is merged, but its check only reports. As of
-  31 August 2026 `pr-title` is in neither ruleset's required status checks, so
+  3 September 2026 `pr-title` is in neither ruleset's required status checks, so
   a pull request with a red title check can still be merged. The issue was
   closed as completed on 28 August and reopened on 30 August for exactly this
   reason, which is the case for writing the state down here rather than leaving
@@ -106,9 +111,9 @@ make it enforce anything.
 
 ## Phase B — Brand & Design Foundation
 
-1. HIT-007 — Corporate Identity & Design Tokens Spec
+1. HIT-007 — Corporate Identity & Design Tokens Spec *(done)*
 2. HIT-081 — Finalize Logo & App Icon Assets
-3. HIT-008 — Implement Flutter Design Token System (replace temporary tokens)
+3. HIT-008 — Implement Flutter Design Token System (replace temporary tokens) *(done)*
 
 ## Phase C — Firebase & Data Foundation
 
@@ -116,8 +121,8 @@ make it enforce anything.
 2. HIT-010 — Firestore Data Model
 3. HIT-011 — Firestore Security Rules
 4. HIT-079 — Implement User Progress Repository
-5. HIT-012 — Local Curriculum Content Schema
-6. HIT-013 — Cloudflare R2 Media Architecture (docs; local Rive preferred for MVP)
+5. HIT-012 — Local Curriculum Content Schema *(done)*
+6. HIT-013 — Cloudflare R2 Media Architecture (docs; local Rive preferred for MVP) *(done)*
 7. HIT-080 — Define & Validate MVP Diction Curriculum *(content approval — parallelizable; gates final content population)*
 
 ## Phase D — App Shell & Authentication
@@ -133,8 +138,8 @@ make it enforce anything.
 
 ## Phase E — Training Core
 
-1. HIT-022 — Exercise Domain Models
-2. HIT-023 — Training Program Models
+1. HIT-022 — Exercise Domain Models *(done)*
+2. HIT-023 — Training Program Models *(done)*
 3. HIT-024 — Local Curriculum Repository
 4. HIT-025 — Today's Training Engine *(uses HIT-079)*
 5. HIT-026 — Training Session State Machine
@@ -146,7 +151,7 @@ make it enforce anything.
 ## Phase F — Exercise Engines
 
 ### Breathing
-1. HIT-029 — Breathing Engine
+1. HIT-029 — Breathing Engine *(done)*
 2. HIT-030 — Breathing UI
 3. HIT-031 — Breathing dataset *(final content gated by HIT-080)*
 
@@ -169,11 +174,11 @@ make it enforce anything.
 1. HIT-043 — Emphasis renderer
 2. HIT-044 — Intonation renderer
 3. HIT-045 — Pause renderer
-4. HIT-047 — WPM calculation
+4. HIT-047 — WPM calculation *(done)*
 5. HIT-046 — Timed reading
 
 ### Speaking
-1. HIT-049 — Preparation countdown
+1. HIT-049 — Preparation countdown *(done)*
 2. HIT-048 — Speaking challenge system (timer MVP; recording is Post-MVP)
 
 ## Phase G — Progress & Engagement
@@ -183,7 +188,7 @@ make it enforce anything.
 3. HIT-054 — Streak algorithm
 4. HIT-055 — Progress screen
 5. HIT-056 — Weekly activity
-6. HIT-057 — Local notification infrastructure
+6. HIT-057 — Local notification infrastructure *(done)*
 7. HIT-060 — Profile
 8. HIT-061 — Settings
 9. HIT-062 — Logout
@@ -195,14 +200,14 @@ make it enforce anything.
 1. HIT-063 — Analytics integration
 2. HIT-064 — Analytics taxonomy
 3. HIT-065 — Crashlytics
-4. HIT-066 — Central error handling
-5. HIT-067 — Loading / empty / error components
+4. HIT-066 — Central error handling *(done)*
+5. HIT-067 — Loading / empty / error components *(done)*
 6. HIT-068 — Core unit tests
 7. HIT-069 — Critical widget tests
 8. HIT-070 — E2E smoke strategy
-9. HIT-071 — GitHub Actions CI (minimal workflow already bootstrapped)
+9. HIT-071 — GitHub Actions CI (minimal workflow already bootstrapped) *(done)*
 10. HIT-072 — Accessibility review
-11. HIT-075 — Finalize README (keep updated)
+11. HIT-075 — Finalize README (keep updated) *(done)*
 12. HIT-073 — Android Device QA
 13. HIT-074 — iOS Device QA
 14. **HIT-076 — MVP Release Readiness Checklist** ← **LAST**
