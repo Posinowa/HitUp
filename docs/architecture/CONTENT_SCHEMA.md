@@ -213,23 +213,38 @@ Suggested location, following the feature first layout in `ARCHITECTURE.md`:
 lib/features/training/domain/models/
 ```
 
-## Repository plan
+## Repository
 
-The loader is **not** implemented here. HIT-024 implements it. The interface it should expose:
+Implemented by **HIT-024** as `CurriculumRepository` in `domain/repositories/`, with
+`AssetCurriculumRepository` in `data/` reading the app bundle. Keeping the interface in `domain/` and
+the bundle reader in `data/` means a later remote or cached source can be swapped in without touching
+any caller.
 
 ```dart
 abstract interface class CurriculumRepository {
   Future<TrainingProgram> loadProgram();
-  Future<List<Exercise>> loadExercises();
-  Future<List<LetterLadder>> loadLetters();
-  Future<List<TongueTwister>> loadTongueTwisters();
-  Future<List<SpeakingChallenge>> loadSpeakingChallenges();
+  Future<ExerciseLibrary> loadExercises();
+  Future<LetterLadderLibrary> loadLetters();
+  Future<TongueTwisterLibrary> loadTongueTwisters();
+  Future<SpeakingChallengeLibrary> loadSpeakingChallenges();
 }
 ```
 
-MVP ships one implementation reading the asset bundle. Keeping the interface in `domain/` and the
-bundle reader in `data/` means a later remote or cached source can be swapped in without touching any
-caller, which is the migration path this issue asks to plan for.
+**Library types, not bare lists.** The plan drafted here originally returned `List<Exercise>` and the
+like. That loses two things the caller needs. The library carries the file's envelope, so a caller can
+tell which content version it is looking at; and for exercises it carries `skippedIds`, the exercises
+this build could not render. Dropping those would hide the reason a day is running short, which is the
+one thing the extensibility rule above exists to make visible. `ProgramDay.resolve` also takes an
+`ExerciseLibrary`, so a list would only force every caller to rebuild what had been thrown away.
+
+**Lookups are not repeated on the repository.** `byId`, `byKey` and `byCategory` live on the library
+types, next to the data they search. The implementation caches, so asking twice costs one read and a
+lookup through the library is as cheap as a method on the repository would be.
+
+**A failed read is not cached.** A successful read is remembered and shared, so two screens opening
+together cause one read. A failure is deliberately forgotten: the error surface offers the user a
+retry, and a cached failure would hand back the same broken future for the rest of the session, so
+the button would do nothing.
 
 ## Validation
 
