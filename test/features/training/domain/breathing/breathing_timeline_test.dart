@@ -2,8 +2,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hitup/features/training/domain/breathing/breathing.dart';
 import 'package:hitup/features/training/domain/models/models.dart';
 
-/// The pattern the shipped content actually uses, so the numbers below are the
-/// ones a user meets rather than ones chosen to make the arithmetic easy.
+/// Four in, two held, six out, five times.
+///
+/// Three different phase lengths on purpose: with any two equal, a boundary
+/// test cannot tell which phase it landed in. This is no longer the pattern the
+/// shipped content carries, and it does not need to be. What it has to be is a
+/// pattern where every phase is distinguishable from the others.
 const BreathingConfig standard = BreathingConfig(
   inhaleSeconds: 4,
   holdSeconds: 2,

@@ -33,12 +33,12 @@
       "id": "breathing_diaphragm_01",
       "title": "Yer tutucu diyafram çalışması",
       "presentationType": "breathing",
-      "durationSeconds": 120,
+      "durationSeconds": 35,
       "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
       "breathing": {
-        "inhaleSeconds": 4,
-        "holdSeconds": 2,
-        "exhaleSeconds": 6,
+        "inhaleSeconds": 1,
+        "holdSeconds": 4,
+        "exhaleSeconds": 2,
         "cycles": 5
       }
     },
