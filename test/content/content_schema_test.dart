@@ -206,6 +206,50 @@ void main() {
       }
     });
 
+    test('a day is as long as the exercises it lists', () {
+      // `estimatedMinutes` is what the home screen promises before the user
+      // starts; the durations are what they then spend. Nothing recomputes one
+      // from the other, so an edit to any exercise silently moves the day it
+      // belongs to. Changing the breathing exercise from 120 seconds to 35 did
+      // exactly that to day one, and this is the check that would have said so.
+      final durations = <String, int>{
+        for (final exercise in exercises)
+          exercise['id'] as String: exercise['durationSeconds'] as int,
+      };
+      for (final day in rows(program, 'days')) {
+        final ids = (day['exerciseIds'] as List).cast<String>();
+        final total = ids.fold(0, (sum, id) => sum + (durations[id] ?? 0));
+        expect(
+          day['estimatedMinutes'],
+          (total / 60).round(),
+          reason: 'day ${day['day']} claims ${day['estimatedMinutes']} minutes '
+              'but its exercises take $total seconds',
+        );
+      }
+    });
+
+    test('a breathing exercise lasts as long as its own cycles do', () {
+      // `durationSeconds` and the breathing block are authored separately, so
+      // they can disagree, and the disagreement is invisible: the engine runs
+      // the cycles while every screen above it shows the other number. This
+      // content shipped with 120 against cycles worth 60 until the numbers
+      // were sourced, and nothing noticed.
+      for (final exercise in exercises) {
+        final block = exercise['breathing'];
+        if (block is! Map) {
+          continue;
+        }
+        final cycle = (block['inhaleSeconds'] as int) +
+            (block['holdSeconds'] as int) +
+            (block['exhaleSeconds'] as int);
+        expect(
+          exercise['durationSeconds'],
+          cycle * (block['cycles'] as int),
+          reason: '${exercise['id']} durationSeconds does not match its cycles',
+        );
+      }
+    });
+
     test('the sample set covers every presentation type', () {
       final used = exercises.map((e) => e['presentationType']).toSet();
       expect(

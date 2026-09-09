@@ -138,7 +138,7 @@ not touch the curriculum.
 ## Type specific config blocks
 
 ```json
-"breathing":         { "inhaleSeconds": 4, "holdSeconds": 2, "exhaleSeconds": 6, "cycles": 5 }
+"breathing":         { "inhaleSeconds": 1, "holdSeconds": 4, "exhaleSeconds": 2, "cycles": 5 }
 "letter":            { "letterKey": "r", "repetitions": 3 }
 "tongueTwister":     { "tongueTwisterIds": ["tt_r_01"], "repetitions": 2 }
 "emphasis":          { "text": "...", "emphasisWordIndexes": [0, 3] }
