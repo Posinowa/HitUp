@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "439823445433",
+    "project_id": "hitup-691be",
+    "storage_bucket": "hitup-691be.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:439823445433:android:426f8b59e25fef597eda68",
+        "android_client_info": {
+          "package_name": "com.posinowa.hitup"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAowhqdC1qanwL-ub6ulYTI1p5uRIa1Tr4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
