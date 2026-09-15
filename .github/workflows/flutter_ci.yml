@@ -36,6 +36,13 @@ jobs:
 
       - name: Validate repository policy
         shell: bash
+        # Branch names come in through env for the reason given in
+        # branch_policy.yml: an expression inside run is pasted into the
+        # script before bash parses it, and the head branch is named by
+        # whoever opens the pull request.
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           set -euo pipefail
           fail=0
@@ -50,8 +57,8 @@ jobs:
 
           # Branch naming for feature PRs into develop (advisory hard-fail for clearly wrong targets is handled by branch-policy on main)
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            base="${{ github.base_ref }}"
-            head="${{ github.head_ref }}"
+            base="$BASE_REF"
+            head="$HEAD_REF"
             echo "PR base=$base head=$head"
             if [ "$base" = "develop" ]; then
               case "$head" in

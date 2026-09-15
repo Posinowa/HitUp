@@ -19,10 +19,17 @@ jobs:
     steps:
       - name: Enforce main source-branch policy
         shell: bash
+        # Branch names come in through env, not as expressions inside run.
+        # GitHub pastes an expression into the script text before bash parses
+        # it, and the head branch is named by whoever opens the pull request,
+        # so a name like x";exit${IFS}0;" would run as code and pass this check.
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           set -euo pipefail
-          base="${{ github.base_ref }}"
-          head="${{ github.head_ref }}"
+          base="$BASE_REF"
+          head="$HEAD_REF"
           echo "Evaluating PR: $head → $base"
 
           if [ "$base" != "main" ]; then
