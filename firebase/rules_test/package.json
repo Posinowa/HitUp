@@ -1,0 +1,16 @@
+{
+  "name": "hitup-firestore-rules-test",
+  "private": true,
+  "description": "Runs firestore.rules against the Firestore emulator (HIT-011).",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "npx --yes firebase-tools@15.30.0 emulators:exec --only firestore --project demo-hitup --config ../../firebase.json \"node --test\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.2",
+    "firebase": "12.19.0"
+  }
+}

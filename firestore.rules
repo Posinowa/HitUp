@@ -1,0 +1,162 @@
+rules_version = '2';
+
+// Firestore security rules (HIT-011).
+//
+// Every user reads and writes their own tree under users/{uid} and nothing
+// else. Anything not matched below is denied.
+//
+// Two kinds of rule live here, and they age differently:
+//
+//   Ownership: who may touch a path. This does not depend on the data model
+//   and is not expected to change.
+//
+//   Shape: which fields a document may carry and what values they may hold.
+//   This follows docs/architecture/FIRESTORE_MODEL.md, which is still a DRAFT
+//   owned by HIT-010. Every check marked "HIT-010" moves when that model is
+//   finalised, and should move in the same pull request.
+//
+// What rules cannot do: HitUp has no backend, so progress is computed on the
+// device and written by the client. Rules can stop a user rewriting or
+// backdating their history, and can refuse values that are impossible; they
+// cannot prove a user actually trained. That limit comes from the no-backend
+// decision, not from a gap in this file.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function nonNegativeInt(value) {
+      return value is int && value >= 0;
+    }
+
+    match /users/{userId} {
+      allow read, delete: if isOwner(userId);
+
+      // createdAt must be the server's clock on create and never change after,
+      // so an account's age cannot be set by the client.
+      allow create: if isOwner(userId)
+        && isValidUser(request.resource.data)
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if isOwner(userId)
+        && isValidUser(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      // HIT-010: field list and types follow the draft model.
+      //
+      // Optional fields are read with get(field, fallback). The fallback is
+      // chosen so an absent field passes its own check, which is what makes
+      // "absent, or valid" a single expression.
+      function isValidUser(d) {
+        return d.keys().hasOnly([
+            'displayName', 'email', 'createdAt', 'currentProgramDay',
+            'totalTrainingMinutes', 'currentStreak', 'longestStreak',
+            'lastTrainingDate'
+          ])
+          && d.createdAt is timestamp
+          && d.get('displayName', '') is string
+          && d.get('displayName', '').size() <= 100
+          && d.get('email', '') is string
+          && d.get('email', '').size() <= 254
+          && nonNegativeInt(d.get('currentProgramDay', 0))
+          && nonNegativeInt(d.get('totalTrainingMinutes', 0))
+          && nonNegativeInt(d.get('currentStreak', 0))
+          && nonNegativeInt(d.get('longestStreak', 0))
+          // A current streak longer than the longest one is not a value, it
+          // is a client that updated one field and forgot the other.
+          && d.get('longestStreak', 0) >= d.get('currentStreak', 0)
+          // HIT-010 has not decided between a yyyy-MM-dd string and a
+          // timestamp, so both are accepted until it does. Null is accepted
+          // too: a user who has never trained has no last training date, and
+          // that is a state, not a malformed value.
+          && (d.get('lastTrainingDate', '') is string
+              || d.get('lastTrainingDate', '') is timestamp
+              || d.get('lastTrainingDate', '') == null);
+      }
+
+      // Append-only session log.
+      //
+      // Update is refused, and completedAt must be the server's clock on
+      // create, so an entry can be neither edited nor backdated. Delete is
+      // allowed: it cannot be used to forge history, because a re-created
+      // entry is stamped with the time it was re-created, and a user has to
+      // be able to remove their own data.
+      match /trainingHistory/{historyId} {
+        allow read, delete: if isOwner(userId);
+        allow update: if false;
+        allow create: if isOwner(userId)
+          && isValidHistory(request.resource.data)
+          && request.resource.data.completedAt == request.time;
+
+        // HIT-010: field list and types follow the draft model.
+        function isValidHistory(d) {
+          return d.keys().hasOnly([
+              'trainingDate', 'programDay', 'completedExerciseIds',
+              'durationMinutes', 'completedAt'
+            ])
+            && d.keys().hasAll([
+              'trainingDate', 'programDay', 'completedExerciseIds',
+              'durationMinutes', 'completedAt'
+            ])
+            && d.trainingDate is string
+            && d.trainingDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+            && d.programDay is int
+            && d.programDay >= 1
+            // A session completes at least one exercise, and the cap keeps a
+            // single document from being used as free storage.
+            && d.completedExerciseIds is list
+            && d.completedExerciseIds.size() >= 1
+            && d.completedExerciseIds.size() <= 50
+            && nonNegativeInt(d.durationMinutes)
+            && d.durationMinutes <= 1440;
+        }
+      }
+
+      match /exerciseProgress/{exerciseId} {
+        allow read, delete: if isOwner(userId);
+
+        allow create: if isOwner(userId)
+          && isValidProgress(request.resource.data, exerciseId);
+
+        // A completion count only grows. A lower number is a client writing a
+        // stale copy over a newer one.
+        allow update: if isOwner(userId)
+          && isValidProgress(request.resource.data, exerciseId)
+          && request.resource.data.completionCount >= resource.data.completionCount;
+
+        // HIT-010: field list and types follow the draft model.
+        function isValidProgress(d, id) {
+          return d.keys().hasOnly(['exerciseId', 'completionCount', 'lastCompletedAt'])
+            && d.keys().hasAll(['exerciseId', 'completionCount', 'lastCompletedAt'])
+            // The document id and the field are one fact written twice; this
+            // keeps them from disagreeing.
+            && d.exerciseId == id
+            && nonNegativeInt(d.completionCount)
+            && d.lastCompletedAt == request.time;
+        }
+      }
+
+      // The draft model has exactly one preferences document, "settings".
+      match /preferences/{docId} {
+        allow read, delete: if isOwner(userId) && docId == 'settings';
+        allow create, update: if isOwner(userId)
+          && docId == 'settings'
+          && isValidPreferences(request.resource.data);
+
+        // HIT-010: field list and types follow the draft model.
+        function isValidPreferences(d) {
+          return d.keys().hasOnly([
+              'reminderEnabled', 'reminderTime', 'soundEnabled', 'hapticEnabled'
+            ])
+            && d.get('reminderEnabled', false) is bool
+            && d.get('soundEnabled', false) is bool
+            && d.get('hapticEnabled', false) is bool
+            && d.get('reminderTime', '00:00') is string
+            && d.get('reminderTime', '00:00').matches('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+        }
+      }
+    }
+  }
+}

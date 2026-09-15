@@ -80,3 +80,8 @@ credentials*.json
 # Local tooling
 *.log
 coverage/
+
+# Firestore rules tests (HIT-011). The Node toolchain is test tooling only.
+firebase/rules_test/node_modules/
+# Written by `firebase use --add`; a per-machine project alias.
+.firebaserc
