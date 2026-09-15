@@ -46,7 +46,7 @@ jobs:
     name: release-metadata
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Validate the pinned Flutter version
         # Also run by flutter_ci.yml. The reasoning lives in the script.
         run: bash .github/scripts/check-flutter-version.sh
@@ -62,7 +62,7 @@ jobs:
             echo "note=Credential-free validation only. No App Store / Play Store publishing."
           } > release-metadata.txt
           cat release-metadata.txt
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-metadata
           path: release-metadata.txt
@@ -72,12 +72,12 @@ jobs:
     name: release-android-build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: "17"
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version-file: .fvmrc
           channel: stable
@@ -96,7 +96,7 @@ jobs:
       # shippable, but the compilation path is the real one, which is the
       # point of validation.
       - run: flutter build apk --release
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-apk-unsigned-validation-only
           path: build/app/outputs/flutter-apk/app-release.apk
@@ -124,7 +124,7 @@ jobs:
       # the debug signing config. The artifact is not shippable and its name
       # says so; what is being validated is that the bundle compiles at all.
       - run: flutter build appbundle --release
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-aab-unsigned-validation-only
           path: build/app/outputs/bundle/release/app-release.aab
@@ -135,8 +135,8 @@ jobs:
     name: release-ios-build
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version-file: .fvmrc
           channel: stable
