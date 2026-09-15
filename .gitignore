@@ -63,6 +63,9 @@ app.*.map.json
 **/firebase-adminsdk*.json
 **/*-firebase-adminsdk-*.json
 **/google-services-desktop.json
+# Firebase client configuration (HIT-009). Injected via GitHub Secrets in CI
+# and kept locally by developers; see docs/setup/FIREBASE_SETUP.md.
+android/app/google-services.json
 credentials*.json
 !assets/**/credentials*.json
 *.jks
