@@ -140,7 +140,7 @@ make it enforce anything.
 
 1. HIT-022 — Exercise Domain Models *(done)*
 2. HIT-023 — Training Program Models *(done)*
-3. HIT-024 — Local Curriculum Repository
+3. HIT-024 — Local Curriculum Repository *(done)*
 4. HIT-025 — Today's Training Engine *(uses HIT-079)*
 5. HIT-026 — Training Session State Machine
 6. HIT-028 — Generic Exercise Container
