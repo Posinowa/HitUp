@@ -9,10 +9,17 @@
          declaring it twice creates two places to keep in sync. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
+    <!-- HIT-097, backup. allowBackup="false" turns backup off. Android's own
+         documentation notes that on Android 12 and higher some manufacturers
+         still run device-to-device transfer despite it, so dataExtractionRules
+         also excludes everything from both cloud backup and device transfer.
+         Neither line covers the other. See SECURITY.md, "Android backup". -->
     <application
         android:label="HitUp"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules">
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -77,6 +77,46 @@ HitUp has **no custom backend**. Do not introduce `backend/`, `server/`, `functi
 
 Users must only access their own data. Open/test-mode Firestore rules are not acceptable for production.
 
+## Android backup
+
+The Android app opts out of backup and device-to-device transfer (HIT-097).
+
+**Why.** When the manifest says nothing, Android makes an app's private storage eligible for cloud backup and for transfer to a new phone. Once users sign in, that storage holds the session, because Firebase Auth keeps the signed-in user on the device. A restored backup or a transfer could carry that session onto a phone that never signed in.
+
+**What it costs.** Training progress lives in Firestore, not on the device, so a restored or transferred install asks the user to sign in again. Anything kept only on the device starts from its defaults.
+
+**How.** Two settings in `android/app/src/main/`, and neither covers the other:
+
+- `android:allowBackup="false"` on `<application>` in `AndroidManifest.xml`.
+- `android:dataExtractionRules="@xml/data_extraction_rules"`, which excludes every storage domain from both cloud backup and device transfer. Android's documentation notes that on Android 12 and higher some manufacturers still run device-to-device transfer when `allowBackup` is `false`, and the app targets a newer Android version than that.
+
+**Check the merged manifest, not the source one.** A plugin can contribute `<application>` attributes through the manifest merger:
+
+```bash
+flutter build apk --debug
+grep -nE "allowBackup|dataExtractionRules" build/app/intermediates/merged_manifests/debug/processDebugManifest/AndroidManifest.xml
+```
+
+Both attributes must appear with the values above.
+
+**Check on a device.** With a debug build installed:
+
+```bash
+adb shell bmgr enable true
+adb shell bmgr backupnow com.posinowa.hitup
+```
+
+For device-to-device transfer, note the selected transport, switch to the transfer one, and switch back afterwards:
+
+```bash
+adb shell bmgr list transports
+adb shell bmgr transport com.google.android.gms/.backup.migrate.service.D2dTransport
+adb shell bmgr init com.google.android.gms/.backup.migrate.service.D2dTransport
+adb shell bmgr backupnow com.posinowa.hitup
+```
+
+Neither run should back up HitUp's data. Once sign-in exists (HIT-020), add the end-to-end check: sign in, run a backup, uninstall, reinstall the same build, and confirm the app opens signed out.
+
 ## CI / CodeQL
 
 Dart is not covered by GitHub CodeQL as a first-class language for this project. Security gating uses Flutter analyzer, tests, Dependency Review, Dependabot, secret scanning, credential-file guards, and Android/iOS build validation instead.
