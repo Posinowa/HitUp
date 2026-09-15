@@ -102,19 +102,26 @@ Foundation UI shows a placeholder screen only. Product screens belong to GitHub 
 
 ## Firebase Setup
 
-**STATUS: OWNER SETUP REQUIRED (HIT-009)**
+Firebase project: `hitup-691be`. The Android and iOS apps are registered under `com.posinowa.hitup` (HIT-078, HIT-009), and `AppBootstrap` initialises Firebase before anything else starts.
 
-Do not invent:
+For local workstation setup and CI secret details, see [`docs/setup/FIREBASE_SETUP.md`](docs/setup/FIREBASE_SETUP.md).
 
-- `google-services.json`
-- `GoogleService-Info.plist`
+`android/app/google-services.json` is git-ignored; CI restores it from encrypted repository secrets (`GOOGLE_SERVICES_JSON_BASE64`). The other configuration files:
+
+- `ios/Runner/GoogleService-Info.plist`
 - `lib/firebase_options.dart`
 
-When access is available, use FlutterFire / Firebase console to register apps using package/bundle id:
+To regenerate them, for example after adding a platform:
 
-- `com.posinowa.hitup`, settled by HIT-078. Registering the apps binds Firebase to it.
+```bash
+dart pub global activate flutterfire_cli
+flutterfire configure --project=hitup-691be --platforms=android,ios --android-package-name=com.posinowa.hitup --ios-bundle-id=com.posinowa.hitup
+```
 
-Then initialize Firebase in `AppBootstrap` (see TODO in code).
+Your account must be signed in to the Firebase CLI (`firebase login`) with access to the project. Two things to check afterwards:
+
+- **The secret scan.** Each file carries a Firebase client API key. These are client configuration, not secrets (see `SECURITY.md`), and are listed by file and line in `.github/secret-scan-allowlist.txt`. If regeneration moves a key to another line, CI fails until the allowlist entry is updated.
+- **iOS on Windows.** The CLI cannot edit the Xcode project off macOS, so `GoogleService-Info.plist` may need downloading separately (`firebase apps:sdkconfig IOS <app id> --project hitup-691be`) and adding to the `Runner` target from a Mac.
 
 ## Cloudflare R2 Strategy
 

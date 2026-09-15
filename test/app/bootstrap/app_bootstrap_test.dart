@@ -73,6 +73,20 @@ NotificationService serviceFrom(List<Override> overrides) {
   return container.read(notificationServiceProvider);
 }
 
+/// Stands in for Firebase, which has no platform channel under `flutter test`.
+Future<void> _skipFirebase() async {}
+
+/// [AppBootstrap.init] with Firebase replaced, so startup can be exercised
+/// without a device. Tests that are about Firebase pass their own initializer.
+Future<List<Override>> boot({
+  required NotificationServiceFactory createNotificationService,
+  FirebaseInitializer initializeFirebase = _skipFirebase,
+}) =>
+    AppBootstrap.init(
+      initializeFirebase: initializeFirebase,
+      createNotificationService: createNotificationService,
+    );
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -81,7 +95,7 @@ void main() {
       final _FakeNotificationService fake = _FakeNotificationService();
 
       final List<Override> overrides =
-          await AppBootstrap.init(createNotificationService: () => fake);
+          await boot(createNotificationService: () => fake);
 
       expect(overrides, hasLength(1));
       expect(serviceFrom(overrides), same(fake));
@@ -90,7 +104,7 @@ void main() {
     test('it initialises the service before handing it over', () async {
       final _FakeNotificationService fake = _FakeNotificationService();
 
-      await AppBootstrap.init(createNotificationService: () => fake);
+      await boot(createNotificationService: () => fake);
 
       expect(fake.initCalls, 1);
     });
@@ -104,7 +118,7 @@ void main() {
           _FakeNotificationService(failOnInit: true);
 
       final List<Override> overrides =
-          await AppBootstrap.init(createNotificationService: () => fake);
+          await boot(createNotificationService: () => fake);
 
       expect(overrides, hasLength(1));
     });
@@ -118,7 +132,7 @@ void main() {
           _FakeNotificationService(failOnInit: true);
 
       final List<Override> overrides =
-          await AppBootstrap.init(createNotificationService: () => fake);
+          await boot(createNotificationService: () => fake);
 
       expect(serviceFrom(overrides), same(fake));
       expect(fake.initCalls, 1);
@@ -130,7 +144,7 @@ void main() {
       final _FakeNotificationService fake = _FakeNotificationService();
 
       await expectLater(
-        AppBootstrap.init(createNotificationService: () => fake),
+        boot(createNotificationService: () => fake),
         completes,
       );
     });
@@ -138,7 +152,7 @@ void main() {
     test('the service is built once, not per override', () async {
       int built = 0;
 
-      await AppBootstrap.init(
+      await boot(
         createNotificationService: () {
           built++;
           return _FakeNotificationService();
@@ -146,6 +160,43 @@ void main() {
       );
 
       expect(built, 1);
+    });
+
+    test('Firebase is initialised before the notification service is built',
+        () async {
+      // Auth, progress and sync sit on Firebase, so it comes first.
+      final List<String> order = <String>[];
+
+      await boot(
+        initializeFirebase: () async => order.add('firebase'),
+        createNotificationService: () {
+          order.add('notifications');
+          return _FakeNotificationService();
+        },
+      );
+
+      expect(order, <String>['firebase', 'notifications']);
+    });
+
+    test('a Firebase failure is not swallowed', () async {
+      // The opposite of the notification promise above, and deliberately so.
+      // Firebase.initializeApp reads config compiled into the app; when it
+      // throws, the build is broken. If a catch were added around it, the
+      // app would open normally with nothing under it, and this would fail.
+      int built = 0;
+
+      await expectLater(
+        boot(
+          initializeFirebase: () async =>
+              throw StateError('firebase config broken'),
+          createNotificationService: () {
+            built++;
+            return _FakeNotificationService();
+          },
+        ),
+        throwsA(isA<StateError>()),
+      );
+      expect(built, 0);
     });
   });
 }
