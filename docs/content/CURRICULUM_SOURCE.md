@@ -6,6 +6,8 @@ This is the input to the approval HIT-080 asks for, not the approval. Every exer
 
 Where two sources cover the same ground they are shown side by side rather than merged, so the choice between them stays a decision someone makes rather than one this file made quietly.
 
+The decisions taken on #82 on 14 September 2026 are recorded below, next to the material each one settles.
+
 ## Sources
 
 **[S1] T.C. Millî Eğitim Bakanlığı, Büro Yönetimi, "Diksiyon 1", module code 90KG00004, Ankara 2011.** 72 pages. Vocational training material published by the Ministry. Its front matter states: *"Millî Eğitim Bakanlığınca ücretsiz olarak verilmiştir."*
@@ -20,7 +22,7 @@ Those are the document's own claims about its author. Nothing here verifies them
 
 Page numbers are each document's own printed numbers, not PDF positions.
 
-**Licence is not settled by this file.** "Free of charge" is what S1 says about its own distribution; whether that permits reproducing exercise text inside a commercial app is a separate question and needs an answer before any of this reaches `assets/content/`.
+**Licence, settled on #82: the app does not reproduce source text.** Instructional text in `assets/content/` is written by the team. The sources supply facts, such as durations, ratios, repetition limits and which techniques exist, and those stay page-cited in this file so each one can be checked. That takes the question of whether "free of charge" permits reproduction in a commercial app out of the MVP's path.
 
 ## The breathing ratio: two sources, one answer
 
@@ -30,7 +32,8 @@ This is the part with a real recommendation behind it, and the two sources agree
 |---|---|---|---|---|
 | **S1**, p.14 | 1 | 4 | 2 | Exercise V |
 | **S2**, p.3 | 1 | 4 | 2 | "Derin Soluma" |
-| **shipped placeholder** | 4 | 2 | 6 | `assets/content/exercises.json`, none |
+| **shipped before #151** | 4 | 2 | 6 | placeholder, none |
+| **shipped since #151** | 1 | 4 | 2 | S1 and S2 |
 
 Verbatim, S1:
 
@@ -42,7 +45,7 @@ Verbatim, S2. The separators are reproduced as the document prints them:
 
 S2 states the same ratio as a formula and gives a worked example: two seconds in, eight held, four out. S1 gives it as one second in, four held, two out. Same shape, different scale.
 
-**The value currently in the repository matches neither, and came from nowhere.** It was written as a placeholder and it holds the hold shorter than the inhale, which both sources invert.
+**The value the repository shipped before #151 matched neither, and came from nowhere.** It was written as a placeholder and held the breath for less time than the inhale, which both sources invert. #151 replaced it with 1-4-2.
 
 S1 also gives a second, different pattern at p.14, a progression rather than a fixed cycle: inhale through the nose for a count of 6, exhale through the mouth for 8, then raise the exhale by two at a time up to 22 while the inhale stays at 6. `BreathingConfig` cannot express that today; it carries one inhale, one hold, one exhale and a repeat count.
 
@@ -56,9 +59,11 @@ S1 carries no warnings. **S2 does**, in the same paragraph as the ratio, p.3-4:
 
 That is three separate facts an app needs: a per-session cap of ten repetitions, a suggested twice-daily rhythm, and a stated reason not to exceed it.
 
-The shipped placeholder uses five cycles, which is inside that cap. That appears to be luck rather than sourcing.
+**#82 adopts the cap:** deep breathing is limited to ten repetitions per session. The shipped exercise uses five cycles, inside it.
 
-**This matters most for S1's Exercise IV**, the rapid panting it calls “Köpek soluması”. S1 gives it no limit at all. S2's warning is about exactly this class of exercise, and the app should carry a limit even though the source that describes the exercise does not.
+**This matters most for S1's Exercise IV**, the rapid panting it calls “Köpek soluması”. S1 gives it no limit at all. S2's warning is about exactly this class of exercise. **#82 excludes it from the MVP.**
+
+**#82 also sets a notice:** every breathing exercise is preceded by a short notice to stop if the user feels dizzy or lightheaded. That is a conservative posture to build against, not a safety sign-off; see the last section.
 
 ## Breathing exercises [S1, pages 13-15]
 
@@ -69,7 +74,7 @@ Ten in total. The two with explicit counts are above; the rest:
 | I | 13 | Lie on the back, breathe into the belly. Two weeks, daily |
 | II | 13 | Upright, deep breath held, pull the belly in and release |
 | III | 13 | Deep breath, exhale as a hiss. Broken or wave-like variants |
-| IV | 14 | Rapid shallow panting, “Köpek soluması”. See the safety note above |
+| IV | 14 | Rapid shallow panting, “Köpek soluması”. Excluded from the MVP by #82 |
 | VI | 14 | Rise onto the toes while inhaling, hold, drop onto the heels and release |
 | VIII | 14 | Read a marked poem, one breath per marked span |
 | IX | 15 | One long sentence in a single breath |
@@ -77,7 +82,7 @@ Ten in total. The two with explicit counts are above; the rest:
 
 Exercise III is the sound cue HIT-029 left room for: the exhale is a hiss.
 
-Exercise VIII quotes Yahya Kemal Beyatlı's *Akıncılar* with breath marks. **Its copyright is not S1's to grant** and needs checking separately.
+Exercise VIII quotes Yahya Kemal Beyatlı's *Akıncılar* with breath marks. **#82 excludes that excerpt:** the author died in 1958 and the poem is still under copyright protection in Turkey, so it is not S1's to grant. The exercise itself, one breath per marked span, can be built on text the team writes.
 
 ## Relaxation [S1, pages 15-17]
 
@@ -146,7 +151,7 @@ Two examples, page 47, verbatim:
 
 S1's own instruction for these: say them slowly first, then gradually faster. It also says outright that some will read as nonsense, and that the meaning does not matter, only the articulation.
 
-This maps onto `LetterLadder` directly, and the second example is a tongue twister in the sense `TongueTwister` means.
+This maps onto `LetterLadder` directly, and the second example is a tongue twister in the sense `TongueTwister` means. Under the licence decision above, both are shown here as evidence of the technique; the sentences the app uses are written by the team.
 
 ## Articulation faults S1 names [page 44]
 
@@ -158,20 +163,22 @@ S1 suggests reading aloud and working through tongue twisters for stammering, an
 
 Three lengths: short, normal, long. This is the material HIT-045 needs.
 
-## What is still missing, and who has to supply it
+## What was missing, and what #82 decided
 
-**A day by day program.** Neither source has a notion of "day 1". Someone has to decide which exercises open the programme, how many per day, and how difficulty moves. That decision is in no source and is the core of what HIT-080 must approve.
+**A day by day program.** Neither source has a notion of "day 1". **#82:** fourteen days of around fifteen minutes each, both figures taken from the sources. Each day runs breathing, then articulation (tongue, jaw, lips, letter), then a text exercise, a tongue twister or a reading. The progression across the fourteen days is authored by the team; the sources do not define one, so it is a design choice rather than a gap.
 
-**Durations for everything except breathing.** Between them the sources give: two weeks of daily practice, fifteen minutes a day, six breaths a minute, the 1-4-2 ratio, the 6-to-22 progression, ten repetitions a session, twice daily. Every other duration in the app would be invented.
+**Durations for everything except breathing.** Between them the sources give: two weeks of daily practice, fifteen minutes a day, six breaths a minute, the 1-4-2 ratio, the 6-to-22 progression, ten repetitions a session, twice daily. Every other duration in the app is set by the team.
 
-**Tongue twisters.** A handful across both sources. A real library needs another source.
+**Tongue twisters.** A handful across both sources. **#82:** written originally by the team. Original text needs no licence, and this is also how HIT-041 reaches its ten entries.
 
-**Speaking prompts.** None in S1 or S2. S3 covers delivery and may help HIT-048, but it carries no prompts either.
+**Speaking prompts.** None in S1 or S2. S3 covers delivery and may help HIT-048, but it carries no prompts either. **#82:** written originally by the team, like the tongue twisters.
 
-**A safety text the app shows.** S2 gives one warning and one cap. Whether that is enough for an app used unsupervised, and what it should say on screen, is a judgement someone qualified has to make.
+**A safety text the app shows.** S2 gives one warning and one cap. **#82** adopts the cap and the dizziness notice above as the posture to build against. **Still open:** the final breathing text must be reviewed by someone qualified before any public release.
+
+Until content is rewritten under these decisions, everything shipping in `assets/content/` stays `status: placeholder`.
 
 ## What this file deliberately does not do
 
-It does not assign exercises to days, invent durations, or write the safety text. Those are the parts HIT-080 exists to have approved, and inventing them is what the issue says not to do.
+It does not assign exercises to days, set durations, or write the text the app shows. Those follow the decisions above and belong in the curriculum content itself.
 
-The one change it does argue for is the breathing ratio: two independent sources give 1-4-2, the repository ships 4-2-6 from no source, and correcting that is a small change with a citation behind it.
+The one change it argued for was the breathing ratio: two independent sources give 1-4-2, the repository shipped 4-2-6 from no source, and #151 corrected it with the citation above.
