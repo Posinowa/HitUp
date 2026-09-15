@@ -73,7 +73,7 @@ values; they cannot prove that a user actually trained.
 ### Testing the rules
 
 The tests run the real rules file against the Firestore emulator. They need
-Node 20+ and Java 11+ (the emulator is a Java process).
+Node 20+ and Java 21+ (the emulator is a Java process).
 
 ```bash
 cd firebase/rules_test
