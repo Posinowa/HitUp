@@ -163,21 +163,26 @@ describe('user document', () => {
     );
   });
 
-  test('lastTrainingDate accepts a string, a timestamp or null while HIT-010 decides', async () => {
+  test('lastTrainingDate is a yyyy-MM-dd day, or absent', async () => {
+    // HIT-010 settled the type: the user's own calendar day, so the streak can
+    // compare days without carrying a timezone. Absent means never trained.
     await assertSucceeds(
       setDoc(doc(alice(), 'users/alice'), validUser({ lastTrainingDate: '2026-09-14' })),
     );
     await env.clearFirestore();
-    await assertSucceeds(
-      setDoc(doc(alice(), 'users/alice'), validUser({ lastTrainingDate: aPastTime() })),
-    );
-    await env.clearFirestore();
-    await assertSucceeds(
-      setDoc(doc(alice(), 'users/alice'), validUser({ lastTrainingDate: null })),
-    );
+    await assertSucceeds(setDoc(doc(alice(), 'users/alice'), validUser()));
   });
 
-  test('lastTrainingDate refuses any other type', async () => {
+  test('lastTrainingDate refuses a timestamp, a null and a malformed day', async () => {
+    await assertFails(
+      setDoc(doc(alice(), 'users/alice'), validUser({ lastTrainingDate: aPastTime() })),
+    );
+    await assertFails(
+      setDoc(doc(alice(), 'users/alice'), validUser({ lastTrainingDate: null })),
+    );
+    await assertFails(
+      setDoc(doc(alice(), 'users/alice'), validUser({ lastTrainingDate: '14.09.2026' })),
+    );
     await assertFails(setDoc(doc(alice(), 'users/alice'), validUser({ lastTrainingDate: 20260914 })));
   });
 });
