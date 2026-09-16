@@ -63,7 +63,29 @@ Both are available on Google Fonts and free for commercial use.
 
 ### Logo / icon direction
 
-A seafoam-gradient sound and breath cycle mark: a simple looping wave form that reads at once as a voice waveform and a breathing rhythm, on a white or dark-pine background depending on context. Keep it legible at launcher-icon size (avoid fine gradient detail that disappears when scaled down); HIT-081 delivers the final production asset.
+**The mark is Damga**, a tamga: an upright stem, two dots beside it, three diagonal strokes rising from it, in the seafoam gradient on a dark pine tile. Chosen on #83 (HIT-081) on 14 September 2026 and delivered as the production asset set.
+
+**This departs from the brief HIT-007 approved**, which read:
+
+> A seafoam-gradient sound and breath cycle mark: a simple looping wave form that reads at once as a voice waveform and a breathing rhythm.
+
+The palette, the gradient and the background rule are unchanged; the motif is not. The reason, in the words of the decision: a looping waveform is the mark most voice and audio apps already carry, so it says "audio app" rather than "this app", while a tamga is speech cut into stone, which is what the Orhun inscriptions are and what a diction app is about. The waveform's weakness belongs to the concept; Damga's weaknesses, thin gaps at small sizes, were fixable and were fixed.
+
+**Legibility at small sizes is a constraint the mark is drawn to**, not an afterthought. Every gap inside it is at least 43 units on the 512 canvas, which is 2 dp once the notification icon is drawn at 24 dp, the size at which separate shapes stop fusing. The dots are sized to match. The launcher foreground is scaled to sit inside the 66 of 108 dp safe circle, so round and squircle masks clip nothing.
+
+**Where the assets are:**
+
+| Asset | Path |
+|---|---|
+| Master | `assets/branding/logo/damga.svg` |
+| Launcher, legacy | `android/app/src/main/res/mipmap-*/ic_launcher.png` |
+| Launcher, adaptive | `mipmap-anydpi-v26/ic_launcher.xml`, `mipmap-*/ic_launcher_foreground.png`, `values/ic_launcher_background.xml` |
+| Notification, 24 dp monochrome | `android/app/src/main/res/drawable-*/ic_stat_hitup.png` |
+| iOS app icon | `ios/Runner/Assets.xcassets/AppIcon.appiconset/` |
+
+The notification icon is white on transparent on purpose: Android draws it as a silhouette and tints it, so colour in that file would be discarded.
+
+Every one of those files is generated from the master, so the mark cannot drift between platforms. [`damga-icon-preview.png`](damga-icon-preview.png) shows the whole set as it ships: the notification icon at each density, the launcher icon under the circle and squircle masks, and the iOS icon.
 
 ### UI personality notes
 
