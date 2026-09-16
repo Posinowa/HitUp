@@ -105,6 +105,14 @@ class LocalNotificationService implements NotificationService {
   LocalNotificationService({FlutterLocalNotificationsPlugin? plugin})
       : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
 
+  /// Android drawable used as the small icon on every notification (HIT-081).
+  ///
+  /// Named here rather than written inline so a test can check that the
+  /// drawable this string points at actually ships. A missing drawable is not
+  /// a build error; Android falls back at runtime, and the first sign of it is
+  /// a blank square in the status bar on a user's phone.
+  static const String androidSmallIcon = '@drawable/ic_stat_hitup';
+
   /// Android channel that carries daily training reminders.
   ///
   /// The id is written into every notification and into the system settings
@@ -134,11 +142,12 @@ class LocalNotificationService implements NotificationService {
 
     await _plugin.initialize(
       settings: const InitializationSettings(
-        // The launcher icon is a stand-in. Android draws notification icons as
-        // a flat white silhouette, so a full-colour launcher icon renders as a
-        // white blob. A dedicated monochrome icon is part of the icon asset
-        // work in HIT-081; this line is what changes when that lands.
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        // The mark as a flat white silhouette, drawn at 24 dp (HIT-081).
+        // Android renders a notification icon as a silhouette whatever it is
+        // given, so the full-colour launcher icon this used to name arrived as
+        // a white blob. `ic_stat_hitup` is that silhouette, with the gaps
+        // opened far enough to survive the size.
+        android: AndroidInitializationSettings(androidSmallIcon),
         // All four request flags are false on purpose. Passing true here makes
         // iOS show the permission prompt during startup, before the user has
         // seen anything about reminders. Permission is asked for in
