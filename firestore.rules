@@ -11,9 +11,9 @@ rules_version = '2';
 //   and is not expected to change.
 //
 //   Shape: which fields a document may carry and what values they may hold.
-//   This follows docs/architecture/FIRESTORE_MODEL.md, which is still a DRAFT
-//   owned by HIT-010. Every check marked "HIT-010" moves when that model is
-//   finalised, and should move in the same pull request.
+//   This follows docs/architecture/FIRESTORE_MODEL.md, settled by HIT-010.
+//   Every check marked "HIT-010" is that document in rule form, so a change
+//   there moves the rule and its test with it, in the same pull request.
 //
 // What rules cannot do: HitUp has no backend, so progress is computed on the
 // device and written by the client. Rules can stop a user rewriting or
@@ -44,7 +44,7 @@ service cloud.firestore {
         && isValidUser(request.resource.data)
         && request.resource.data.createdAt == resource.data.createdAt;
 
-      // HIT-010: field list and types follow the draft model.
+      // HIT-010: field list and types follow the model.
       //
       // Optional fields are read with get(field, fallback). The fallback is
       // chosen so an absent field passes its own check, which is what makes
@@ -67,13 +67,14 @@ service cloud.firestore {
           // A current streak longer than the longest one is not a value, it
           // is a client that updated one field and forgot the other.
           && d.get('longestStreak', 0) >= d.get('currentStreak', 0)
-          // HIT-010 has not decided between a yyyy-MM-dd string and a
-          // timestamp, so both are accepted until it does. Null is accepted
-          // too: a user who has never trained has no last training date, and
-          // that is a state, not a malformed value.
-          && (d.get('lastTrainingDate', '') is string
-              || d.get('lastTrainingDate', '') is timestamp
-              || d.get('lastTrainingDate', '') == null);
+          // HIT-010 settled this: the user's own calendar day as "yyyy-MM-dd",
+          // not a timestamp, so the streak can compare days without carrying a
+          // timezone. A user who has never trained has no such day, and the
+          // model says the field is then absent rather than null, which is what
+          // the fallback below allows through.
+          && d.get('lastTrainingDate', '1970-01-01') is string
+          && d.get('lastTrainingDate', '1970-01-01')
+              .matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
       }
 
       // Append-only session log.
@@ -90,7 +91,7 @@ service cloud.firestore {
           && isValidHistory(request.resource.data)
           && request.resource.data.completedAt == request.time;
 
-        // HIT-010: field list and types follow the draft model.
+        // HIT-010: field list and types follow the model.
         function isValidHistory(d) {
           return d.keys().hasOnly([
               'trainingDate', 'programDay', 'completedExerciseIds',
@@ -126,7 +127,7 @@ service cloud.firestore {
           && isValidProgress(request.resource.data, exerciseId)
           && request.resource.data.completionCount >= resource.data.completionCount;
 
-        // HIT-010: field list and types follow the draft model.
+        // HIT-010: field list and types follow the model.
         function isValidProgress(d, id) {
           return d.keys().hasOnly(['exerciseId', 'completionCount', 'lastCompletedAt'])
             && d.keys().hasAll(['exerciseId', 'completionCount', 'lastCompletedAt'])
@@ -138,14 +139,14 @@ service cloud.firestore {
         }
       }
 
-      // The draft model has exactly one preferences document, "settings".
+      // The model has exactly one preferences document, "settings".
       match /preferences/{docId} {
         allow read, delete: if isOwner(userId) && docId == 'settings';
         allow create, update: if isOwner(userId)
           && docId == 'settings'
           && isValidPreferences(request.resource.data);
 
-        // HIT-010: field list and types follow the draft model.
+        // HIT-010: field list and types follow the model.
         function isValidPreferences(d) {
           return d.keys().hasOnly([
               'reminderEnabled', 'reminderTime', 'soundEnabled', 'hapticEnabled'
