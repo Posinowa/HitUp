@@ -148,15 +148,20 @@ void main() {
       // Turkish for "placeholder") had leaked into the word lists as if
       // they were examples, for letters they don't even contain.
       //
-      // toLowerCase() is fine for the letters currently in this file. It is
-      // NOT Turkish-aware for I/ı/İ/i, so if a letter entry for one of those
-      // is ever added, this check needs a proper Turkish case fold instead.
+      // Turkish has two i letters and they do not share a case pair: I lowers
+      // to ı and İ lowers to i. Dart's toLowerCase() follows the English rule,
+      // so it turns "Kapı" into "kapı" but "I" into "i", and the word for the
+      // letter it actually contains stops matching. This fold fixes the two
+      // pairs before falling back to the ordinary rule.
+      String turkishLower(String value) =>
+          value.replaceAll('I', 'ı').replaceAll('İ', 'i').toLowerCase();
+
       for (final letter in letters) {
-        final target = (letter['letter'] as String).toLowerCase();
+        final target = turkishLower(letter['letter'] as String);
         final words = (letter['words'] as List<dynamic>).cast<String>();
         for (final word in words) {
           expect(
-            word.toLowerCase(),
+            turkishLower(word),
             contains(target),
             reason: '${letter['key']}: "$word" has no "$target"',
           );
@@ -432,15 +437,43 @@ void main() {
     });
 
     test('every exercise is reachable from the program', () {
+      // Three exercises are deliberately not scheduled. Each needs a media
+      // file that does not exist yet, so a user meeting one would find an
+      // exercise that cannot run, while the renderer being built for it needs
+      // a fixture to build against. They are named here rather than allowed by
+      // a rule, so the list shrinks as the media lands instead of hiding a
+      // fourth orphan later.
+      const waitingOnMedia = <String, String>{
+        'listening_audio_01': 'HIT-013 delivers the audio',
+        'rive_sample_01': 'HIT-032 delivers the animation',
+        'articulation_lips_ux_01': 'HIT-034 delivers the lip animation',
+      };
+
       final scheduled = <String>{
         for (final day in rows(program, 'days'))
           ...(day['exerciseIds'] as List<dynamic>).cast<String>(),
       };
+
       expect(
         scheduled,
-        containsAll(exerciseIds),
+        containsAll(exerciseIds.difference(waitingOnMedia.keys.toSet())),
         reason: 'some exercises are defined but never scheduled',
       );
+
+      for (final MapEntry<String, String> entry in waitingOnMedia.entries) {
+        expect(
+          exerciseIds,
+          contains(entry.key),
+          reason: '${entry.key} is listed as waiting on media but does not '
+              'exist; ${entry.value}',
+        );
+        expect(
+          scheduled,
+          isNot(contains(entry.key)),
+          reason: '${entry.key} is scheduled, so it no longer belongs on the '
+              'waiting list',
+        );
+      }
     });
   });
 }

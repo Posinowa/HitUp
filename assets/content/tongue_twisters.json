@@ -1,28 +1,100 @@
 {
   "schemaVersion": "1.0.0",
-  "contentVersion": "0.1.0",
+  "contentVersion": "0.2.0",
   "status": "placeholder",
   "locale": "tr-TR",
   "tongueTwisters": [
     {
       "id": "tt_r_01",
-      "text": "Yer tutucu tekerleme, onaylı metin HIT-080 ile gelecek.",
+      "text": "Rıhtımda arık bir at, rüzgârda arı arar; arı aramaz, rıhtımda tur atar.",
       "targetLetter": "R",
       "difficulty": "easy",
       "recommendedDurationSeconds": 60,
       "category": "letter"
     },
     {
+      "id": "tt_s_cedilla_01",
+      "text": "Şişeci Şükrü, şeker şurubunu şişkin şişelere üşenmeden şıkır şıkır şişirdi.",
+      "targetLetter": "Ş",
+      "difficulty": "medium",
+      "recommendedDurationSeconds": 60,
+      "category": "letter"
+    },
+    {
+      "id": "tt_p_b_01",
+      "text": "Pembe pabuçlu balıkçı, bembeyaz balonu pat diye patlattı; patlayan balon pır pır uçtu.",
+      "targetLetter": "P",
+      "difficulty": "medium",
+      "recommendedDurationSeconds": 60,
+      "category": "letter"
+    },
+    {
+      "id": "tt_m_01",
+      "text": "Mor mumlu masada mırıldanan mama, mırıldanmayı unutunca mutfakta mum mum bir mırıltı kaldı.",
+      "targetLetter": "M",
+      "difficulty": "easy",
+      "recommendedDurationSeconds": 60,
+      "category": "letter"
+    },
+    {
+      "id": "tt_l_01",
+      "text": "Lale, limonlu lokmayı lalelikte yalnız yerken lokmadan lal olup lafı unuttu.",
+      "targetLetter": "L",
+      "difficulty": "medium",
+      "recommendedDurationSeconds": 60,
+      "category": "letter"
+    },
+    {
+      "id": "tt_z_01",
+      "text": "Zümrüt zeminli zarif zurna, zamansız zıplayınca zangır zangır zonkladı.",
+      "targetLetter": "Z",
+      "difficulty": "hard",
+      "recommendedDurationSeconds": 60,
+      "category": "letter"
+    },
+    {
+      "id": "tt_i_01",
+      "text": "İğneli iplik ıslak ırmakta ilik ilik iş işledi; işi ıskalayınca ilik ıslandı.",
+      "targetLetter": "İ",
+      "difficulty": "hard",
+      "recommendedDurationSeconds": 60,
+      "category": "letter"
+    },
+    {
+      "id": "tt_a_01",
+      "text": "Ardıcın altında armut arayan aval ayı, armudu ağaçta arayınca aval aval bakakaldı.",
+      "targetLetter": "A",
+      "difficulty": "easy",
+      "recommendedDurationSeconds": 60,
+      "category": "letter"
+    },
+    {
       "id": "tt_ritim_01",
-      "text": "Yer tutucu ritim tekerlemesi, onaylı metin HIT-080 ile gelecek.",
+      "text": "Bir tık, iki tık, üç tık; tıkır tıkır sayarken tıkanan tık, takılana takıldı.",
       "targetLetter": null,
       "difficulty": "medium",
       "recommendedDurationSeconds": 45,
       "category": "rhythm"
     },
     {
+      "id": "tt_ritim_02",
+      "text": "Dört dörtlük dizide dize dize dizilen diziler, dizildikçe düzeldi.",
+      "targetLetter": null,
+      "difficulty": "hard",
+      "recommendedDurationSeconds": 45,
+      "category": "rhythm"
+    },
+    {
       "id": "tt_nefes_01",
-      "text": "Yer tutucu nefes tekerlemesi, onaylı metin HIT-080 ile gelecek.",
+      "text": "Tek nefeste söyle: kapıdan çıktım, köşeyi döndüm, caddeyi geçtim, parkı boyladım, banka oturdum ve hâlâ nefesim vardı.",
+      "targetLetter": null,
+      "difficulty": "medium",
+      "recommendedDurationSeconds": 90,
+      "category": "breath"
+    },
+    {
+      "id": "tt_nefes_02",
+      "text": "Uzun bir cümleyi sonuna taşımak nefesi tutmak değil, nefesi ölçülü harcamaktır; bu cümleyi durmadan bitir.",
       "targetLetter": null,
       "difficulty": "hard",
       "recommendedDurationSeconds": 90,

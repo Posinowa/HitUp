@@ -1,22 +1,246 @@
 {
   "schemaVersion": "1.0.0",
-  "contentVersion": "0.1.0",
+  "contentVersion": "0.2.0",
   "status": "placeholder",
   "locale": "tr-TR",
   "letters": [
     {
-      "key": "r",
-      "letter": "R",
-      "syllables": ["RA", "RE", "RI", "RO", "RU"],
-      "words": ["Yer", "Araba", "Rakam"],
-      "notes": "Yer tutucu harf merdiveni. Onaylı içerik HIT-080 ile gelecek."
+      "key": "a",
+      "letter": "A",
+      "syllables": [
+        "A",
+        "AL",
+        "AM",
+        "AR",
+        "AS"
+      ],
+      "words": [
+        "Ada",
+        "Araba",
+        "Ayna"
+      ],
+      "notes": "Ağız açıklığını büyüten harf. Çeneyi kilitlemeden söyle."
+    },
+    {
+      "key": "e",
+      "letter": "E",
+      "syllables": [
+        "E",
+        "EL",
+        "EM",
+        "ER",
+        "ES"
+      ],
+      "words": [
+        "Elma",
+        "Ekmek",
+        "Perde"
+      ],
+      "notes": "Dilin ortası yükselir. Sesi ağzının önünde tut."
+    },
+    {
+      "key": "i",
+      "letter": "İ",
+      "syllables": [
+        "İ",
+        "İL",
+        "İM",
+        "İR",
+        "İS"
+      ],
+      "words": [
+        "İğne",
+        "İpek",
+        "Bilgi"
+      ],
+      "notes": "İnce ünlü. I ile karıştırma, dilin öne gelsin."
+    },
+    {
+      "key": "i_dotless",
+      "letter": "I",
+      "syllables": [
+        "I",
+        "IL",
+        "IM",
+        "IR",
+        "IS"
+      ],
+      "words": [
+        "Ilık",
+        "Irmak",
+        "Kapı"
+      ],
+      "notes": "Kalın ünlü. Dilin geriye çekilir, ağız daha az açılır."
+    },
+    {
+      "key": "o",
+      "letter": "O",
+      "syllables": [
+        "O",
+        "OL",
+        "OM",
+        "OR",
+        "OS"
+      ],
+      "words": [
+        "Orman",
+        "Okul",
+        "Boya"
+      ],
+      "notes": "Dudaklar yuvarlanır. Yuvarlaklığı sonuna kadar koru."
+    },
+    {
+      "key": "u",
+      "letter": "U",
+      "syllables": [
+        "U",
+        "UL",
+        "UM",
+        "UR",
+        "US"
+      ],
+      "words": [
+        "Uçak",
+        "Umut",
+        "Kuzu"
+      ],
+      "notes": "Dudaklar öne uzar. Sesi burnundan değil ağzından ver."
+    },
+    {
+      "key": "p",
+      "letter": "P",
+      "syllables": [
+        "PA",
+        "PE",
+        "PI",
+        "PO",
+        "PU"
+      ],
+      "words": [
+        "Pencere",
+        "Kapı",
+        "Sepet"
+      ],
+      "notes": "Patlamalı ünsüz. Dudaklar önce kapanır, sonra havayı bırakır."
+    },
+    {
+      "key": "b",
+      "letter": "B",
+      "syllables": [
+        "BA",
+        "BE",
+        "BI",
+        "BO",
+        "BU"
+      ],
+      "words": [
+        "Balık",
+        "Bardak",
+        "Kabuk"
+      ],
+      "notes": "P ile aynı hareket, farkı sesin titremesi. Elini boğazına koy, titreşimi hisset."
+    },
+    {
+      "key": "m",
+      "letter": "M",
+      "syllables": [
+        "MA",
+        "ME",
+        "MI",
+        "MO",
+        "MU"
+      ],
+      "words": [
+        "Masa",
+        "Mektup",
+        "Limon"
+      ],
+      "notes": "Ses burundan geçer. Dudaklar kapalıyken uzatarak söyle."
+    },
+    {
+      "key": "s",
+      "letter": "S",
+      "syllables": [
+        "SA",
+        "SE",
+        "SI",
+        "SO",
+        "SU"
+      ],
+      "words": [
+        "Sabah",
+        "Sokak",
+        "Kasa"
+      ],
+      "notes": "Dişlerin arasından ince bir hava akar. Islık gibi olmasın."
     },
     {
       "key": "s_cedilla",
       "letter": "Ş",
-      "syllables": ["ŞA", "ŞE", "ŞI", "ŞO", "ŞU"],
-      "words": ["Şafak", "Kuş", "Güneş"],
-      "notes": "ASCII olmayan harfler için anahtar dönüştürme kuralına örnek. Onaylı içerik HIT-080 ile gelecek."
+      "syllables": [
+        "ŞA",
+        "ŞE",
+        "ŞI",
+        "ŞO",
+        "ŞU"
+      ],
+      "words": [
+        "Şeker",
+        "Şarkı",
+        "Kuş"
+      ],
+      "notes": "S'ye göre dil biraz geride, ses daha kalın. İkisini arka arkaya çalış."
+    },
+    {
+      "key": "z",
+      "letter": "Z",
+      "syllables": [
+        "ZA",
+        "ZE",
+        "ZI",
+        "ZO",
+        "ZU"
+      ],
+      "words": [
+        "Zaman",
+        "Zeytin",
+        "Beyaz"
+      ],
+      "notes": "S ile aynı yer, farkı sesin titremesi. Sonu sertleşip S'ye dönmesin."
+    },
+    {
+      "key": "l",
+      "letter": "L",
+      "syllables": [
+        "LA",
+        "LE",
+        "LI",
+        "LO",
+        "LU"
+      ],
+      "words": [
+        "Lamba",
+        "Limon",
+        "Kalem"
+      ],
+      "notes": "Dil ucu üst dişlerin arkasına değer, hava yanlardan akar."
+    },
+    {
+      "key": "r",
+      "letter": "R",
+      "syllables": [
+        "RA",
+        "RE",
+        "RI",
+        "RO",
+        "RU"
+      ],
+      "words": [
+        "Rüzgâr",
+        "Araba",
+        "Kader"
+      ],
+      "notes": "Dil ucu bir kez hafifçe titrer. Zorlarsan boğazdan çıkar, yavaş çalış."
     }
   ]
 }

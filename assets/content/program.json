@@ -1,43 +1,202 @@
 {
   "schemaVersion": "1.0.0",
-  "contentVersion": "0.1.0",
+  "contentVersion": "0.2.0",
   "status": "placeholder",
   "locale": "tr-TR",
   "programId": "hitup_mvp",
-  "title": "HitUp MVP programı (yer tutucu)",
+  "title": "HitUp 14 günlük diksiyon programı",
   "days": [
     {
       "day": 1,
-      "title": "Yer tutucu 1. gün",
-      "estimatedMinutes": 4,
+      "title": "1. gün: Nefesin temeli",
+      "estimatedMinutes": 14,
       "exerciseIds": [
         "intro_text_01",
         "breathing_diaphragm_01",
-        "articulation_lips_ux_01",
-        "letter_r_01"
+        "articulation_tongue_01",
+        "articulation_jaw_01",
+        "articulation_lips_01",
+        "letter_a_01",
+        "twister_easy_01"
       ]
     },
     {
       "day": 2,
-      "title": "Yer tutucu 2. gün",
-      "estimatedMinutes": 5,
+      "title": "2. gün: Ritmi oturt",
+      "estimatedMinutes": 14,
       "exerciseIds": [
-        "warmup_timer_01",
-        "rive_sample_01",
-        "twister_r_01",
-        "emphasis_sample_01",
-        "intonation_sample_01"
+        "breathing_diaphragm_02",
+        "articulation_tongue_02",
+        "articulation_jaw_02",
+        "articulation_lips_02",
+        "letter_e_01",
+        "twister_easy_02",
+        "warmup_timer_01"
       ]
     },
     {
       "day": 3,
-      "title": "Yer tutucu 3. gün",
-      "estimatedMinutes": 5,
+      "title": "3. gün: Dil ucu ve İ",
+      "estimatedMinutes": 13,
       "exerciseIds": [
-        "listening_audio_01",
-        "pause_sample_01",
+        "breathing_diaphragm_03",
+        "articulation_tongue_03",
+        "articulation_jaw_03",
+        "articulation_lips_03",
+        "letter_i_01",
+        "reading_timed_01"
+      ]
+    },
+    {
+      "day": 4,
+      "title": "4. gün: Kalın ünlüler",
+      "estimatedMinutes": 13,
+      "exerciseIds": [
+        "breathing_diaphragm_04",
+        "articulation_tongue_01",
+        "articulation_jaw_02",
+        "articulation_lips_03",
+        "letter_idotless_01",
+        "twister_medium_01"
+      ]
+    },
+    {
+      "day": 5,
+      "title": "5. gün: Yuvarlak ünlüler",
+      "estimatedMinutes": 13,
+      "exerciseIds": [
+        "breathing_diaphragm_05",
+        "articulation_tongue_02",
+        "articulation_jaw_03",
+        "articulation_lips_01",
+        "letter_o_01",
+        "reading_timed_02"
+      ]
+    },
+    {
+      "day": 6,
+      "title": "6. gün: Dudak ünlüleri",
+      "estimatedMinutes": 15,
+      "exerciseIds": [
+        "breathing_diaphragm_05",
+        "articulation_tongue_03",
+        "articulation_jaw_01",
+        "articulation_lips_02",
+        "letter_u_01",
+        "twister_medium_02",
+        "intonation_sample_02"
+      ]
+    },
+    {
+      "day": 7,
+      "title": "7. gün: Duraklamayı tanı",
+      "estimatedMinutes": 15,
+      "exerciseIds": [
+        "breathing_diaphragm_05",
+        "articulation_tongue_01",
+        "articulation_jaw_03",
+        "articulation_lips_02",
+        "letter_p_01",
+        "twister_rhythm_01",
+        "pause_sample_01"
+      ]
+    },
+    {
+      "day": 8,
+      "title": "8. gün: Tıslayan nefes",
+      "estimatedMinutes": 14,
+      "exerciseIds": [
+        "breathing_hiss_01",
+        "articulation_tongue_02",
+        "articulation_jaw_01",
+        "articulation_lips_03",
+        "letter_b_01",
         "reading_timed_01",
+        "emphasis_sample_01"
+      ]
+    },
+    {
+      "day": 9,
+      "title": "9. gün: Tek nefeste cümle",
+      "estimatedMinutes": 15,
+      "exerciseIds": [
+        "breathing_diaphragm_05",
+        "articulation_tongue_03",
+        "articulation_jaw_02",
+        "articulation_lips_01",
+        "letter_m_01",
+        "twister_breath_01",
+        "intonation_sample_01"
+      ]
+    },
+    {
+      "day": 10,
+      "title": "10. gün: Islıklı sesler",
+      "estimatedMinutes": 15,
+      "exerciseIds": [
+        "breathing_diaphragm_05",
+        "articulation_tongue_01",
+        "articulation_jaw_03",
+        "articulation_lips_02",
+        "letter_s_01",
+        "reading_timed_02",
+        "pause_sample_02"
+      ]
+    },
+    {
+      "day": 11,
+      "title": "11. gün: Ş ile S ayrımı",
+      "estimatedMinutes": 15,
+      "exerciseIds": [
+        "breathing_diaphragm_05",
+        "articulation_tongue_02",
+        "articulation_jaw_01",
+        "articulation_lips_03",
+        "letter_scedilla_01",
+        "twister_hard_01",
+        "emphasis_sample_02"
+      ]
+    },
+    {
+      "day": 12,
+      "title": "12. gün: Tonlamayı duy",
+      "estimatedMinutes": 15,
+      "exerciseIds": [
+        "breathing_hiss_01",
+        "articulation_tongue_03",
+        "articulation_jaw_02",
+        "articulation_lips_01",
+        "letter_z_01",
+        "reading_timed_01",
+        "speaking_topic_01"
+      ]
+    },
+    {
+      "day": 13,
+      "title": "13. gün: Konuşmaya geçiş",
+      "estimatedMinutes": 15,
+      "exerciseIds": [
+        "breathing_diaphragm_05",
+        "articulation_tongue_01",
+        "articulation_jaw_02",
+        "articulation_lips_03",
+        "letter_l_01",
+        "twister_easy_02",
         "speaking_intro_01"
+      ]
+    },
+    {
+      "day": 14,
+      "title": "14. gün: R günü ve toparlama",
+      "estimatedMinutes": 16,
+      "exerciseIds": [
+        "breathing_diaphragm_05",
+        "articulation_tongue_02",
+        "articulation_jaw_03",
+        "articulation_lips_01",
+        "letter_r_01",
+        "twister_hard_01",
+        "speaking_story_01"
       ]
     }
   ]

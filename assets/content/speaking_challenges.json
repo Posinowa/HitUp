@@ -1,22 +1,29 @@
 {
   "schemaVersion": "1.0.0",
-  "contentVersion": "0.1.0",
+  "contentVersion": "0.2.0",
   "status": "placeholder",
   "locale": "tr-TR",
   "challenges": [
     {
       "id": "sc_intro_60",
-      "title": "Yer tutucu tanıtım görevi",
-      "prompt": "Yer tutucu konuşma sorusu. Onaylı metin HIT-080 ile gelecek.",
+      "title": "Kendini tanıt",
+      "prompt": "Bir dakikada kendini tanıt: adın, ne yaptığın ve konuşmanı neden geliştirmek istediğin.",
       "durationSeconds": 60,
-      "preparationSeconds": 3
+      "preparationSeconds": 5
     },
     {
       "id": "sc_topic_90",
-      "title": "Yer tutucu serbest konu görevi",
-      "prompt": "Yer tutucu konuşma sorusu. Onaylı metin HIT-080 ile gelecek.",
+      "title": "Bu hafta ne öğrendin",
+      "prompt": "Son bir haftada öğrendiğin bir şeyi anlat: ne olduğunu, nasıl öğrendiğini ve neden aklında kaldığını söyle.",
       "durationSeconds": 90,
-      "preparationSeconds": 5
+      "preparationSeconds": 10
+    },
+    {
+      "id": "sc_story_120",
+      "title": "Bir yol hikâyesi",
+      "prompt": "Bir yolculuğunu anlat: nereye gittin, yolda ne oldu, döndüğünde ne değişmişti.",
+      "durationSeconds": 120,
+      "preparationSeconds": 15
     }
   ]
 }
