@@ -1,40 +1,15 @@
 {
   "schemaVersion": "1.0.0",
-  "contentVersion": "0.1.0",
+  "contentVersion": "0.2.0",
   "status": "placeholder",
   "locale": "tr-TR",
   "exercises": [
     {
-      "id": "intro_text_01",
-      "title": "Yer tutucu bilgi kartı",
-      "presentationType": "text",
-      "durationSeconds": 30,
-      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek."
-    },
-    {
-      "id": "warmup_timer_01",
-      "title": "Yer tutucu süreli hazırlık",
-      "presentationType": "timer",
-      "durationSeconds": 60,
-      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek."
-    },
-    {
-      "id": "listening_audio_01",
-      "title": "Yer tutucu dinleme",
-      "presentationType": "audio",
-      "durationSeconds": 45,
-      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
-      "media": {
-        "kind": "audio",
-        "key": "placeholder_sample"
-      }
-    },
-    {
       "id": "breathing_diaphragm_01",
-      "title": "Yer tutucu diyafram çalışması",
+      "title": "Diyafram nefesi, 5 tur",
       "presentationType": "breathing",
       "durationSeconds": 35,
-      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
+      "instructions": "Başın döner ya da sersemlersen dur, normal nefesine dön. Dik otur, bir elini karnına koy. Burnundan alırken karnın şişsin, göğsün neredeyse hiç kalkmasın. Bir saniyede al, dört saniye tut, ağzından iki saniyede ver.",
       "breathing": {
         "inhaleSeconds": 1,
         "holdSeconds": 4,
@@ -43,11 +18,574 @@
       }
     },
     {
+      "id": "breathing_diaphragm_02",
+      "title": "Diyafram nefesi, 6 tur",
+      "presentationType": "breathing",
+      "durationSeconds": 42,
+      "instructions": "Başın döner ya da sersemlersen dur, normal nefesine dön. Bir önceki günün ritmi, bir tur fazlası. Bir saniyede al, dört saniye tut, iki saniyede ver. Tutarken omuzlarını yukarı çekme.",
+      "breathing": {
+        "inhaleSeconds": 1,
+        "holdSeconds": 4,
+        "exhaleSeconds": 2,
+        "cycles": 6
+      }
+    },
+    {
+      "id": "breathing_diaphragm_03",
+      "title": "Diyafram nefesi, 7 tur",
+      "presentationType": "breathing",
+      "durationSeconds": 49,
+      "instructions": "Başın döner ya da sersemlersen dur, normal nefesine dön. Bir saniyede al, dört saniye tut, iki saniyede ver. Verirken sesin çıkmasın, hava düzgün aksın.",
+      "breathing": {
+        "inhaleSeconds": 1,
+        "holdSeconds": 4,
+        "exhaleSeconds": 2,
+        "cycles": 7
+      }
+    },
+    {
+      "id": "breathing_diaphragm_04",
+      "title": "Diyafram nefesi, 8 tur",
+      "presentationType": "breathing",
+      "durationSeconds": 56,
+      "instructions": "Başın döner ya da sersemlersen dur, normal nefesine dön. Bir saniyede al, dört saniye tut, iki saniyede ver. Tutuş anında çeneni ve boynunu gevşek bırak.",
+      "breathing": {
+        "inhaleSeconds": 1,
+        "holdSeconds": 4,
+        "exhaleSeconds": 2,
+        "cycles": 8
+      }
+    },
+    {
+      "id": "breathing_diaphragm_05",
+      "title": "Diyafram nefesi, 10 tur",
+      "presentationType": "breathing",
+      "durationSeconds": 70,
+      "instructions": "Başın döner ya da sersemlersen dur, normal nefesine dön. Bir saniyede al, dört saniye tut, iki saniyede ver. On tur bir seansın üst sınırıdır, daha fazlasını yapma.",
+      "breathing": {
+        "inhaleSeconds": 1,
+        "holdSeconds": 4,
+        "exhaleSeconds": 2,
+        "cycles": 10
+      }
+    },
+    {
+      "id": "breathing_hiss_01",
+      "title": "Tıslayarak verme",
+      "presentationType": "breathing",
+      "durationSeconds": 42,
+      "instructions": "Başın döner ya da sersemlersen dur, normal nefesine dön. Aynı ritim, tek farkla: havayı verirken dişlerinin arasından \"sss\" diye tıslat. Bir saniyede al, dört saniye tut, iki saniyede tıslayarak ver. Ses eşit kalsın, sonda zayıflamasın.",
+      "breathing": {
+        "inhaleSeconds": 1,
+        "holdSeconds": 4,
+        "exhaleSeconds": 2,
+        "cycles": 6
+      }
+    },
+    {
+      "id": "articulation_tongue_01",
+      "title": "Dil ısınması",
+      "presentationType": "timer",
+      "durationSeconds": 120,
+      "instructions": "Dilini ağzının içinde sakız çiğner gibi hızlıca çiğne. Sonra dişlerinin dış tarafından bir tur döndür, yönü değiştir, bir tur daha. Ağzının içi yorulana kadar sürdür."
+    },
+    {
+      "id": "articulation_tongue_02",
+      "title": "Dil ucu çalışması",
+      "presentationType": "timer",
+      "durationSeconds": 120,
+      "instructions": "Dilinin ucunu alt ön dişlerinin arkasına yasla, kökünden ileri geri hareket ettir. Uç sabit kalsın, hareket kökten gelsin. Yavaş başla, sonra hızlan."
+    },
+    {
+      "id": "articulation_tongue_03",
+      "title": "Dil esnetme",
+      "presentationType": "timer",
+      "durationSeconds": 120,
+      "instructions": "Dilini ağzından dışarı uzat ve beş saniye tut, geri çek. Sonra dilini yuvarlayıp daraltılmış dudakların arasından girip çıkar. Zorlanırsan ara ver, zorlama."
+    },
+    {
+      "id": "articulation_jaw_01",
+      "title": "Çene açma",
+      "presentationType": "timer",
+      "durationSeconds": 120,
+      "instructions": "Çeneni yavaşça sonuna kadar aç, üç saniye tut, kapat. Sonra aynı hareketi hızlandır. Ses çıkarmadan yap, çenende ağrı hissedersen dur."
+    },
+    {
+      "id": "articulation_jaw_02",
+      "title": "Çene döndürme",
+      "presentationType": "timer",
+      "durationSeconds": 120,
+      "instructions": "Çeneni önce ileri geri, sonra sağa sola, en son daireler çizerek hareket ettir. Her yönde on tekrar. Omuzların yukarı kalkmasın."
+    },
+    {
+      "id": "articulation_jaw_03",
+      "title": "Çene serbestleştirme",
+      "presentationType": "timer",
+      "durationSeconds": 120,
+      "instructions": "Avucunu alt çenenin altına koy, hafif direnç ver ve çeneni o dirence karşı kapat. Sonra elini çek, çeneni tamamen gevşet ve serbest bırak. On tekrar."
+    },
+    {
+      "id": "articulation_lips_01",
+      "title": "Dudak patlatma",
+      "presentationType": "timer",
+      "durationSeconds": 120,
+      "instructions": "Dudaklarını hafif kapat ve ağzından kuvvetle hava ver, hava dudaklarını titretsin. Sonra dudaklarını ileri uzatıp daire çiz, yön değiştir."
+    },
+    {
+      "id": "articulation_lips_02",
+      "title": "Dudak hecesi",
+      "presentationType": "timer",
+      "durationSeconds": 120,
+      "instructions": "Çenen kapalıyken sırayla ve hızlıca söyle: mı, mi, mu, mü. Sonra fe, ve. Sonra pe, be. Her grupta dudakların işi yapsın, çene kilitli kalsın."
+    },
+    {
+      "id": "articulation_lips_03",
+      "title": "Kalemle konuşma",
+      "presentationType": "timer",
+      "durationSeconds": 120,
+      "instructions": "Bir kalemi dudaklarının arasına yatay koy ve şu cümleyi üç kez söyle: \"Sabah erken kalkan kişi, güne bir adım önde başlar.\" Sonra kalemi çıkar, aynı cümleyi tekrar söyle. Fark, kalemsiz söylerken duyulan rahatlıktır."
+    },
+    {
+      "id": "letter_a_01",
+      "title": "Harf merdiveni, A",
+      "presentationType": "letter",
+      "durationSeconds": 180,
+      "instructions": "Heceleri önce yavaş, sonra hızlanarak üç kez oku. Sonra kelimeleri aynı şekilde söyle. Anlam değil, sesin netliği önemli.",
+      "letter": {
+        "letterKey": "a",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "letter_e_01",
+      "title": "Harf merdiveni, E",
+      "presentationType": "letter",
+      "durationSeconds": 180,
+      "instructions": "Heceleri önce yavaş, sonra hızlanarak üç kez oku. Sonra kelimeleri aynı şekilde söyle. Anlam değil, sesin netliği önemli.",
+      "letter": {
+        "letterKey": "e",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "letter_i_01",
+      "title": "Harf merdiveni, İ",
+      "presentationType": "letter",
+      "durationSeconds": 180,
+      "instructions": "Heceleri önce yavaş, sonra hızlanarak üç kez oku. Sonra kelimeleri aynı şekilde söyle. Anlam değil, sesin netliği önemli.",
+      "letter": {
+        "letterKey": "i",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "letter_idotless_01",
+      "title": "Harf merdiveni, I",
+      "presentationType": "letter",
+      "durationSeconds": 180,
+      "instructions": "Heceleri önce yavaş, sonra hızlanarak üç kez oku. Sonra kelimeleri aynı şekilde söyle. Anlam değil, sesin netliği önemli.",
+      "letter": {
+        "letterKey": "i_dotless",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "letter_o_01",
+      "title": "Harf merdiveni, O",
+      "presentationType": "letter",
+      "durationSeconds": 180,
+      "instructions": "Heceleri önce yavaş, sonra hızlanarak üç kez oku. Sonra kelimeleri aynı şekilde söyle. Anlam değil, sesin netliği önemli.",
+      "letter": {
+        "letterKey": "o",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "letter_u_01",
+      "title": "Harf merdiveni, U",
+      "presentationType": "letter",
+      "durationSeconds": 180,
+      "instructions": "Heceleri önce yavaş, sonra hızlanarak üç kez oku. Sonra kelimeleri aynı şekilde söyle. Anlam değil, sesin netliği önemli.",
+      "letter": {
+        "letterKey": "u",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "letter_p_01",
+      "title": "Harf merdiveni, P",
+      "presentationType": "letter",
+      "durationSeconds": 180,
+      "instructions": "Heceleri önce yavaş, sonra hızlanarak üç kez oku. Sonra kelimeleri aynı şekilde söyle. Anlam değil, sesin netliği önemli.",
+      "letter": {
+        "letterKey": "p",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "letter_b_01",
+      "title": "Harf merdiveni, B",
+      "presentationType": "letter",
+      "durationSeconds": 180,
+      "instructions": "Heceleri önce yavaş, sonra hızlanarak üç kez oku. Sonra kelimeleri aynı şekilde söyle. Anlam değil, sesin netliği önemli.",
+      "letter": {
+        "letterKey": "b",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "letter_m_01",
+      "title": "Harf merdiveni, M",
+      "presentationType": "letter",
+      "durationSeconds": 180,
+      "instructions": "Heceleri önce yavaş, sonra hızlanarak üç kez oku. Sonra kelimeleri aynı şekilde söyle. Anlam değil, sesin netliği önemli.",
+      "letter": {
+        "letterKey": "m",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "letter_s_01",
+      "title": "Harf merdiveni, S",
+      "presentationType": "letter",
+      "durationSeconds": 180,
+      "instructions": "Heceleri önce yavaş, sonra hızlanarak üç kez oku. Sonra kelimeleri aynı şekilde söyle. Anlam değil, sesin netliği önemli.",
+      "letter": {
+        "letterKey": "s",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "letter_scedilla_01",
+      "title": "Harf merdiveni, Ş",
+      "presentationType": "letter",
+      "durationSeconds": 180,
+      "instructions": "Heceleri önce yavaş, sonra hızlanarak üç kez oku. Sonra kelimeleri aynı şekilde söyle. Anlam değil, sesin netliği önemli.",
+      "letter": {
+        "letterKey": "s_cedilla",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "letter_z_01",
+      "title": "Harf merdiveni, Z",
+      "presentationType": "letter",
+      "durationSeconds": 180,
+      "instructions": "Heceleri önce yavaş, sonra hızlanarak üç kez oku. Sonra kelimeleri aynı şekilde söyle. Anlam değil, sesin netliği önemli.",
+      "letter": {
+        "letterKey": "z",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "letter_l_01",
+      "title": "Harf merdiveni, L",
+      "presentationType": "letter",
+      "durationSeconds": 180,
+      "instructions": "Heceleri önce yavaş, sonra hızlanarak üç kez oku. Sonra kelimeleri aynı şekilde söyle. Anlam değil, sesin netliği önemli.",
+      "letter": {
+        "letterKey": "l",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "letter_r_01",
+      "title": "Harf merdiveni, R",
+      "presentationType": "letter",
+      "durationSeconds": 180,
+      "instructions": "Heceleri önce yavaş, sonra hızlanarak üç kez oku. Sonra kelimeleri aynı şekilde söyle. Anlam değil, sesin netliği önemli.",
+      "letter": {
+        "letterKey": "r",
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "twister_easy_01",
+      "title": "Tekerleme, kolay set",
+      "presentationType": "tongueTwister",
+      "durationSeconds": 180,
+      "instructions": "Önce çok yavaş ve abartılı söyle, ağzını fazlasıyla aç. Hatasız söyleyebildiğinde hızlan, hata yaptığında bir tık yavaşla.",
+      "tongueTwister": {
+        "tongueTwisterIds": [
+          "tt_a_01",
+          "tt_m_01"
+        ],
+        "repetitions": 2
+      }
+    },
+    {
+      "id": "twister_easy_02",
+      "title": "Tekerleme, R ve L",
+      "presentationType": "tongueTwister",
+      "durationSeconds": 180,
+      "instructions": "Önce çok yavaş ve abartılı söyle, ağzını fazlasıyla aç. Hatasız söyleyebildiğinde hızlan, hata yaptığında bir tık yavaşla.",
+      "tongueTwister": {
+        "tongueTwisterIds": [
+          "tt_r_01",
+          "tt_l_01"
+        ],
+        "repetitions": 2
+      }
+    },
+    {
+      "id": "twister_medium_01",
+      "title": "Tekerleme, ıslıklı sesler",
+      "presentationType": "tongueTwister",
+      "durationSeconds": 180,
+      "instructions": "Önce çok yavaş ve abartılı söyle, ağzını fazlasıyla aç. Hatasız söyleyebildiğinde hızlan, hata yaptığında bir tık yavaşla.",
+      "tongueTwister": {
+        "tongueTwisterIds": [
+          "tt_s_cedilla_01",
+          "tt_z_01"
+        ],
+        "repetitions": 2
+      }
+    },
+    {
+      "id": "twister_medium_02",
+      "title": "Tekerleme, dudak sesleri",
+      "presentationType": "tongueTwister",
+      "durationSeconds": 180,
+      "instructions": "Önce çok yavaş ve abartılı söyle, ağzını fazlasıyla aç. Hatasız söyleyebildiğinde hızlan, hata yaptığında bir tık yavaşla.",
+      "tongueTwister": {
+        "tongueTwisterIds": [
+          "tt_p_b_01"
+        ],
+        "repetitions": 3
+      }
+    },
+    {
+      "id": "twister_rhythm_01",
+      "title": "Tekerleme, tempo",
+      "presentationType": "tongueTwister",
+      "durationSeconds": 180,
+      "instructions": "Önce çok yavaş ve abartılı söyle, ağzını fazlasıyla aç. Hatasız söyleyebildiğinde hızlan, hata yaptığında bir tık yavaşla.",
+      "tongueTwister": {
+        "tongueTwisterIds": [
+          "tt_ritim_01",
+          "tt_ritim_02"
+        ],
+        "repetitions": 2
+      }
+    },
+    {
+      "id": "twister_breath_01",
+      "title": "Tekerleme, tek nefeste",
+      "presentationType": "tongueTwister",
+      "durationSeconds": 180,
+      "instructions": "Önce çok yavaş ve abartılı söyle, ağzını fazlasıyla aç. Hatasız söyleyebildiğinde hızlan, hata yaptığında bir tık yavaşla.",
+      "tongueTwister": {
+        "tongueTwisterIds": [
+          "tt_nefes_01",
+          "tt_nefes_02"
+        ],
+        "repetitions": 2
+      }
+    },
+    {
+      "id": "twister_hard_01",
+      "title": "Tekerleme, zor set",
+      "presentationType": "tongueTwister",
+      "durationSeconds": 180,
+      "instructions": "Önce çok yavaş ve abartılı söyle, ağzını fazlasıyla aç. Hatasız söyleyebildiğinde hızlan, hata yaptığında bir tık yavaşla.",
+      "tongueTwister": {
+        "tongueTwisterIds": [
+          "tt_i_01",
+          "tt_ritim_02"
+        ],
+        "repetitions": 2
+      }
+    },
+    {
+      "id": "reading_timed_01",
+      "title": "Süreli okuma, 1. metin",
+      "presentationType": "timedReading",
+      "durationSeconds": 180,
+      "instructions": "Metni sesli oku. Önce anlaşılır ol, tempo ikinci okumada gelir.",
+      "timedReading": {
+        "text": "Konuşmak, ciğerdeki havayı söze çevirmektir. Havayı doğru kullanan kişi cümlenin sonuna yorulmadan varır. Bu yüzden okuma çalışması, hızdan önce nefes çalışmasıdır. Önce rahat bir tempoda oku, sonra aynı metni biraz hızlandır ve nerede tıkandığını işaretle.",
+        "targetWordsPerMinute": 120
+      }
+    },
+    {
+      "id": "reading_timed_02",
+      "title": "Süreli okuma, 2. metin",
+      "presentationType": "timedReading",
+      "durationSeconds": 180,
+      "instructions": "Metni sesli oku. Önce anlaşılır ol, tempo ikinci okumada gelir.",
+      "timedReading": {
+        "text": "Bir cümlenin anlamı sadece kelimelerde değil, kelimelerin arasındaki duraklarda da durur. Aynı cümleyi farklı yerlerde durarak oku ve anlamın nasıl kaydığını dinle. Acele eden okuyucu, dinleyene düşünecek zaman bırakmaz.",
+        "targetWordsPerMinute": 130
+      }
+    },
+    {
+      "id": "emphasis_sample_01",
+      "title": "Vurgu çalışması, 1",
+      "presentationType": "emphasis",
+      "durationSeconds": 90,
+      "instructions": "Aynı cümleyi üç kez oku ve her seferinde işaretli kelimeyi öne çıkar. Anlamın nasıl değiştiğini dinle.",
+      "emphasis": {
+        "text": "Bu kitabı sana ben aldım.",
+        "emphasisWordIndexes": [
+          0,
+          3,
+          4
+        ]
+      }
+    },
+    {
+      "id": "emphasis_sample_02",
+      "title": "Vurgu çalışması, 2",
+      "presentationType": "emphasis",
+      "durationSeconds": 90,
+      "instructions": "İşaretli kelimeleri sırayla vurgula. Vurgu yüksek ses değildir; kelimeyi biraz uzatmak ve öncesinde kısa durmaktır.",
+      "emphasis": {
+        "text": "Yarın sabah erkenden yola çıkacağız.",
+        "emphasisWordIndexes": [
+          0,
+          2
+        ]
+      }
+    },
+    {
+      "id": "intonation_sample_01",
+      "title": "Tonlama çalışması, 1",
+      "presentationType": "intonation",
+      "durationSeconds": 90,
+      "instructions": "Cümleyi işaretlere göre oku: yükselen yerde sesin tırmansın, düz yerde sabit kalsın, düşen yerde insin.",
+      "intonation": {
+        "text": "Bugün hava güzel, dışarı çıkmak iyi gelecek.",
+        "contour": [
+          {
+            "wordIndex": 0,
+            "direction": "rise"
+          },
+          {
+            "wordIndex": 3,
+            "direction": "flat"
+          },
+          {
+            "wordIndex": 6,
+            "direction": "fall"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intonation_sample_02",
+      "title": "Tonlama çalışması, 2",
+      "presentationType": "intonation",
+      "durationSeconds": 90,
+      "instructions": "Cümlenin sonunda soru işareti yok, çünkü onu tonlama belirleyecek. Aynı cümleyi önce soru, sonra cevap gibi oku: sorunun sonu yükselir, cevabın sonu düşer.",
+      "intonation": {
+        "text": "Toplantı saat üçte mi başlıyor.",
+        "contour": [
+          {
+            "wordIndex": 0,
+            "direction": "flat"
+          },
+          {
+            "wordIndex": 2,
+            "direction": "rise"
+          },
+          {
+            "wordIndex": 4,
+            "direction": "fall"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pause_sample_01",
+      "title": "Duraklama çalışması, 1",
+      "presentationType": "pause",
+      "durationSeconds": 90,
+      "instructions": "İşaretli kelimelerden sonra kısa bir duraklama ver. Duraklama boşluk değil, dinleyene düşünme payıdır.",
+      "pause": {
+        "text": "Konuşurken acele etmeyen kişi, dinleyene düşünecek zaman bırakır.",
+        "pauseAfterWordIndexes": [
+          2,
+          5
+        ],
+        "pauseMilliseconds": 400
+      }
+    },
+    {
+      "id": "pause_sample_02",
+      "title": "Duraklama çalışması, 2",
+      "presentationType": "pause",
+      "durationSeconds": 90,
+      "instructions": "Önce hiç durmadan oku, sonra işaretli yerlerde dur. İki okuyuşu karşılaştır.",
+      "pause": {
+        "text": "Nefesini doğru kullanan kişi, cümlenin sonuna yorulmadan varır.",
+        "pauseAfterWordIndexes": [
+          1,
+          4
+        ],
+        "pauseMilliseconds": 500
+      }
+    },
+    {
+      "id": "speaking_intro_01",
+      "title": "Konuşma görevi, tanıtım",
+      "presentationType": "speakingChallenge",
+      "durationSeconds": 90,
+      "instructions": "Soruyu oku, hazırlık süresinde ne anlatacağını düşün, sonra süre boyunca durmadan konuş. Takılırsan baştan başlama, kaldığın yerden devam et.",
+      "speakingChallenge": {
+        "challengeId": "sc_intro_60"
+      }
+    },
+    {
+      "id": "speaking_topic_01",
+      "title": "Konuşma görevi, bu hafta",
+      "presentationType": "speakingChallenge",
+      "durationSeconds": 120,
+      "instructions": "Soruyu oku, hazırlık süresinde ne anlatacağını düşün, sonra süre boyunca durmadan konuş. Takılırsan baştan başlama, kaldığın yerden devam et.",
+      "speakingChallenge": {
+        "challengeId": "sc_topic_90"
+      }
+    },
+    {
+      "id": "speaking_story_01",
+      "title": "Konuşma görevi, yol hikâyesi",
+      "presentationType": "speakingChallenge",
+      "durationSeconds": 150,
+      "instructions": "Soruyu oku, hazırlık süresinde ne anlatacağını düşün, sonra süre boyunca durmadan konuş. Takılırsan baştan başlama, kaldığın yerden devam et.",
+      "speakingChallenge": {
+        "challengeId": "sc_story_120"
+      }
+    },
+    {
+      "id": "intro_text_01",
+      "title": "Programa başlarken",
+      "presentationType": "text",
+      "durationSeconds": 60,
+      "instructions": "On dört gün, günde yaklaşık on beş dakika. Her gün önce nefes, sonra dil, çene ve dudak, sonra harf çalışması, en sonda metin çalışması var. Sırayı bozma: ağız kasları ısınmadan yapılan metin çalışması yorar, ilerletmez."
+    },
+    {
+      "id": "warmup_timer_01",
+      "title": "Sessiz ısınma",
+      "presentationType": "timer",
+      "durationSeconds": 60,
+      "instructions": "Omuzlarını iki kez çevir, çeneni gevşet, dudaklarını hafifçe titret. Süre bitene kadar sessiz kal ve nefesini yavaşlat."
+    },
+    {
+      "id": "listening_audio_01",
+      "title": "Dinle ve tekrarla",
+      "presentationType": "audio",
+      "durationSeconds": 45,
+      "instructions": "Kayıttaki cümleyi dinle, sonra aynı tonlama ve duraklarla tekrarla. Ses dosyası HIT-013 ile gelecek, o zamana kadar bu çalışma programda yer almaz.",
+      "media": {
+        "kind": "audio",
+        "key": "placeholder_sample"
+      }
+    },
+    {
       "id": "rive_sample_01",
-      "title": "Yer tutucu Rive gösterimi",
+      "title": "Animasyonlu örnek",
       "presentationType": "rive",
       "durationSeconds": 45,
-      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
+      "instructions": "Ağız hareketini ekrandaki animasyondan izle ve birlikte yap. Animasyon HIT-032 ile gelecek, o zamana kadar bu çalışma programda yer almaz.",
       "media": {
         "kind": "rive",
         "key": "placeholder_sample",
@@ -56,95 +594,14 @@
     },
     {
       "id": "articulation_lips_ux_01",
-      "title": "Yer tutucu dudak çalışması (U-X)",
+      "title": "Dudak çalışması, U ve X",
       "presentationType": "articulation",
       "durationSeconds": 60,
-      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
+      "instructions": "Dudaklarını önce U der gibi yuvarla, sonra geniş bir gülümseme genişliğine aç. İki biçim arasında gidip gel. Animasyon HIT-034 ile gelecek.",
       "media": {
         "kind": "rive",
         "key": "ux_lips",
         "stateMachine": "LipStates"
-      }
-    },
-    {
-      "id": "letter_r_01",
-      "title": "Yer tutucu harf merdiveni",
-      "presentationType": "letter",
-      "durationSeconds": 90,
-      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
-      "letter": {
-        "letterKey": "r",
-        "repetitions": 3
-      }
-    },
-    {
-      "id": "twister_r_01",
-      "title": "Yer tutucu tekerleme",
-      "presentationType": "tongueTwister",
-      "durationSeconds": 60,
-      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
-      "tongueTwister": {
-        "tongueTwisterIds": ["tt_r_01"],
-        "repetitions": 2
-      }
-    },
-    {
-      "id": "emphasis_sample_01",
-      "title": "Yer tutucu vurgu çalışması",
-      "presentationType": "emphasis",
-      "durationSeconds": 60,
-      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
-      "emphasis": {
-        "text": "Yer tutucu cümle, onaylı metin HIT-080 ile gelecek.",
-        "emphasisWordIndexes": [0, 4]
-      }
-    },
-    {
-      "id": "intonation_sample_01",
-      "title": "Yer tutucu tonlama çalışması",
-      "presentationType": "intonation",
-      "durationSeconds": 60,
-      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
-      "intonation": {
-        "text": "Yer tutucu cümle, onaylı metin HIT-080 ile gelecek.",
-        "contour": [
-          { "wordIndex": 0, "direction": "rise" },
-          { "wordIndex": 4, "direction": "flat" },
-          { "wordIndex": 7, "direction": "fall" }
-        ]
-      }
-    },
-    {
-      "id": "pause_sample_01",
-      "title": "Yer tutucu duraklama çalışması",
-      "presentationType": "pause",
-      "durationSeconds": 60,
-      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
-      "pause": {
-        "text": "Yer tutucu cümle, onaylı metin HIT-080 ile gelecek.",
-        "pauseAfterWordIndexes": [2, 5],
-        "pauseMilliseconds": 400
-      }
-    },
-    {
-      "id": "reading_timed_01",
-      "title": "Yer tutucu süreli okuma",
-      "presentationType": "timedReading",
-      "durationSeconds": 120,
-      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
-      "timedReading": {
-        "text": "Yer tutucu cümle, onaylı metin HIT-080 ile gelecek.",
-        "targetWordsPerMinute": 140
-      }
-    },
-    {
-      "id": "speaking_intro_01",
-      "title": "Yer tutucu konuşma görevi",
-      "presentationType": "speakingChallenge",
-      "durationSeconds": 60,
-      "instructions": "Yer tutucu yönerge. Onaylı metin HIT-080 ile gelecek.",
-      "speakingChallenge": {
-        "challengeId": "sc_intro_60"
       }
     }
   ]
