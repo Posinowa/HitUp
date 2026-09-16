@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Background (Dark) in docs/design/IDENTITY.md. The mark keeps its
+         seafoam gradient on it, and a dark tile reads on light wallpapers. -->
+    <color name="ic_launcher_background">#101A18</color>
+</resources>
