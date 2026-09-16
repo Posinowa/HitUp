@@ -64,12 +64,22 @@ const validUser = (overrides = {}) => ({
   ...overrides,
 });
 
+/** A user document as it sits in the database once created. */
+const storedUser = (overrides = {}) => validUser({ createdAt: aPastTime(), ...overrides });
+
 const validHistory = (overrides = {}) => ({
   trainingDate: '2026-09-14',
   programDay: 1,
   completedExerciseIds: ['breathing_diaphragm_01'],
   durationMinutes: 15,
   completedAt: serverTimestamp(),
+  ...overrides,
+});
+
+const validProgress = (overrides = {}) => ({
+  exerciseId: 'ex1',
+  completionCount: 1,
+  lastCompletedAt: serverTimestamp(),
   ...overrides,
 });
 
@@ -99,6 +109,15 @@ describe("an authenticated user cannot touch another user's data", () => {
     await assertFails(setDoc(doc(bob(), 'users/alice'), validUser()));
   });
 
+  test("cannot overwrite another user's existing document", async () => {
+    // The test above writes to an empty path, so it only reaches the create
+    // rule. With a document already there, the same write reaches update.
+    await seed('users/alice', storedUser());
+    await assertFails(
+      setDoc(doc(bob(), 'users/alice'), storedUser({ currentStreak: 1, longestStreak: 1 })),
+    );
+  });
+
   test("cannot delete another user's document", async () => {
     await seed('users/alice', { createdAt: aPastTime() });
     await assertFails(deleteDoc(doc(bob(), 'users/alice')));
@@ -108,6 +127,31 @@ describe("an authenticated user cannot touch another user's data", () => {
     await seed('users/alice/trainingHistory/h1', { programDay: 1 });
     await assertFails(getDoc(doc(bob(), 'users/alice/trainingHistory/h1')));
     await assertFails(setDoc(doc(bob(), 'users/alice/trainingHistory/h2'), validHistory()));
+  });
+
+  test("cannot delete another user's training history entry", async () => {
+    await seed('users/alice/trainingHistory/h1', { programDay: 1 });
+    await assertFails(deleteDoc(doc(bob(), 'users/alice/trainingHistory/h1')));
+  });
+
+  test("cannot read or delete another user's exercise progress", async () => {
+    await seed('users/alice/exerciseProgress/ex1', validProgress({ lastCompletedAt: aPastTime() }));
+    await assertFails(getDoc(doc(bob(), 'users/alice/exerciseProgress/ex1')));
+    await assertFails(deleteDoc(doc(bob(), 'users/alice/exerciseProgress/ex1')));
+  });
+
+  test("cannot create or overwrite another user's exercise progress", async () => {
+    await assertFails(setDoc(doc(bob(), 'users/alice/exerciseProgress/ex1'), validProgress()));
+    await seed(
+      'users/alice/exerciseProgress/ex2',
+      validProgress({ exerciseId: 'ex2', completionCount: 5, lastCompletedAt: aPastTime() }),
+    );
+    await assertFails(
+      setDoc(
+        doc(bob(), 'users/alice/exerciseProgress/ex2'),
+        validProgress({ exerciseId: 'ex2', completionCount: 6 }),
+      ),
+    );
   });
 
   test("cannot read or write another user's preferences", async () => {
@@ -148,6 +192,25 @@ describe('user document', () => {
     await assertFails(setDoc(doc(alice(), 'users/alice'), validUser({ isAdmin: true })));
   });
 
+  test('a field outside the model is refused on update too', async () => {
+    await seed('users/alice', storedUser());
+    await assertFails(updateDoc(doc(alice(), 'users/alice'), { isAdmin: true }));
+  });
+
+  test('displayName and email must be strings within their length limits', async () => {
+    await assertSucceeds(
+      setDoc(
+        doc(alice(), 'users/alice'),
+        validUser({ displayName: 'a'.repeat(100), email: 'a'.repeat(254) }),
+      ),
+    );
+    await env.clearFirestore();
+    await assertFails(setDoc(doc(alice(), 'users/alice'), validUser({ displayName: 'a'.repeat(101) })));
+    await assertFails(setDoc(doc(alice(), 'users/alice'), validUser({ displayName: ['Alice'] })));
+    await assertFails(setDoc(doc(alice(), 'users/alice'), validUser({ email: 'a'.repeat(255) })));
+    await assertFails(setDoc(doc(alice(), 'users/alice'), validUser({ email: ['alice@example.com'] })));
+  });
+
   test('a negative counter is refused', async () => {
     await assertFails(setDoc(doc(alice(), 'users/alice'), validUser({ currentStreak: -1 })));
     await assertFails(setDoc(doc(alice(), 'users/alice'), validUser({ totalTrainingMinutes: -5 })));
@@ -155,6 +218,10 @@ describe('user document', () => {
 
   test('a fractional counter is refused', async () => {
     await assertFails(setDoc(doc(alice(), 'users/alice'), validUser({ currentProgramDay: 1.5 })));
+  });
+
+  test('a fractional longest streak is refused', async () => {
+    await assertFails(setDoc(doc(alice(), 'users/alice'), validUser({ longestStreak: 2.5 })));
   });
 
   test('a current streak longer than the longest is refused', async () => {
@@ -230,6 +297,35 @@ describe('training history is append-only', () => {
     const { programDay, ...withoutDay } = validHistory();
     await assertFails(setDoc(doc(alice(), 'users/alice/trainingHistory/h1'), withoutDay));
   });
+
+  test('an entry with a field outside the model is refused', async () => {
+    await assertFails(
+      setDoc(doc(alice(), 'users/alice/trainingHistory/h1'), validHistory({ verified: true })),
+    );
+  });
+
+  test('programDay must be a whole number of at least one', async () => {
+    const path = 'users/alice/trainingHistory/h1';
+    await assertFails(setDoc(doc(alice(), path), validHistory({ programDay: 0 })));
+    await assertFails(setDoc(doc(alice(), path), validHistory({ programDay: 1.5 })));
+  });
+
+  test('completedExerciseIds must be a list of at most 50', async () => {
+    const path = 'users/alice/trainingHistory/h1';
+    const ids = (n) => Array.from({ length: n }, (_, i) => `exercise_${i}`);
+    await assertFails(
+      setDoc(doc(alice(), path), validHistory({ completedExerciseIds: 'breathing_diaphragm_01' })),
+    );
+    await assertFails(setDoc(doc(alice(), path), validHistory({ completedExerciseIds: ids(51) })));
+    await assertSucceeds(setDoc(doc(alice(), path), validHistory({ completedExerciseIds: ids(50) })));
+  });
+
+  test('durationMinutes must be a whole number from 0 to 1440', async () => {
+    const path = 'users/alice/trainingHistory/h1';
+    await assertFails(setDoc(doc(alice(), path), validHistory({ durationMinutes: -1 })));
+    await assertFails(setDoc(doc(alice(), path), validHistory({ durationMinutes: 1441 })));
+    await assertSucceeds(setDoc(doc(alice(), path), validHistory({ durationMinutes: 1440 })));
+  });
 });
 
 describe('exercise progress', () => {
@@ -257,6 +353,24 @@ describe('exercise progress', () => {
       setDoc(doc(alice(), path), { exerciseId: 'ex1', completionCount: 2, lastCompletedAt: serverTimestamp() }),
     );
   });
+
+  test('a completion count cannot start below zero', async () => {
+    await assertFails(
+      setDoc(doc(alice(), 'users/alice/exerciseProgress/ex1'), validProgress({ completionCount: -1 })),
+    );
+  });
+
+  test('lastCompletedAt cannot be backdated', async () => {
+    await assertFails(
+      setDoc(doc(alice(), 'users/alice/exerciseProgress/ex1'), validProgress({ lastCompletedAt: aPastTime() })),
+    );
+  });
+
+  test('a progress document with a field outside the model is refused', async () => {
+    await assertFails(
+      setDoc(doc(alice(), 'users/alice/exerciseProgress/ex1'), validProgress({ verified: true })),
+    );
+  });
 });
 
 describe('preferences', () => {
@@ -275,9 +389,28 @@ describe('preferences', () => {
     await assertFails(setDoc(doc(alice(), 'users/alice/preferences/other'), { soundEnabled: true }));
   });
 
+  test('no preferences document other than "settings" can be read or deleted', async () => {
+    await seed('users/alice/preferences/other', { soundEnabled: true });
+    await assertFails(getDoc(doc(alice(), 'users/alice/preferences/other')));
+    await assertFails(deleteDoc(doc(alice(), 'users/alice/preferences/other')));
+  });
+
   test('an impossible reminder time is refused', async () => {
     await assertFails(
       setDoc(doc(alice(), 'users/alice/preferences/settings'), { reminderTime: '25:00' }),
+    );
+  });
+
+  test('each switch must be true or false', async () => {
+    const path = 'users/alice/preferences/settings';
+    await assertFails(setDoc(doc(alice(), path), { reminderEnabled: 'yes' }));
+    await assertFails(setDoc(doc(alice(), path), { soundEnabled: 1 }));
+    await assertFails(setDoc(doc(alice(), path), { hapticEnabled: 'false' }));
+  });
+
+  test('a preferences field outside the model is refused', async () => {
+    await assertFails(
+      setDoc(doc(alice(), 'users/alice/preferences/settings'), { soundEnabled: true, theme: 'dark' }),
     );
   });
 });
