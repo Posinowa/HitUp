@@ -88,11 +88,11 @@ service cloud.firestore {
         allow read, delete: if isOwner(userId);
         allow update: if false;
         allow create: if isOwner(userId)
-          && isValidHistory(request.resource.data)
+          && isValidHistory(request.resource.data, historyId)
           && request.resource.data.completedAt == request.time;
 
         // HIT-010: field list and types follow the model.
-        function isValidHistory(d) {
+        function isValidHistory(d, id) {
           return d.keys().hasOnly([
               'trainingDate', 'programDay', 'completedExerciseIds',
               'durationMinutes', 'completedAt'
@@ -103,6 +103,11 @@ service cloud.firestore {
             ])
             && d.trainingDate is string
             && d.trainingDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+            // HIT-010: the document id is the day, which is what keeps one
+            // day to one entry. With any other id a second completion of the
+            // same day would create a second document instead of being
+            // refused, and the totals it carries would be counted twice.
+            && d.trainingDate == id
             && d.programDay is int
             && d.programDay >= 1
             // A session completes at least one exercise, and the cap keeps a
