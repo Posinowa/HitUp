@@ -71,7 +71,7 @@ Both are available on Google Fonts and free for commercial use.
 
 The palette, the gradient and the background rule are unchanged; the motif is not. The reason, in the words of the decision: a looping waveform is the mark most voice and audio apps already carry, so it says "audio app" rather than "this app", while a tamga is speech cut into stone, which is what the Orhun inscriptions are and what a diction app is about. The waveform's weakness belongs to the concept; Damga's weaknesses, thin gaps at small sizes, were fixable and were fixed.
 
-**Legibility at small sizes is a constraint the mark is drawn to**, not an afterthought. Every gap inside it is at least 43 units on the 512 canvas, which is 2 dp once the notification icon is drawn at 24 dp, the size at which separate shapes stop fusing. The dots are sized to match. The launcher foreground is scaled to sit inside the 66 of 108 dp safe circle, so round and squircle masks clip nothing.
+**Legibility at small sizes is a constraint the mark is drawn to**, not an afterthought. Every gap inside it is at least 43 units on the 512 canvas, which is 2 dp once the notification icon is drawn at 24 dp, the size at which separate shapes stop fusing. The dots are sized to match. The launcher foreground is scaled so the mark reaches 72% of the way to the 66 of 108 dp safe circle. Reaching the circle itself clips nothing, but on a phone the mark then fills the icon edge to edge; the margin is what makes it read as a mark on a tile rather than a tile-shaped mark.
 
 **Where the assets are:**
 
