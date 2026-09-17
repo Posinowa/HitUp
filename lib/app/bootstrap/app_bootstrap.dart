@@ -1,10 +1,14 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/analytics/analytics_service.dart';
 import '../../core/config/environment.dart';
 import '../../core/services/notification_service.dart';
 import '../../firebase_options.dart';
+import '../../shared/providers/analytics_providers.dart';
 import '../../shared/providers/notification_providers.dart';
 
 /// Builds the notification service the app starts with.
@@ -21,6 +25,12 @@ typedef NotificationServiceFactory = NotificationService Function();
 /// more: under `flutter test` there is no platform channel, so the real call
 /// throws before any test gets to run.
 typedef FirebaseInitializer = Future<void> Function();
+
+/// Builds the analytics service the app starts with.
+///
+/// A parameter for the same reason as the two above: the real one reads
+/// `FirebaseAnalytics.instance`, which needs a platform channel no test has.
+typedef AnalyticsServiceFactory = AnalyticsService Function();
 
 /// Application bootstrap for foundation initialization.
 ///
@@ -44,6 +54,8 @@ class AppBootstrap {
     FirebaseInitializer initializeFirebase = _initializeFirebase,
     NotificationServiceFactory createNotificationService =
         LocalNotificationService.new,
+    AnalyticsServiceFactory createAnalyticsService = _createAnalyticsService,
+    bool collectAnalytics = !kDebugMode,
   }) async {
     WidgetsFlutterBinding.ensureInitialized();
 
@@ -68,9 +80,42 @@ class AppBootstrap {
       createNotificationService,
     );
 
+    final AnalyticsService analytics = await _initAnalytics(
+      createAnalyticsService,
+      collect: collectAnalytics,
+    );
+
     return <Override>[
       notificationServiceProvider.overrideWithValue(notifications),
+      analyticsServiceProvider.overrideWithValue(analytics),
     ];
+  }
+
+  /// The real analytics service, over the Firebase instance.
+  static AnalyticsService _createAnalyticsService() =>
+      FirebaseAnalyticsService(FirebaseAnalytics.instance);
+
+  /// Creates the analytics service and sets collection for this build.
+  ///
+  /// Collection is off in debug builds, so a developer running the app does
+  /// not add taps to the product's numbers (HIT-063). Failure is not fatal for
+  /// the same reason as notifications, only more so: analytics is a side
+  /// channel, and no part of the app depends on it. When it fails the service
+  /// is still returned, so call sites need no null check.
+  static Future<AnalyticsService> _initAnalytics(
+    AnalyticsServiceFactory create, {
+    required bool collect,
+  }) async {
+    final AnalyticsService service = create();
+
+    try {
+      await service.setCollectionEnabled(collect);
+    } on Object catch (error, stackTrace) {
+      debugPrint('HIT-063: analytics setup failed. Cause: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+
+    return service;
   }
 
   /// Initialises Firebase with the options generated for this project.
