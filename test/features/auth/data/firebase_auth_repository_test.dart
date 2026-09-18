@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +10,8 @@ import 'package:hitup/features/auth/data/firebase_auth_repository.dart';
 import 'package:hitup/features/auth/data/user_profile_store.dart';
 import 'package:hitup/features/auth/domain/models/auth_user.dart';
 import 'package:hitup/features/auth/domain/repositories/auth_repository.dart';
+
+import '../../../support/firestore_rules.dart';
 
 /// A gateway that records what it was asked and fails on request.
 class _FakeGateway implements AuthGateway {
@@ -106,20 +107,6 @@ class _FakeStore implements UserProfileStore {
       'displayName': displayName,
     });
   }
-}
-
-/// The field list a `hasOnly([...])` in `firestore.rules` allows, found by the
-/// function it sits in.
-Set<String> rulesFieldsOf(String function) {
-  final String rules = File('firestore.rules').readAsStringSync();
-  final RegExpMatch? match = RegExp(
-    'function $function\\([^)]*\\)\\s*\\{\\s*return d\\.keys\\(\\)\\.hasOnly\\(\\[([^\\]]*)\\]',
-  ).firstMatch(rules);
-  expect(match, isNotNull, reason: 'no hasOnly list found in $function');
-  return RegExp(r"'([A-Za-z]+)'")
-      .allMatches(match!.group(1)!)
-      .map((RegExpMatch m) => m.group(1)!)
-      .toSet();
 }
 
 void main() {
