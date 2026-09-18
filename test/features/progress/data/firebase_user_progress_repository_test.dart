@@ -675,6 +675,49 @@ void main() {
     });
   });
 
+  group('one training day', () {
+    test('reads the entry for a date', () async {
+      store.server['users/$uid/trainingHistory/2026-09-18'] = <String, Object?>{
+        'trainingDate': '2026-09-18',
+        'programDay': 4,
+        'completedExerciseIds': <Object?>['a'],
+        'durationMinutes': 13,
+      };
+
+      final TrainingHistoryEntry? entry = await repository.getTrainingDay(
+        uid,
+        CalendarDay(2026, 9, 18),
+      );
+
+      expect(entry!.programDay, 4);
+      expect(entry.date, CalendarDay(2026, 9, 18));
+      expect(store.reads, <String>['users/$uid/trainingHistory/2026-09-18']);
+    });
+
+    test('a date the server has no entry for is null', () async {
+      expect(
+        await repository.getTrainingDay(uid, CalendarDay(2026, 9, 18)),
+        isNull,
+      );
+    });
+
+    test('a date the local copy has never seen is offline, not missing',
+        () async {
+      store.online = false;
+      await _expectCode(
+        () => repository.getTrainingDay(uid, CalendarDay(2026, 9, 18)),
+        FailureCode.networkOffline,
+      );
+    });
+
+    test('an id that would address another document is refused', () {
+      expect(
+        () => repository.getTrainingDay('a/b', CalendarDay(2026, 9, 18)),
+        throwsArgumentError,
+      );
+    });
+  });
+
   group('the programme day', () {
     test('moves on when the user is still on the day they finished', () async {
       store.server['users/$uid'] = _profileData()..['currentProgramDay'] = 4;
