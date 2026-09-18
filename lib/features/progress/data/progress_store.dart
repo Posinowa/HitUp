@@ -31,6 +31,29 @@ abstract interface class ProgressStore {
 
   /// Applies [writes] as one atomic batch: all of them or none.
   Future<void> commit(List<StoredWrite> writes);
+
+  /// Reads and writes inside one transaction.
+  ///
+  /// What a batch cannot do: decide what to write from what was read. The
+  /// store re-reads at write time and runs [body] again if another writer got
+  /// in between, so [body] must be safe to run more than once and must not
+  /// have an effect of its own beyond the writes it asks for.
+  ///
+  /// A transaction needs the server, so it fails offline rather than queuing
+  /// (`USER_PROGRESS.md`).
+  Future<T> transaction<T>(Future<T> Function(StoredTransaction tx) body);
+}
+
+/// The reads and writes available inside a transaction.
+///
+/// Every read comes before every write, which is Firestore's rule, not this
+/// project's: a write followed by a read in the same transaction is refused.
+abstract interface class StoredTransaction {
+  /// Reads a document as the transaction sees it.
+  Future<StoredDocument> read(String path);
+
+  /// Changes the given fields of a document that must already exist.
+  void update(String path, Map<String, Object> fields);
 }
 
 /// A document as read. Timestamps arrive as [DateTime].

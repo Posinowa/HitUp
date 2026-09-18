@@ -12,6 +12,7 @@ import 'package:hitup/features/progress/domain/models/exercise_progress.dart';
 import 'package:hitup/features/progress/domain/models/training_history_entry.dart';
 import 'package:hitup/features/progress/domain/models/user_preferences.dart';
 import 'package:hitup/features/progress/domain/models/user_profile.dart';
+import 'package:hitup/features/progress/domain/streak.dart';
 
 import '../../../support/firestore_rules.dart';
 
@@ -112,7 +113,38 @@ class _FakeStore implements ProgressStore {
     if (commitError != null) throw commitError!;
   }
 
+  /// How many transactions were run, and what each one wrote.
+  int transactions = 0;
+  final List<Map<String, Object>> transactionWrites = <Map<String, Object>>[];
+  Object? transactionError;
+
+  @override
+  Future<T> transaction<T>(
+    Future<T> Function(StoredTransaction tx) body,
+  ) async {
+    transactions++;
+    if (transactionError != null) throw transactionError!;
+    return body(_FakeTransaction(this));
+  }
+
   Future<void> close() => watched.close();
+}
+
+/// The reads and writes a transaction body makes, against the fake's server.
+class _FakeTransaction implements StoredTransaction {
+  _FakeTransaction(this.store);
+
+  final _FakeStore store;
+
+  @override
+  Future<StoredDocument> read(String path) => store.read(path);
+
+  @override
+  void update(String path, Map<String, Object> fields) {
+    store.transactionWrites.add(fields);
+    // Applied at once, so a test can read back what the transaction wrote.
+    store.server[path] = <String, Object?>{...?store.server[path], ...fields};
+  }
 }
 
 FirebaseException _denied() => FirebaseException(
@@ -514,6 +546,132 @@ void main() {
         () => repository.getExerciseProgress(uid),
         FailureCode.networkOffline,
       );
+    });
+  });
+
+  group('the streak', () {
+    Map<String, Object?> profileWith({
+      Object? last,
+      int current = 0,
+      int longest = 0,
+    }) =>
+        _profileData(lastTrainingDate: last)
+          ..['currentStreak'] = current
+          ..['longestStreak'] = longest;
+
+    test('counts today, in one transaction, and writes the three fields',
+        () async {
+      store.server['users/$uid'] = profileWith(
+        last: '2026-09-16',
+        current: 3,
+        longest: 5,
+      );
+
+      final StreakUpdate update = await repository.updateStreak(
+        uid,
+        CalendarDay(2026, 9, 17),
+      );
+
+      expect(store.transactions, 1);
+      expect(update.currentStreak, 4);
+      expect(update.longestStreak, 5);
+      expect(update.changed, isTrue);
+      expect(store.transactionWrites.single, <String, Object>{
+        'currentStreak': 4,
+        'longestStreak': 5,
+        'lastTrainingDate': '2026-09-17',
+      });
+      // No batch: a read-then-write cannot be one.
+      expect(store.commits, isEmpty);
+    });
+
+    test('a day already counted writes nothing at all', () async {
+      store.server['users/$uid'] = profileWith(
+        last: '2026-09-17',
+        current: 4,
+        longest: 6,
+      );
+
+      final StreakUpdate update = await repository.updateStreak(
+        uid,
+        CalendarDay(2026, 9, 17),
+      );
+
+      expect(update.changed, isFalse);
+      expect(update.currentStreak, 4);
+      expect(store.transactions, 1);
+      expect(store.transactionWrites, isEmpty);
+    });
+
+    test('a first training starts the streak and records the day', () async {
+      store.server['users/$uid'] = profileWith();
+
+      final StreakUpdate update = await repository.updateStreak(
+        uid,
+        CalendarDay(2026, 9, 17),
+      );
+
+      expect(update.currentStreak, 1);
+      expect(update.longestStreak, 1);
+      expect(
+        store.server['users/$uid']!['lastTrainingDate'],
+        '2026-09-17',
+      );
+    });
+
+    test('a missed day starts again, and the longest streak stays', () async {
+      store.server['users/$uid'] = profileWith(
+        last: '2026-09-10',
+        current: 7,
+        longest: 9,
+      );
+
+      final StreakUpdate update = await repository.updateStreak(
+        uid,
+        CalendarDay(2026, 9, 17),
+      );
+
+      expect(update.currentStreak, 1);
+      expect(update.longestStreak, 9);
+      expect(store.transactionWrites.single['longestStreak'], 9);
+    });
+
+    test('a profile the server does not have is not found', () async {
+      await _expectCode(
+        () => repository.updateStreak(uid, CalendarDay(2026, 9, 17)),
+        FailureCode.dataNotFound,
+      );
+    });
+
+    test('an unreadable stored day is unusable data, not a reset', () async {
+      // Resetting the streak because a field could not be read would punish
+      // the user for a bug.
+      store.server['users/$uid'] = profileWith(last: '17.09.2026');
+
+      await _expectCode(
+        () => repository.updateStreak(uid, CalendarDay(2026, 9, 17)),
+        FailureCode.dataUnknown,
+      );
+      expect(store.transactionWrites, isEmpty);
+    });
+
+    test('a failed transaction is thrown, not swallowed', () async {
+      final FirebaseException unavailable =
+          FirebaseException(plugin: 'cloud_firestore', code: 'unavailable');
+      store.transactionError = unavailable;
+
+      await expectLater(
+        repository.updateStreak(uid, CalendarDay(2026, 9, 17)),
+        throwsA(same(unavailable)),
+      );
+    });
+
+    test('an id that would address another document is refused', () {
+      expect(
+        () => repository.updateStreak('a/b', CalendarDay(2026, 9, 17)),
+        throwsArgumentError,
+      );
+      expect(store.transactions, 0);
     });
   });
 
