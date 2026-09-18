@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../../core/text/turkish_case.dart';
 import 'content_envelope.dart';
 import 'json_reader.dart';
 
@@ -232,11 +233,70 @@ class TongueTwisterLibrary {
   /// because "none of these yet" and "no such category" are the same thing to a
   /// screen listing them.
   List<TongueTwister> byCategory(TongueTwisterCategory category) =>
+      where(category: category);
+
+  /// Every twister aimed at [letter], in file order.
+  ///
+  /// The comparison folds case in Turkish, so `I` matches `ı` and `İ` matches
+  /// `i` (`turkish_case.dart`). Content writes the letter in upper case and a
+  /// screen may hold it either way; matching the wrong pair would silently
+  /// return nothing.
+  ///
+  /// Twisters with no target letter, the rhythm and breath ones, never match.
+  List<TongueTwister> byTargetLetter(String letter) =>
+      where(targetLetter: letter);
+
+  /// Every twister at [difficulty], in file order.
+  List<TongueTwister> byDifficulty(TongueTwisterDifficulty difficulty) =>
+      where(difficulty: difficulty);
+
+  /// Every twister matching all of the given filters, in file order.
+  ///
+  /// An omitted filter does not narrow the result, so `where()` is the whole
+  /// library. This is the one place the matching lives; the three lookups above
+  /// are names for the common cases.
+  List<TongueTwister> where({
+    String? targetLetter,
+    TongueTwisterDifficulty? difficulty,
+    TongueTwisterCategory? category,
+  }) =>
       List<TongueTwister>.unmodifiable(
-        tongueTwisters.where(
-          (TongueTwister twister) => twister.category == category,
-        ),
+        tongueTwisters.where((TongueTwister twister) {
+          if (category != null && twister.category != category) {
+            return false;
+          }
+          if (difficulty != null && twister.difficulty != difficulty) {
+            return false;
+          }
+          if (targetLetter != null) {
+            final String? own = twister.targetLetter;
+            if (own == null || !turkishEqualsIgnoringCase(own, targetLetter)) {
+              return false;
+            }
+          }
+          return true;
+        }),
       );
+
+  /// The target letters the library has, folded to lower case, in file order
+  /// and without repeats.
+  ///
+  /// What a letter picker lists, so a screen does not have to walk the library
+  /// and fold the cases itself.
+  List<String> get targetLetters {
+    final List<String> letters = <String>[];
+    for (final TongueTwister twister in tongueTwisters) {
+      final String? letter = twister.targetLetter;
+      if (letter == null) {
+        continue;
+      }
+      final String folded = turkishLowerCase(letter);
+      if (!letters.contains(folded)) {
+        letters.add(folded);
+      }
+    }
+    return List<String>.unmodifiable(letters);
+  }
 
   @override
   bool operator ==(Object other) =>
