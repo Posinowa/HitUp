@@ -163,6 +163,32 @@ class FirebaseUserProgressRepository implements UserProgressRepository {
   }
 
   @override
+  Future<int> advanceProgramDay(String uid, {required int completedDay}) {
+    _requireSegment(uid, 'uid');
+    if (completedDay < 1) {
+      throw ArgumentError.value(
+        completedDay,
+        'completedDay',
+        'must be at least 1',
+      );
+    }
+    return _store.transaction<int>((StoredTransaction tx) async {
+      final StoredDocument doc = await tx.read(_userPath(uid));
+      _requireExists(doc, 'profile');
+      final int current = _Reader(doc).integer('currentProgramDay');
+
+      // Only the day they are on moves them forward. Finishing an older day
+      // again, or a second device that already advanced, leaves it alone.
+      if (current != completedDay) {
+        return current;
+      }
+      final int next = current + 1;
+      tx.update(_userPath(uid), <String, Object>{'currentProgramDay': next});
+      return next;
+    });
+  }
+
+  @override
   Future<UserPreferences> getPreferences(String uid) async {
     _requireSegment(uid, 'uid');
     final StoredDocument doc = await _store.read(_preferencesPath(uid));
