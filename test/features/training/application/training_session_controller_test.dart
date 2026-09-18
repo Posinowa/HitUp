@@ -2,11 +2,32 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hitup/features/auth/domain/models/auth_user.dart';
+import 'package:hitup/features/progress/domain/repositories/user_progress_repository.dart';
 import 'package:hitup/features/training/application/training_session_controller.dart';
 import 'package:hitup/features/training/data/session_store.dart';
 import 'package:hitup/features/training/domain/models/models.dart';
 import 'package:hitup/features/training/domain/training_session.dart';
+import 'package:hitup/shared/providers/auth_providers.dart';
+import 'package:hitup/shared/providers/progress_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// A progress repository that records what completions it was told about.
+class _FakeProgress implements UserProgressRepository {
+  final List<(String, String)> completions = <(String, String)>[];
+  Object? error;
+
+  @override
+  Future<void> saveExerciseCompletion(String uid, String exerciseId) async {
+    completions.add((uid, exerciseId));
+    if (error != null) {
+      throw error!;
+    }
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
 
 /// A session store in memory, which records what it was asked to do.
 class _FakeSessionStore implements SessionStore {
@@ -63,14 +84,29 @@ TodayTraining _today(List<String> ids) => TodayTraining(
 
 void main() {
   late _FakeSessionStore store;
+  late _FakeProgress progress;
   late ProviderContainer container;
+
+  /// Builds the container, signed in as [uid] unless it is null.
+  void buildContainer({String? uid = 'uid-1'}) {
+    container = ProviderContainer(
+      overrides: <Override>[
+        sessionStoreProvider.overrideWithValue(store),
+        userProgressRepositoryProvider.overrideWithValue(progress),
+        authStateChangesProvider.overrideWith(
+          (Ref ref) => Stream<AuthUser?>.value(
+            uid == null ? null : AuthUser(uid: uid),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+  }
 
   setUp(() {
     store = _FakeSessionStore();
-    container = ProviderContainer(
-      overrides: <Override>[sessionStoreProvider.overrideWithValue(store)],
-    );
-    addTearDown(container.dispose);
+    progress = _FakeProgress();
+    buildContainer();
   });
 
   TrainingSessionController controller() =>
@@ -298,6 +334,65 @@ void main() {
       final SharedPreferences preferences =
           await SharedPreferences.getInstance();
       expect(preferences.getString(PreferencesSessionStore.key), isNotNull);
+    });
+  });
+
+  group('counting completions on the account (HIT-052)', () {
+    test('a completed exercise is counted, by id, for the signed-in user',
+        () async {
+      // The provider has to have emitted before the controller can read the
+      // account off it, which is what a screen's own build would have done.
+      container.listen(authStateChangesProvider, (_, __) {});
+      await pumpEventQueue();
+
+      controller().begin(_today(<String>['a', 'b']));
+      controller().completeCurrentExercise();
+      await pumpEventQueue();
+
+      expect(progress.completions, <(String, String)>[('uid-1', 'a')]);
+    });
+
+    test('a skipped exercise is not counted', () async {
+      container.listen(authStateChangesProvider, (_, __) {});
+      await pumpEventQueue();
+
+      controller().begin(_today(<String>['a', 'b']));
+      controller().skipCurrentExercise();
+      controller().completeCurrentExercise();
+      await pumpEventQueue();
+
+      expect(progress.completions, <(String, String)>[('uid-1', 'b')]);
+    });
+
+    test('a signed-out user still runs the session, nothing is counted',
+        () async {
+      buildContainer(uid: null);
+      container.listen(authStateChangesProvider, (_, __) {});
+      await pumpEventQueue();
+
+      controller().begin(_today(<String>['a']));
+      controller().completeCurrentExercise();
+      await pumpEventQueue();
+
+      expect(progress.completions, isEmpty);
+      expect(current()!.completedExerciseIds, <String>['a']);
+      expect(current()!.status, SessionStatus.completed);
+    });
+
+    test('a failed count does not fail the session', () async {
+      // The exercise was done on the device. Whether the count reached the
+      // server is a separate question, and not one the user is doing.
+      progress.error = StateError('offline for good');
+      container.listen(authStateChangesProvider, (_, __) {});
+      await pumpEventQueue();
+
+      controller().begin(_today(<String>['a', 'b']));
+      controller().completeCurrentExercise();
+      await pumpEventQueue();
+
+      expect(current()!.currentExerciseId, 'b');
+      expect(current()!.completedExerciseIds, <String>['a']);
+      expect(store.saved, current());
     });
   });
 }
