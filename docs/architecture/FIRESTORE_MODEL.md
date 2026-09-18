@@ -57,7 +57,7 @@ Completing the same day twice must not create two entries or count the day's min
 
 That refusal is what keeps the totals right, because a completion is one batched write (below): Firestore applies a batch whole or not at all, so when the history entry in it is refused, the increments to `totalTrainingMinutes` and the rest are refused with it.
 
-What the repository has to handle: the refusal arrives as `permission-denied`, which the mapper turns into `FailureCode.permissionDenied`. For a history entry that already exists for today, that is "already saved", not an error to show the user. The repository should check its own cache for today's entry before writing, and treat the refusal as success if it still happens, for instance when a completion queued offline meets one already synced from another device.
+What the repository does with it: the refusal arrives as `permission-denied`, which the mapper turns into `FailureCode.permissionDenied`. For a history entry that already exists for today, that is "already saved", not an error to show the user. The repository checks the local copy for today's entry before writing, and writes nothing if it is there. If the write is refused anyway, for instance because the day was completed on another device, it reads the entry back from the server and reports "already saved" only if the server confirms the entry exists; a signed-out user gets the same refusal, so the refusal alone proves nothing.
 
 ## Writes that must not half-apply
 
@@ -76,8 +76,8 @@ What the repository has to handle: the refusal arrives as `permission-denied`, w
 
 The Firestore SDK's own persistence is the mechanism; the app builds nothing of its own. What that means for the repositories (HIT-079) and the error surface (HIT-066):
 
-- A write made offline is queued and applied when connectivity returns. The caller sees it succeed immediately, and the server confirmation is not surfaced separately for the MVP.
-- A read made offline, before that path has ever synced, has nothing cached. That is "not fetched yet", which is not the same as "this user has no data", and the repository is the layer that can tell them apart.
+- A write made offline is applied to the local copy at once, so every listener, and every screen built on one, shows it immediately. It is sent when connectivity returns. The `Future` the write returns completes only then, when the server has accepted it, so a screen must not wait on that `Future` to move on (`USER_PROGRESS.md`).
+- A read made offline, before that path has ever synced, has nothing cached. That is "not fetched yet", which is not the same as "this user has no data", and the repository is the layer that can tell them apart: it reports that case as `FailureCode.networkOffline`, never as missing data.
 - A genuine failure goes through the mapper HIT-066 already built: `unavailable` becomes `FailureCode.networkUnavailable` and `deadline-exceeded` becomes `FailureCode.networkTimeout`. No Firestore-specific failure type is invented.
 
 ## Indexes
