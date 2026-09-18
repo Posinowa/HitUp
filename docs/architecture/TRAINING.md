@@ -1,6 +1,6 @@
 # Training
 
-**STATUS: TODAY'S TRAINING IMPLEMENTED (HIT-025).** The session state machine is HIT-026, the screens are HIT-027 onwards.
+**STATUS: TODAY'S TRAINING AND THE SESSION IMPLEMENTED (HIT-025, HIT-026).** The screens are HIT-027 onwards, and recording a finished day is HIT-052 and HIT-053.
 
 ## What decides today's training
 
@@ -64,6 +64,44 @@ if (today.isProgramFinished) {
 ```
 
 `totalDuration` is the sum of the exercises' own durations, which is what the session will take. `estimatedDuration` is the day's authored figure and includes the pauses between exercises, so it is the larger of the two and the honest one to show before starting.
+
+## Running a day (HIT-026)
+
+`TrainingSession` is the state machine. It is a value: each transition returns a new session rather than changing the old one, so the whole thing reads in one file and tests without a widget, a timer or a repository.
+
+```text
+notStarted  --start-->  inProgress  --pause-->  paused  --resume-->  inProgress
+                            |                                            |
+                     complete / skip the last exercise, or finish        ...
+                            v
+                        completed
+```
+
+| File | Holds |
+|---|---|
+| `features/training/domain/training_session.dart` | The states and the transitions |
+| `features/training/application/training_session_controller.dart` | The session a screen is running, and the saving |
+| `features/training/data/session_store.dart` | The unfinished session on the device |
+
+**Illegal transitions throw.** Pausing something that was never started, or completing an exercise after the session is over, is a caller bug rather than a state to fall back from. A screen asks first: `canStart`, `canPause`, `canResume`, `canAdvance`, `canFinish`.
+
+**Completing the last exercise completes the session.** Nothing else has to notice that it was the last one.
+
+**Skipping is not completing.** A skipped exercise is passed over and not recorded, so `completedExerciseIds` is what actually happened and `isFullyCompleted` can tell a finished day from an abandoned one.
+
+**Finishing early keeps what was done.** A user who leaves after two of five exercises has two completions, and `isFullyCompleted` is false.
+
+**A double tap records once.** A screen that fires the callback twice before it rebuilds cannot count the same exercise twice.
+
+## The unfinished session on the device
+
+`SessionStore` keeps the current session in the device's preferences, so the home screen can offer to carry on with it (#23). The device, not Firestore: a half-finished session is not progress, it is where someone was when the phone rang, and putting it on the account would have two devices arguing about which half-session is current. `FIRESTORE_MODEL.md` has no place for one either.
+
+The controller writes after every transition and does not wait for the write: the screen moves on with the state it already has, and a failed write costs a resume, not the session.
+
+A saved session that cannot be read, or one whose status this build does not know, is refused rather than guessed at. The day starts again, which is a small loss next to resuming into a state the app cannot reason about.
+
+A **finished** session is never offered for resume; it is left over from a run that ended without being cleared. `discard()` is what a screen calls once a finished session has been recorded (#53, #54); until then the saved copy is the safety net.
 
 ## Testing
 
