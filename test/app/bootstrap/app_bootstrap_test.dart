@@ -1,7 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hitup/app/bootstrap/app_bootstrap.dart';
+import 'package:hitup/core/analytics/analytics_event.dart';
+import 'package:hitup/core/analytics/analytics_service.dart';
 import 'package:hitup/core/services/notification_service.dart';
+import 'package:hitup/shared/providers/analytics_providers.dart';
 import 'package:hitup/shared/providers/notification_providers.dart';
 
 /// A notification service that records what was asked of it and never touches
@@ -66,11 +70,49 @@ class _FakeNotificationService implements NotificationService {
       throw UnimplementedError('bootstrap must not cancel anything');
 }
 
+/// An analytics service that records what startup asked of it.
+///
+/// Logging throws: startup has nothing to report yet, and an event sent before
+/// the first frame would be one nobody asked for.
+class _FakeAnalyticsService implements AnalyticsService {
+  _FakeAnalyticsService({this.failOnSetup = false});
+
+  /// Whether [setCollectionEnabled] throws, standing in for a platform
+  /// channel that is not there.
+  final bool failOnSetup;
+
+  /// What [setCollectionEnabled] was called with, in order.
+  final List<bool> collectionCalls = <bool>[];
+
+  @override
+  Future<void> setCollectionEnabled(bool enabled) async {
+    collectionCalls.add(enabled);
+    if (failOnSetup) {
+      throw StateError('analytics setup failed');
+    }
+  }
+
+  @override
+  Future<void> log(AnalyticsEvent event) =>
+      throw UnimplementedError('bootstrap must not log an event');
+
+  @override
+  Future<void> setUserId(String? uid) =>
+      throw UnimplementedError('bootstrap must not set a user id');
+}
+
 /// Reads back the service a set of overrides carries.
 NotificationService serviceFrom(List<Override> overrides) {
   final ProviderContainer container = ProviderContainer(overrides: overrides);
   addTearDown(container.dispose);
   return container.read(notificationServiceProvider);
+}
+
+/// Reads back the analytics service a set of overrides carries.
+AnalyticsService analyticsFrom(List<Override> overrides) {
+  final ProviderContainer container = ProviderContainer(overrides: overrides);
+  addTearDown(container.dispose);
+  return container.read(analyticsServiceProvider);
 }
 
 /// Stands in for Firebase, which has no platform channel under `flutter test`.
@@ -81,10 +123,14 @@ Future<void> _skipFirebase() async {}
 Future<List<Override>> boot({
   required NotificationServiceFactory createNotificationService,
   FirebaseInitializer initializeFirebase = _skipFirebase,
+  AnalyticsServiceFactory createAnalyticsService = _FakeAnalyticsService.new,
+  bool collectAnalytics = false,
 }) =>
     AppBootstrap.init(
       initializeFirebase: initializeFirebase,
       createNotificationService: createNotificationService,
+      createAnalyticsService: createAnalyticsService,
+      collectAnalytics: collectAnalytics,
     );
 
 void main() {
@@ -97,7 +143,7 @@ void main() {
       final List<Override> overrides =
           await boot(createNotificationService: () => fake);
 
-      expect(overrides, hasLength(1));
+      expect(overrides, hasLength(2));
       expect(serviceFrom(overrides), same(fake));
     });
 
@@ -120,7 +166,7 @@ void main() {
       final List<Override> overrides =
           await boot(createNotificationService: () => fake);
 
-      expect(overrides, hasLength(1));
+      expect(overrides, hasLength(2));
     });
 
     test('the failed service is still the one the app gets', () async {
@@ -136,6 +182,63 @@ void main() {
 
       expect(serviceFrom(overrides), same(fake));
       expect(fake.initCalls, 1);
+    });
+
+    test('it hands the app an analytics service, collection set for the build',
+        () async {
+      final _FakeAnalyticsService analytics = _FakeAnalyticsService();
+
+      final List<Override> overrides = await boot(
+        createNotificationService: _FakeNotificationService.new,
+        createAnalyticsService: () => analytics,
+        collectAnalytics: true,
+      );
+
+      expect(analyticsFrom(overrides), same(analytics));
+      expect(analytics.collectionCalls, <bool>[true]);
+    });
+
+    test('a debug build starts with collection off', () async {
+      // The promise the file makes in prose: development taps do not land in
+      // the product's numbers. This calls init without collectAnalytics on
+      // purpose, so the default itself is what gets tested. Tests run in debug,
+      // so the default has to come out false.
+      final _FakeAnalyticsService analytics = _FakeAnalyticsService();
+
+      await AppBootstrap.init(
+        initializeFirebase: _skipFirebase,
+        createNotificationService: _FakeNotificationService.new,
+        createAnalyticsService: () => analytics,
+      );
+
+      expect(kDebugMode, isTrue, reason: 'this test assumes a debug run');
+      expect(analytics.collectionCalls, <bool>[false]);
+    });
+
+    test('analytics that cannot start up does not stop the app opening',
+        () async {
+      final _FakeAnalyticsService analytics =
+          _FakeAnalyticsService(failOnSetup: true);
+
+      final List<Override> overrides = await boot(
+        createNotificationService: _FakeNotificationService.new,
+        createAnalyticsService: () => analytics,
+      );
+
+      expect(overrides, hasLength(2));
+      // Still the one the app gets, so call sites need no null check.
+      expect(analyticsFrom(overrides), same(analytics));
+    });
+
+    test('startup logs no event of its own', () async {
+      // Logging throws on the fake. An event sent before the first frame is
+      // one nobody asked for, and this is what would catch it.
+      final _FakeAnalyticsService analytics = _FakeAnalyticsService();
+
+      await boot(
+        createNotificationService: _FakeNotificationService.new,
+        createAnalyticsService: () => analytics,
+      );
     });
 
     test('startup asks the service for nothing but init', () async {
