@@ -141,6 +141,37 @@ void main() {
       expect((await ring(tester, remaining: Duration.zero)).value, 0);
     });
 
+    testWidgets('stays round, and smaller, where there is little room',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Center(
+            child: SizedBox(
+              width: 300,
+              height: 100,
+              child: Center(
+                child: Builder(
+                  builder: (BuildContext context) =>
+                      const CountdownRenderer().build(
+                    context,
+                    ExerciseRenderContext(
+                      exercise: _exercise(ExercisePresentationType.timer),
+                      remaining: const Duration(seconds: 10),
+                      isRunning: true,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final Size ring = tester.getSize(find.byType(CircularProgressIndicator));
+      expect(ring.height, 100);
+      expect(ring.width, ring.height, reason: 'a squashed ring is an oval');
+    });
+
     testWidgets('never draws past full', (WidgetTester tester) async {
       expect(
         (await ring(tester, remaining: const Duration(seconds: 90))).value,

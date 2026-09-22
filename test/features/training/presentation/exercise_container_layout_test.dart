@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hitup/core/theme/app_theme.dart';
 import 'package:hitup/features/auth/domain/models/auth_user.dart';
 import 'package:hitup/features/training/application/training_session_controller.dart';
+import 'package:hitup/features/training/data/asset_curriculum_repository.dart';
 import 'package:hitup/features/training/data/session_store.dart';
 import 'package:hitup/features/training/domain/models/models.dart';
 import 'package:hitup/features/training/domain/training_session.dart';
@@ -48,13 +49,30 @@ void main() {
     }
   });
 
-  const Exercise exercise = Exercise(
-    id: 'layout_check',
-    title: 'Diyafram nefesi',
-    presentationType: ExercisePresentationType.timer,
-    durationSeconds: 60,
-    instructions: 'Burnundan dört sayıda al, ağzından altı sayıda ver.',
-  );
+  // The longest instructions and title the content ships, so the check is
+  // against the real worst case, not a sentence written to fit.
+  late Exercise exercise;
+
+  setUpAll(() async {
+    final ExerciseLibrary library =
+        await AssetCurriculumRepository().loadExercises();
+    final Exercise longest = library.exercises.reduce(
+      (Exercise a, Exercise b) =>
+          a.instructions.length >= b.instructions.length ? a : b,
+    );
+    exercise = Exercise(
+      id: 'layout_check',
+      title: library.exercises
+          .reduce(
+            (Exercise a, Exercise b) =>
+                a.title.length >= b.title.length ? a : b,
+          )
+          .title,
+      presentationType: ExercisePresentationType.timer,
+      durationSeconds: 60,
+      instructions: longest.instructions,
+    );
+  });
 
   for (final (Size screen, double scale) in const <(Size, double)>[
     (Size(390, 844), 1),
@@ -89,10 +107,10 @@ void main() {
               ),
               child: child!,
             ),
-            home: const ExerciseContainerScreen(
+            home: ExerciseContainerScreen(
               today: TodayTraining(
                 programDay: 1,
-                day: ProgramDay(
+                day: const ProgramDay(
                   day: 1,
                   title: 'Gün 1',
                   estimatedMinutes: 1,
@@ -102,7 +120,7 @@ void main() {
                 ),
                 resolved: ResolvedDay(
                   exercises: <Exercise>[exercise],
-                  missingIds: <String>[],
+                  missingIds: const <String>[],
                 ),
               ),
             ),

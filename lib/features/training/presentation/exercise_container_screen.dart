@@ -500,28 +500,58 @@ class _ExerciseView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Text(exercise.title, style: text.headlineMedium),
-              const SizedBox(height: AppSpacing.sm),
-              Text(exercise.instructions, style: text.bodyLarge),
-              const SizedBox(height: AppSpacing.lg),
               Expanded(
-                child: ListenableBuilder(
-                  listenable: clock,
-                  builder: (BuildContext context, Widget? _) => Center(
-                    // Keyed by position, so a renderer with state of its own
-                    // starts fresh on the next exercise, even one of the
-                    // same type.
-                    child: KeyedSubtree(
-                      key: ValueKey<int>(session.currentIndex),
-                      child: renderer.build(
-                        context,
-                        ExerciseRenderContext(
-                          exercise: exercise,
-                          remaining: clock.remaining,
-                          isRunning: running,
+                // The title and instructions take what they need, up to half
+                // of the room between the bar and the time, and scroll past
+                // that; the renderer has the rest. On a small phone with
+                // large text the longest instructions the content ships do
+                // not fit otherwise, and the controls would be pushed off.
+                child: LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints room) =>
+                      Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: room.maxHeight / 2,
+                        ),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              Text(exercise.title, style: text.headlineMedium),
+                              const SizedBox(height: AppSpacing.sm),
+                              Text(
+                                exercise.instructions,
+                                style: text.bodyLarge,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: AppSpacing.lg),
+                      Expanded(
+                        child: ListenableBuilder(
+                          listenable: clock,
+                          builder: (BuildContext context, Widget? _) => Center(
+                            // Keyed by position, so a renderer with state of
+                            // its own starts fresh on the next exercise, even
+                            // one of the same type.
+                            child: KeyedSubtree(
+                              key: ValueKey<int>(session.currentIndex),
+                              child: renderer.build(
+                                context,
+                                ExerciseRenderContext(
+                                  exercise: exercise,
+                                  remaining: clock.remaining,
+                                  isRunning: running,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
