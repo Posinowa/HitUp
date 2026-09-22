@@ -5,6 +5,7 @@ import 'package:hitup/features/training/domain/models/models.dart';
 import 'package:hitup/features/training/presentation/renderers/countdown_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/exercise_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/exercise_renderers.dart';
+import 'package:hitup/features/training/presentation/renderers/rive_renderer.dart';
 
 class _Marker implements ExerciseRenderer {
   const _Marker(this.name);
@@ -84,14 +85,20 @@ void main() {
       registry = container.read(exerciseRendererRegistryProvider);
     });
 
-    test('a countdown for timer, and the plain body for everything else', () {
+    test(
+        'a countdown for timer, Rive for rive and articulation, and the '
+        'plain body for everything else', () {
       for (final ExercisePresentationType type
           in ExercisePresentationType.values) {
         expect(
           registry.rendererFor(type),
-          type == ExercisePresentationType.timer
-              ? isA<CountdownRenderer>()
-              : isA<PlainExerciseRenderer>(),
+          switch (type) {
+            ExercisePresentationType.timer => isA<CountdownRenderer>(),
+            ExercisePresentationType.rive ||
+            ExercisePresentationType.articulation =>
+              isA<RiveExerciseRenderer>(),
+            _ => isA<PlainExerciseRenderer>(),
+          },
           reason: type.name,
         );
       }

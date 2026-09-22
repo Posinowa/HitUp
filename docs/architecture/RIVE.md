@@ -1,6 +1,6 @@
 # Rive
 
-**STATUS: RUNTIME IN PLACE AND PROVEN TO RENDER (HIT-032).** The renderer that shows an exercise's animation is HIT-033 (#36).
+**STATUS: RUNTIME IN PLACE AND PROVEN TO RENDER (HIT-032); EXERCISES SHOW THEIR ANIMATION THROUGH ONE RENDERER (HIT-033).**
 
 The mouth, lip, tongue and jaw drills are Rive animations. This page is what the app does with a `.riv` file, and what an animation needs so the app can drive it.
 
@@ -31,6 +31,20 @@ A file that imports both `package:flutter/foundation.dart` and `package:rive/riv
 
 **Not through `FileLoader`.** When loading fails, `FileLoader.file()` throws, and also fails a completer that nothing listens to. That second error surfaces as an unhandled one, next to the error the caller already handled, and a crash reporter records it as a crash. Seen with `rive` 0.14.11 on a missing asset.
 
+## The exercise renderer (HIT-033)
+
+`RiveExerciseRenderer` (`features/training/presentation/renderers/rive_renderer.dart`) is registered for the `rive` and `articulation` presentation types, so the exercise screen (`TRAINING.md`) shows every Rive exercise through it, in the shared chrome. The content decides everything it shows: `media.key` names the file, `media.stateMachine` the state machine, and nothing looks at an exercise id.
+
+In order, each step's failure shown in place of the animation, with the message the table below gives:
+
+1. **No Rive media on the exercise**, or media of another kind: a content mistake, known before anything loads.
+2. **The runtime**, through `riveRuntimeProvider`. Not running: nothing is read.
+3. **The bytes**, `assets/rive/<key>.riv` through `riveBytesLoaderProvider`, read before anything reaches the runtime, so a missing file is reported as missing.
+4. **Decoding**, with the factory from `riveFactoryProvider`, `Factory.rive` in the app. The provider hands out a function, called only after step 2, because reading a factory loads the native library.
+5. **The controller**, with the state machine the content names, or the file's default when it names none.
+
+While the session is paused the controller is inactive, so the animation holds still. Leaving the exercise while it loads stops it after the step in hand, and whatever was opened is released. New media on the same view starts a new load, and a load of the old media that finishes later is dropped, so an old file is never shown for new content.
+
 ## What goes wrong, and what the user reads
 
 `mapErrorToFailure` turns Rive's errors into content failures, so a screen shows a sentence rather than a stack trace:
@@ -49,13 +63,15 @@ For whoever makes the `.riv` files:
 
 - **One file per media key**, named after the key: `ux_lips` is `assets/rive/ux_lips.riv`. The key is lower case letters, digits and `_` (`R2_MEDIA.md`).
 - **The state machine is named in the content**, and the file must have one of exactly that name: `"media": {"kind": "rive", "key": "ux_lips", "stateMachine": "LipStates"}` needs a state machine called `LipStates`. The content has no field for the artboard, so the file's default artboard is the one shown.
-- **Inputs are not decided yet.** Which inputs a drill's state machine takes, and what the app sets them to, is settled with the first real animation (#37, the U-X lip drill) and written here then.
+- **Inputs are not decided yet.** Which inputs a drill's state machine takes, and what the app sets them to, is settled with the first real animation (#37, the U-X lip drill) and written here then. The content has no field for them, and the renderer sets none.
 
 The content already names two files that are not in `assets/rive/` yet: `ux_lips` (state machine `LipStates`) and `placeholder_sample` (`PlaceholderStates`). Until they arrive, loading them is the "not in the app" row above.
 
 Not verified here: which versions of the Rive editor export files that `rive` 0.14.11 reads. Check it when the first real file is exported.
 
 ## Testing
+
+`test/features/training/presentation/rive_renderer_test.dart` runs everywhere, with a fake runtime and a counted factory that is never made: the file read from `assets/rive/`, a missing file reported before the runtime is reached, a runtime that does not run reading nothing, an exercise without Rive media asking nothing, the loading state, leaving while it loads, new media dropping the old load, a failure while opening shown rather than thrown, and an articulation drill shown by the renderer inside the exercise screen. `rive_renderer_render_test.dart` (tagged) draws `rocket.riv` and `rating.riv` through it, each with its named state machine, uses the default one when none is named, holds still while paused, moves from one file to another in the same place, and shows a missing state machine or bytes that are not a Rive file as media that cannot be shown.
 
 `test/core/media/rive_runtime_test.dart` runs everywhere: the runtime asked once, a failure kept as false and not asked again, callers sharing one start, and the app having one runtime. `test/core/errors/failure_mapper_test.dart` holds the mapping of each Rive exception.
 
