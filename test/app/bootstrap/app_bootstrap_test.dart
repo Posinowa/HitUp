@@ -4,8 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hitup/app/bootstrap/app_bootstrap.dart';
 import 'package:hitup/core/analytics/analytics_event.dart';
 import 'package:hitup/core/analytics/analytics_service.dart';
+import 'package:hitup/core/observability/crash_reporter.dart';
 import 'package:hitup/core/services/notification_service.dart';
 import 'package:hitup/shared/providers/analytics_providers.dart';
+import 'package:hitup/shared/providers/crash_providers.dart';
 import 'package:hitup/shared/providers/notification_providers.dart';
 
 /// A notification service that records what was asked of it and never touches
@@ -101,6 +103,44 @@ class _FakeAnalyticsService implements AnalyticsService {
       throw UnimplementedError('bootstrap must not set a user id');
 }
 
+/// A crash reporter that records what startup asked of it.
+///
+/// Reporting throws: startup has no error to report, and one sent before the
+/// first frame would be an error nobody hit.
+class _FakeCrashReporter implements CrashReporter {
+  _FakeCrashReporter({this.failOnSetup = false});
+
+  /// Whether [setCollectionEnabled] throws.
+  final bool failOnSetup;
+
+  /// What [setCollectionEnabled] was called with, in order.
+  final List<bool> collectionCalls = <bool>[];
+
+  @override
+  Future<void> setCollectionEnabled(bool enabled) async {
+    collectionCalls.add(enabled);
+    if (failOnSetup) {
+      throw StateError('crash reporting setup failed');
+    }
+  }
+
+  @override
+  Future<void> recordError(
+    Object error,
+    StackTrace? stackTrace, {
+    bool fatal = false,
+  }) =>
+      throw UnimplementedError('bootstrap must not report an error');
+
+  @override
+  Future<void> recordFlutterError(FlutterErrorDetails details) =>
+      throw UnimplementedError('bootstrap must not report an error');
+
+  @override
+  Future<void> setUserId(String? uid) =>
+      throw UnimplementedError('bootstrap must not set a user id');
+}
+
 /// Reads back the service a set of overrides carries.
 NotificationService serviceFrom(List<Override> overrides) {
   final ProviderContainer container = ProviderContainer(overrides: overrides);
@@ -115,6 +155,13 @@ AnalyticsService analyticsFrom(List<Override> overrides) {
   return container.read(analyticsServiceProvider);
 }
 
+/// Reads back the crash reporter a set of overrides carries.
+CrashReporter crashesFrom(List<Override> overrides) {
+  final ProviderContainer container = ProviderContainer(overrides: overrides);
+  addTearDown(container.dispose);
+  return container.read(crashReporterProvider);
+}
+
 /// Stands in for Firebase, which has no platform channel under `flutter test`.
 Future<void> _skipFirebase() async {}
 
@@ -125,12 +172,16 @@ Future<List<Override>> boot({
   FirebaseInitializer initializeFirebase = _skipFirebase,
   AnalyticsServiceFactory createAnalyticsService = _FakeAnalyticsService.new,
   bool collectAnalytics = false,
+  CrashReporterFactory createCrashReporter = _FakeCrashReporter.new,
+  bool reportCrashes = false,
 }) =>
     AppBootstrap.init(
       initializeFirebase: initializeFirebase,
       createNotificationService: createNotificationService,
       createAnalyticsService: createAnalyticsService,
       collectAnalytics: collectAnalytics,
+      createCrashReporter: createCrashReporter,
+      reportCrashes: reportCrashes,
     );
 
 void main() {
@@ -143,7 +194,7 @@ void main() {
       final List<Override> overrides =
           await boot(createNotificationService: () => fake);
 
-      expect(overrides, hasLength(2));
+      expect(overrides, hasLength(3));
       expect(serviceFrom(overrides), same(fake));
     });
 
@@ -166,7 +217,7 @@ void main() {
       final List<Override> overrides =
           await boot(createNotificationService: () => fake);
 
-      expect(overrides, hasLength(2));
+      expect(overrides, hasLength(3));
     });
 
     test('the failed service is still the one the app gets', () async {
@@ -204,11 +255,14 @@ void main() {
       // purpose, so the default itself is what gets tested. Tests run in debug,
       // so the default has to come out false.
       final _FakeAnalyticsService analytics = _FakeAnalyticsService();
+      final FlutterExceptionHandler? before = FlutterError.onError;
+      addTearDown(() => FlutterError.onError = before);
 
       await AppBootstrap.init(
         initializeFirebase: _skipFirebase,
         createNotificationService: _FakeNotificationService.new,
         createAnalyticsService: () => analytics,
+        createCrashReporter: _FakeCrashReporter.new,
       );
 
       expect(kDebugMode, isTrue, reason: 'this test assumes a debug run');
@@ -225,7 +279,7 @@ void main() {
         createAnalyticsService: () => analytics,
       );
 
-      expect(overrides, hasLength(2));
+      expect(overrides, hasLength(3));
       // Still the one the app gets, so call sites need no null check.
       expect(analyticsFrom(overrides), same(analytics));
     });
@@ -239,6 +293,70 @@ void main() {
         createNotificationService: _FakeNotificationService.new,
         createAnalyticsService: () => analytics,
       );
+    });
+
+    test('it hands the app a crash reporter, collection set for the build',
+        () async {
+      final _FakeCrashReporter crashes = _FakeCrashReporter();
+      final FlutterExceptionHandler? before = FlutterError.onError;
+      addTearDown(() => FlutterError.onError = before);
+
+      final List<Override> overrides = await boot(
+        createNotificationService: _FakeNotificationService.new,
+        createCrashReporter: () => crashes,
+        reportCrashes: true,
+      );
+
+      expect(crashesFrom(overrides), same(crashes));
+      expect(crashes.collectionCalls, <bool>[true]);
+    });
+
+    test('a debug build starts with crash reporting off', () async {
+      final _FakeCrashReporter crashes = _FakeCrashReporter();
+      final FlutterExceptionHandler? before = FlutterError.onError;
+      addTearDown(() => FlutterError.onError = before);
+
+      await AppBootstrap.init(
+        initializeFirebase: _skipFirebase,
+        createNotificationService: _FakeNotificationService.new,
+        createAnalyticsService: _FakeAnalyticsService.new,
+        createCrashReporter: () => crashes,
+      );
+
+      expect(crashes.collectionCalls, <bool>[false]);
+    });
+
+    test('startup wires the error handlers to the reporter', () async {
+      // The promise: an error nothing caught reaches the reporter. Without the
+      // install call, the handler would still be Flutter's own and a crash
+      // would never leave the device.
+      final _FakeCrashReporter crashes = _FakeCrashReporter();
+      final FlutterExceptionHandler? before = FlutterError.onError;
+      addTearDown(() => FlutterError.onError = before);
+
+      await boot(
+        createNotificationService: _FakeNotificationService.new,
+        createCrashReporter: () => crashes,
+      );
+
+      expect(FlutterError.onError, isNot(same(before)));
+    });
+
+    test('a reporter that cannot start up does not stop the app opening',
+        () async {
+      final _FakeCrashReporter crashes = _FakeCrashReporter(failOnSetup: true);
+      final FlutterExceptionHandler? before = FlutterError.onError;
+      addTearDown(() => FlutterError.onError = before);
+
+      final List<Override> overrides = await boot(
+        createNotificationService: _FakeNotificationService.new,
+        createCrashReporter: () => crashes,
+      );
+
+      expect(overrides, hasLength(3));
+      expect(crashesFrom(overrides), same(crashes));
+      // And the handlers are still wired, so later errors are still reported.
+      expect(FlutterError.onError, isNot(same(before)));
     });
 
     test('startup asks the service for nothing but init', () async {
