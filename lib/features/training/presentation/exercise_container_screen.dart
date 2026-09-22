@@ -527,26 +527,33 @@ class _ExerciseView extends StatelessWidget {
               ),
               _TimeLine(clock: clock, paused: !running),
               const SizedBox(height: AppSpacing.md),
-              if (running)
+              // The one primary action on its own line, full width, and the
+              // two others sharing the line below. Three buttons side by
+              // side do not fit a 320 pt phone.
+              if (running) ...<Widget>[
+                ElevatedButton(
+                  onPressed: onComplete,
+                  child: const Text(ExerciseContainerLabelsTr.complete),
+                ),
+                const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: <Widget>[
-                    TextButton(
-                      onPressed: onSkip,
-                      child: const Text(ExerciseContainerLabelsTr.skip),
-                    ),
-                    const Spacer(),
-                    OutlinedButton(
-                      onPressed: onPause,
-                      child: const Text(ExerciseContainerLabelsTr.pause),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: onSkip,
+                        child: const Text(ExerciseContainerLabelsTr.skip),
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    ElevatedButton(
-                      onPressed: onComplete,
-                      child: const Text(ExerciseContainerLabelsTr.complete),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: onPause,
+                        child: const Text(ExerciseContainerLabelsTr.pause),
+                      ),
                     ),
                   ],
-                )
-              else
+                ),
+              ] else
                 ElevatedButton(
                   onPressed: onResume,
                   child: const Text(ExerciseContainerLabelsTr.resume),
