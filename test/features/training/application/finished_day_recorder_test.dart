@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hitup/features/auth/domain/models/auth_user.dart';
 import 'package:hitup/features/progress/domain/models/calendar_day.dart';
 import 'package:hitup/features/progress/domain/models/training_history_entry.dart';
 import 'package:hitup/features/progress/domain/streak.dart';
@@ -8,6 +10,7 @@ import 'package:hitup/features/training/application/finished_day_recorder.dart';
 import 'package:hitup/features/training/application/training_day_recorder.dart';
 import 'package:hitup/features/training/data/pending_day_store.dart';
 import 'package:hitup/features/training/domain/training_session.dart';
+import 'package:hitup/shared/providers/auth_providers.dart';
 
 /// Pending days in memory, with the store's rules: oldest first, the first
 /// session of a date kept.
@@ -233,6 +236,92 @@ void main() {
       await expectLater(first, throwsStateError);
       expect(await second, hasLength(1));
       expect(store.days, isEmpty);
+    });
+  });
+
+  group('when someone signs in', () {
+    late StreamController<AuthUser?> auth;
+    late ProviderContainer container;
+    late bool recorderBuilt;
+
+    setUp(() {
+      auth = StreamController<AuthUser?>.broadcast();
+      addTearDown(auth.close);
+      recorderBuilt = false;
+      container = ProviderContainer(
+        overrides: <Override>[
+          authStateChangesProvider.overrideWith((Ref ref) => auth.stream),
+          pendingDayStoreProvider.overrideWithValue(store),
+          trainingDayRecorderProvider.overrideWith((Ref ref) {
+            recorderBuilt = true;
+            return recorder;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.listen(pendingDaysProvider, (_, __) {});
+    });
+
+    Future<List<TrainingDayRecord>> settle() async {
+      await pumpEventQueue();
+      return container.read(pendingDaysProvider.future);
+    }
+
+    test("records that account's pending days", () async {
+      store.days.addAll(<PendingDay>[_day(16), _day(15)]);
+
+      auth.add(const AuthUser(uid: 'uid-1'));
+
+      expect(await settle(), hasLength(2));
+      expect(recordedDates(), <int>[15, 16]);
+      expect(store.days, isEmpty);
+    });
+
+    test(
+        'with nothing pending for the account, does not reach the account '
+        'at all', () async {
+      store.days.add(_day(16, uid: 'uid-2'));
+
+      auth.add(const AuthUser(uid: 'uid-1'));
+
+      expect(await settle(), isEmpty);
+      expect(recorderBuilt, isFalse);
+      expect(store.days, hasLength(1));
+    });
+
+    test('signed out, records nothing', () async {
+      store.days.add(_day(16));
+
+      auth.add(null);
+
+      expect(await settle(), isEmpty);
+      expect(recorder.calls, isEmpty);
+    });
+
+    test('runs again for the next account', () async {
+      store.days.addAll(<PendingDay>[_day(15), _day(16, uid: 'uid-2')]);
+
+      auth.add(const AuthUser(uid: 'uid-1'));
+      await settle();
+      auth.add(const AuthUser(uid: 'uid-2'));
+      await settle();
+
+      expect(
+        recorder.calls.map(((String, CalendarDay, int) c) => c.$1),
+        <String>['uid-1', 'uid-2'],
+      );
+      expect(store.days, isEmpty);
+    });
+
+    test('a failure is held, and the days stay pending', () async {
+      store.days.add(_day(16));
+      recorder.failOn.add(CalendarDay(2026, 9, 16));
+
+      auth.add(const AuthUser(uid: 'uid-1'));
+      await pumpEventQueue();
+
+      expect(container.read(pendingDaysProvider).hasError, isTrue);
+      expect(store.days, <PendingDay>[_day(16)]);
     });
   });
 }

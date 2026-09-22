@@ -149,10 +149,12 @@ A **finished** session is never offered for resume; it is left over from a run t
 - **One call at a time.** Calls queue behind each other, so two cannot both read the list and record the same day twice.
 - **A list that cannot be read is read as nothing.** Guessing at it could record a day that did not happen.
 
-`recordPending(uid)` records what an earlier run left. Nothing calls it yet: it is for the home screen (#23) to call when the app starts, before it builds today's training.
+**When the app starts.** `pendingDaysProvider` records what an earlier run left, as soon as someone is signed in, and again when the account changes. The app root listens to it, so it starts with the app. It reads the list on the device first and does not reach the account at all when that account has nothing pending, which is almost every launch.
+
+A screen that builds today's training (#23) can wait for it, briefly: offline it does not complete until the device is back online, and today's training should not wait that long. A failure is held in the provider rather than thrown, and the days stay pending for the next launch or the next finished day.
 
 ## Testing
 
 `test/features/training/domain/today_training_engine_test.dart` covers every state above from fixtures, with fake curriculum and progress repositories: each day's order and both totals, determinism, a short day, an empty day, past the last day, a day below one, a hole, an empty programme, and each way the user's day can fail to read.
 
-`test/features/training/application/finished_day_recorder_test.dart` and `test/features/training/data/pending_day_store_test.dart` cover the pending days: kept until recorded, oldest first, one per account and date, other accounts left alone, a failure keeping the rest, calls queued, and the stored form refusing what it cannot read.
+`test/features/training/application/finished_day_recorder_test.dart` and `test/features/training/data/pending_day_store_test.dart` cover the pending days: kept until recorded, oldest first, one per account and date, other accounts left alone, a failure keeping the rest, calls queued, the stored form refusing what it cannot read, and the start-up recording, which does not reach the account when nothing is pending. `test/app/pending_days_on_start_test.dart` holds that the app starts it.

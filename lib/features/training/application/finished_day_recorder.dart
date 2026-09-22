@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/providers/auth_providers.dart';
+import '../../auth/domain/models/auth_user.dart';
 import '../data/pending_day_store.dart';
 import 'training_day_recorder.dart';
 
@@ -106,3 +108,37 @@ final Provider<FinishedDayRecorder> finishedDayRecorderProvider =
     store: ref.watch(pendingDayStoreProvider),
   ),
 );
+
+/// Records the days an earlier run left pending, for whoever is signed in.
+///
+/// Runs when someone signs in and again when the account changes; the app
+/// root keeps it listened to, so it starts with the app. The list on the
+/// device is read first, and the account is not reached at all when that
+/// account has nothing pending, which is almost every launch.
+///
+/// A screen that builds today's training can wait for it, briefly: offline
+/// it does not complete until the device is back online, and today's
+/// training should not wait that long. A failure is held here, not thrown;
+/// the days stay pending for the next launch or the next finished day.
+final FutureProvider<List<TrainingDayRecord>> pendingDaysProvider =
+    FutureProvider<List<TrainingDayRecord>>((Ref ref) async {
+  final String? uid = ref.watch(
+    authStateChangesProvider.select(
+      (AsyncValue<AuthUser?> auth) => auth.valueOrNull?.uid,
+    ),
+  );
+  if (uid == null) {
+    return const <TrainingDayRecord>[];
+  }
+  try {
+    final List<PendingDay> pending =
+        await ref.watch(pendingDayStoreProvider).load();
+    if (!pending.any((PendingDay day) => day.uid == uid)) {
+      return const <TrainingDayRecord>[];
+    }
+    return await ref.read(finishedDayRecorderProvider).recordPending(uid);
+  } catch (error) {
+    debugPrint('HIT-028: pending days not recorded yet. Cause: $error');
+    rethrow;
+  }
+});
