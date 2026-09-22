@@ -1,10 +1,18 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/analytics/analytics_service.dart';
 import '../../core/config/environment.dart';
+import '../../core/observability/crash_hooks.dart';
+import '../../core/observability/crash_reporter.dart';
 import '../../core/services/notification_service.dart';
 import '../../firebase_options.dart';
+import '../../shared/providers/analytics_providers.dart';
+import '../../shared/providers/crash_providers.dart';
 import '../../shared/providers/notification_providers.dart';
 
 /// Builds the notification service the app starts with.
@@ -21,6 +29,18 @@ typedef NotificationServiceFactory = NotificationService Function();
 /// more: under `flutter test` there is no platform channel, so the real call
 /// throws before any test gets to run.
 typedef FirebaseInitializer = Future<void> Function();
+
+/// Builds the analytics service the app starts with.
+///
+/// A parameter for the same reason as the two above: the real one reads
+/// `FirebaseAnalytics.instance`, which needs a platform channel no test has.
+typedef AnalyticsServiceFactory = AnalyticsService Function();
+
+/// Builds the crash reporter the app starts with.
+///
+/// A parameter for the same reason as the others: the real one reads
+/// `FirebaseCrashlytics.instance`.
+typedef CrashReporterFactory = CrashReporter Function();
 
 /// Application bootstrap for foundation initialization.
 ///
@@ -44,6 +64,10 @@ class AppBootstrap {
     FirebaseInitializer initializeFirebase = _initializeFirebase,
     NotificationServiceFactory createNotificationService =
         LocalNotificationService.new,
+    AnalyticsServiceFactory createAnalyticsService = _createAnalyticsService,
+    bool collectAnalytics = !kDebugMode,
+    CrashReporterFactory createCrashReporter = _createCrashReporter,
+    bool reportCrashes = !kDebugMode,
   }) async {
     WidgetsFlutterBinding.ensureInitialized();
 
@@ -68,9 +92,75 @@ class AppBootstrap {
       createNotificationService,
     );
 
+    final AnalyticsService analytics = await _initAnalytics(
+      createAnalyticsService,
+      collect: collectAnalytics,
+    );
+
+    final CrashReporter crashes = await _initCrashReporting(
+      createCrashReporter,
+      report: reportCrashes,
+    );
+
     return <Override>[
       notificationServiceProvider.overrideWithValue(notifications),
+      analyticsServiceProvider.overrideWithValue(analytics),
+      crashReporterProvider.overrideWithValue(crashes),
     ];
+  }
+
+  /// The real analytics service, over the Firebase instance.
+  static AnalyticsService _createAnalyticsService() =>
+      FirebaseAnalyticsService(FirebaseAnalytics.instance);
+
+  /// The real crash reporter, over the Firebase instance.
+  static CrashReporter _createCrashReporter() =>
+      FirebaseCrashReporter(FirebaseCrashlytics.instance);
+
+  /// Creates the crash reporter, sets collection, and wires the error hooks.
+  ///
+  /// The hooks are installed whatever [report] says. They send to the reporter,
+  /// and the reporter is what decides whether anything leaves the device, so
+  /// installing them in a debug build costs nothing and keeps the path the
+  /// same in both builds rather than untested in one of them (HIT-065).
+  static Future<CrashReporter> _initCrashReporting(
+    CrashReporterFactory create, {
+    required bool report,
+  }) async {
+    final CrashReporter reporter = create();
+
+    try {
+      await reporter.setCollectionEnabled(report);
+    } on Object catch (error, stackTrace) {
+      debugPrint('HIT-065: crash reporting setup failed. Cause: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+
+    CrashHooks.install(reporter);
+    return reporter;
+  }
+
+  /// Creates the analytics service and sets collection for this build.
+  ///
+  /// Collection is off in debug builds, so a developer running the app does
+  /// not add taps to the product's numbers (HIT-063). Failure is not fatal for
+  /// the same reason as notifications, only more so: analytics is a side
+  /// channel, and no part of the app depends on it. When it fails the service
+  /// is still returned, so call sites need no null check.
+  static Future<AnalyticsService> _initAnalytics(
+    AnalyticsServiceFactory create, {
+    required bool collect,
+  }) async {
+    final AnalyticsService service = create();
+
+    try {
+      await service.setCollectionEnabled(collect);
+    } on Object catch (error, stackTrace) {
+      debugPrint('HIT-063: analytics setup failed. Cause: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+
+    return service;
   }
 
   /// Initialises Firebase with the options generated for this project.

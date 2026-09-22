@@ -1,7 +1,9 @@
+import '../models/calendar_day.dart';
 import '../models/exercise_progress.dart';
 import '../models/training_history_entry.dart';
 import '../models/user_preferences.dart';
 import '../models/user_profile.dart';
+import '../streak.dart';
 
 /// Everything the app reads and writes about a user's progress (HIT-079).
 ///
@@ -75,6 +77,18 @@ abstract interface class UserProgressRepository {
     String uid,
     TrainingCompletion completion,
   );
+
+  /// Counts [today] towards the streak, and stores the result (HIT-054).
+  ///
+  /// Read, decide, write, in one transaction: what the streak becomes depends
+  /// on what it was, so a batch built from a value read earlier could count a
+  /// day twice when two devices finish the same day at once
+  /// (`FIRESTORE_MODEL.md`).
+  ///
+  /// Returns what the streak is now. A day already counted changes nothing and
+  /// writes nothing, and comes back with `changed` false rather than as an
+  /// error. Needs the server: a transaction cannot be queued offline.
+  Future<StreakUpdate> updateStreak(String uid, CalendarDay today);
 
   /// The user's settings.
   Future<UserPreferences> getPreferences(String uid);

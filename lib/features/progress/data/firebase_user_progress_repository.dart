@@ -6,6 +6,7 @@ import '../domain/models/exercise_progress.dart';
 import '../domain/models/training_history_entry.dart';
 import '../domain/models/user_preferences.dart';
 import '../domain/models/user_profile.dart';
+import '../domain/streak.dart' as domain;
 import '../domain/repositories/user_progress_repository.dart';
 import 'progress_store.dart';
 
@@ -127,6 +128,38 @@ class FirebaseUserProgressRepository implements UserProgressRepository {
       }
       Error.throwWithStackTrace(error, stackTrace);
     }
+  }
+
+  @override
+  Future<domain.StreakUpdate> updateStreak(String uid, CalendarDay today) {
+    _requireSegment(uid, 'uid');
+    return _store.transaction<domain.StreakUpdate>(
+      (StoredTransaction tx) async {
+        final StoredDocument doc = await tx.read(_userPath(uid));
+        _requireExists(doc, 'profile');
+        final _Reader read = _Reader(doc);
+        final String? stored = read.optionalString('lastTrainingDate');
+
+        final domain.StreakUpdate update = domain.advanceStreak(
+          today: today,
+          lastTrainingDate:
+              stored == null ? null : read.parsed(stored, CalendarDay.parse),
+          currentStreak: read.integer('currentStreak'),
+          longestStreak: read.integer('longestStreak'),
+        );
+
+        // Nothing to write for a day already counted. Writing the same values
+        // again would still cost a round trip and still race another device.
+        if (update.changed) {
+          tx.update(_userPath(uid), <String, Object>{
+            'currentStreak': update.currentStreak,
+            'longestStreak': update.longestStreak,
+            'lastTrainingDate': update.lastTrainingDate.key,
+          });
+        }
+        return update;
+      },
+    );
   }
 
   @override
