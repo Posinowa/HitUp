@@ -195,6 +195,18 @@ came out of the shipped content rather than from the shape a reader might assume
   whether the drill works, so a newer file that adds a level is still speakable on an older build.
   An absent value is allowed; a wrong-typed one is still an error.
 
+### Finding twisters (HIT-040)
+
+`TongueTwisterLibrary` answers the three questions a screen has: by target letter, by difficulty, by
+category, and any combination of the three through one `where`. `targetLetters` lists the letters the
+file actually offers, folded to lower case and without repeats, which is what a letter picker shows.
+
+Letter matching folds case **the Turkish way** (`lib/core/text/turkish_case.dart`), because `I` pairs
+with `ı` and `İ` with `i`. Dart's own mapping gets one of those pairs wrong in each direction, so a
+drill written `İ` would not answer a request for `i`. Content writes the letter in upper case and a
+screen may hold it either way; the fold is what makes both find the same twisters. Twisters with no
+target letter never match a letter request.
+
 The plan those models follow:
 
 - Immutable classes with `const` constructors and `final` fields.
