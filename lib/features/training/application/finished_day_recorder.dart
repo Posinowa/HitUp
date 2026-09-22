@@ -22,8 +22,15 @@ import 'training_day_recorder.dart';
 /// streak can be counted in. A failure stops there and leaves the rest
 /// pending, to be tried again.
 ///
-/// **One at a time.** Calls queue behind each other. The pending days are a
-/// read, a change and a write, and two calls interleaving would lose one.
+/// **Kept at once, recorded in turn.** Two queues, because they wait for
+/// different things:
+///
+/// - Keeping a day on the device, or forgetting one, is a read, a change and
+///   a write of the list, and two of them interleaving would lose a day. They
+///   take turns with each other only, and each is over in moments.
+/// - Recordings take turns with each other. Offline one can wait until the
+///   device is back online, and a day finished meanwhile must not wait
+///   behind it to be kept: closing the app would lose it.
 class FinishedDayRecorder {
   /// Creates a recorder over [recorder], keeping pending days in [store].
   FinishedDayRecorder({
@@ -35,26 +42,39 @@ class FinishedDayRecorder {
   final TrainingDayRecorder _recorder;
   final PendingDayStore _store;
 
-  Future<void> _last = Future<void>.value();
+  Future<void> _lastRecording = Future<void>.value();
+  Future<void> _lastStoreChange = Future<void>.value();
+
+  /// What recording each day returned, by account and date, whichever call
+  /// recorded it. A call can find its day already recorded by one queued
+  /// before it, and still has to say what that did.
+  final Map<String, TrainingDayRecord> _recorded =
+      <String, TrainingDayRecord>{};
+
+  static String _keyOf(PendingDay day) => '${day.uid}|${day.date.key}';
 
   /// Keeps [day] on the device, then records it and any older pending day
   /// of the same account.
   ///
   /// Returns what recording [day]'s date did. Throws what the recording
   /// threw; [day] stays pending.
-  Future<TrainingDayRecord> record(PendingDay day) => _queued(() async {
-        await _store.add(day);
-        final Map<PendingDay, TrainingDayRecord> recorded =
-            await _recordPending(day.uid);
-        // Keyed by the stored day, which may be an earlier session on the
-        // same date: that one is kept, as the account keeps it.
-        return recorded.entries
-            .firstWhere(
-              (MapEntry<PendingDay, TrainingDayRecord> entry) =>
-                  entry.key.isSameDayAs(day),
-            )
-            .value;
-      });
+  Future<TrainingDayRecord> record(PendingDay day) {
+    // Kept now, not in turn: see the class comment. The recording is queued
+    // in the same moment, so its place in line is fixed by this call.
+    final Future<void> kept = _changeStore(() => _store.add(day));
+    return _inTurn(() async {
+      await kept;
+      await _recordPending(day.uid);
+      // By account and date: an earlier session on the same date is the one
+      // kept, as the account keeps it, and a call queued before this one may
+      // be what recorded it.
+      final TrainingDayRecord? record = _recorded[_keyOf(day)];
+      if (record == null) {
+        throw StateError('${day.date.key} was neither pending nor recorded');
+      }
+      return record;
+    });
+  }
 
   /// Records every day [uid] left pending, oldest first.
   ///
@@ -62,36 +82,43 @@ class FinishedDayRecorder {
   /// recorded before anything is built on it. Days of another account stay
   /// pending for that account. Returns what was recorded, oldest first.
   Future<List<TrainingDayRecord>> recordPending(String uid) =>
-      _queued(() async => (await _recordPending(uid)).values.toList());
+      _inTurn(() => _recordPending(uid));
 
-  Future<Map<PendingDay, TrainingDayRecord>> _recordPending(String uid) async {
-    final Map<PendingDay, TrainingDayRecord> recorded =
-        <PendingDay, TrainingDayRecord>{};
+  Future<List<TrainingDayRecord>> _recordPending(String uid) async {
+    final List<TrainingDayRecord> records = <TrainingDayRecord>[];
     for (final PendingDay pending in await _store.load()) {
       if (pending.uid != uid) {
         continue;
       }
-      recorded[pending] = await _recorder.record(
+      final TrainingDayRecord record = await _recorder.record(
         uid: pending.uid,
         session: pending.session,
         today: pending.date,
         elapsed: pending.elapsed,
       );
+      _recorded[_keyOf(pending)] = record;
+      records.add(record);
       try {
-        await _store.remove(pending);
+        await _changeStore(() => _store.remove(pending));
       } catch (error) {
         // The day is recorded. Left pending, it is recorded again next time,
         // which the recorder treats as already done (HIT-100).
         debugPrint('HIT-028: could not forget a recorded day. Cause: $error');
       }
     }
-    return recorded;
+    return records;
   }
 
-  Future<T> _queued<T>(Future<T> Function() work) {
-    final Future<T> result = _last.then((_) => work());
-    // The next call waits for this one to end, however it ends.
-    _last = result.then<void>((_) {}, onError: (Object _) {});
+  Future<T> _inTurn<T>(Future<T> Function() work) {
+    final Future<T> result = _lastRecording.then((_) => work());
+    // The next one waits for this one to end, however it ends.
+    _lastRecording = result.then<void>((_) {}, onError: (Object _) {});
+    return result;
+  }
+
+  Future<void> _changeStore(Future<void> Function() change) {
+    final Future<void> result = _lastStoreChange.then((_) => change());
+    _lastStoreChange = result.then<void>((_) {}, onError: (Object _) {});
     return result;
   }
 }

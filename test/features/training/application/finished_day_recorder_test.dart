@@ -38,6 +38,39 @@ class _MemoryStore implements PendingDayStore {
   }
 }
 
+/// A store that takes its time, as the device's does: it reads the list,
+/// waits, then writes the list back. Two changes that overlap lose one, and
+/// a change takes longer than a read, so a read that does not wait for a
+/// change sees the list without it.
+class _SlowStore extends _MemoryStore {
+  @override
+  Future<List<PendingDay>> load() async {
+    await Future<void>.delayed(Duration.zero);
+    return super.load();
+  }
+
+  @override
+  Future<void> add(PendingDay day) async {
+    final List<PendingDay> read = List<PendingDay>.of(days);
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+    days
+      ..clear()
+      ..addAll(read);
+    if (!days.any(day.isSameDayAs)) {
+      days.add(day);
+    }
+  }
+
+  @override
+  Future<void> remove(PendingDay day) async {
+    final List<PendingDay> read = List<PendingDay>.of(days);
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+    days
+      ..clear()
+      ..addAll(read.where((PendingDay kept) => !kept.isSameDayAs(day)));
+  }
+}
+
 /// Records the dates it was asked for, in order.
 class _FakeRecorder implements TrainingDayRecorder {
   final List<(String, CalendarDay, int)> calls = <(String, CalendarDay, int)>[];
@@ -180,6 +213,52 @@ void main() {
     });
   });
 
+  test('a day that could not be forgotten does not stop the next one',
+      () async {
+    store.failRemove = true;
+    await finished.record(_day(18));
+    store.failRemove = false;
+
+    await finished.record(_day(19));
+
+    // 18 is recorded again, which the account treats as already done, and
+    // both are forgotten this time.
+    expect(recordedDates(), <int>[18, 18, 19]);
+    expect(store.days, isEmpty);
+  });
+
+  group('on a store that takes its time', () {
+    setUp(() {
+      store = _SlowStore();
+      finished = FinishedDayRecorder(recorder: recorder, store: store);
+    });
+
+    test('a day is kept before it is recorded', () async {
+      final TrainingDayRecord record = await finished.record(_day(18));
+
+      expect(record.streak!.lastTrainingDate, CalendarDay(2026, 9, 18));
+      expect(recordedDates(), <int>[18]);
+      expect(store.days, isEmpty);
+    });
+
+    test('two days finished together are both kept and both recorded',
+        () async {
+      final List<TrainingDayRecord> records = await Future.wait(
+        <Future<TrainingDayRecord>>[
+          finished.record(_day(17)),
+          finished.record(_day(18)),
+        ],
+      );
+
+      expect(
+        records.map((TrainingDayRecord r) => r.streak!.lastTrainingDate.day),
+        <int>[17, 18],
+      );
+      expect(recordedDates(), <int>[17, 18]);
+      expect(store.days, isEmpty);
+    });
+  });
+
   group('recording what an earlier run left', () {
     test("records every one of the account's days, oldest first", () async {
       store.days.addAll(<PendingDay>[
@@ -215,14 +294,62 @@ void main() {
       final Future<TrainingDayRecord> second = finished.record(_day(18));
       await pumpEventQueue();
 
-      // The second has not even been kept yet: it would otherwise be read,
-      // and recorded, by the first.
-      expect(store.days, <PendingDay>[_day(17)]);
+      // Both are kept at once; only the recording waits its turn.
+      expect(store.days, containsAll(<PendingDay>[_day(17), _day(18)]));
 
       recorder.gate!.complete();
       await Future.wait(<Future<TrainingDayRecord>>[first, second]);
 
       expect(recordedDates(), <int>[17, 18]);
+      expect(store.days, isEmpty);
+    });
+
+    test(
+        'a day finished while an earlier recording hangs is kept on the '
+        'device at once', () async {
+      // Offline, a recording does not complete until the device is back
+      // online. The day finished meanwhile must not wait behind it to be
+      // kept, or closing the app loses it.
+      store.days.add(_day(16));
+      recorder.gate = Completer<void>();
+      final Future<List<TrainingDayRecord>> stuck =
+          finished.recordPending('uid-1');
+      await pumpEventQueue();
+
+      final Future<TrainingDayRecord> today = finished.record(_day(18));
+      await pumpEventQueue();
+
+      expect(store.days, containsAll(<PendingDay>[_day(16), _day(18)]));
+
+      recorder.gate!.complete();
+      await stuck;
+      await today;
+      expect(store.days, isEmpty);
+    });
+
+    test(
+        'a day recorded by a call queued before it still reports its own '
+        'record', () async {
+      // A start-up recording queued behind a stuck one reads the list after
+      // today's day was kept, and records it. The call that finished today
+      // then finds nothing pending, and has to report what was recorded.
+      recorder.gate = Completer<void>();
+      store.days.add(_day(15));
+      final Future<List<TrainingDayRecord>> stuck =
+          finished.recordPending('uid-1');
+      await pumpEventQueue();
+      final Future<List<TrainingDayRecord>> queued =
+          finished.recordPending('uid-1');
+
+      final Future<TrainingDayRecord> today = finished.record(_day(18));
+      await pumpEventQueue();
+      recorder.gate!.complete();
+
+      await stuck;
+      expect(await queued, hasLength(1));
+      final TrainingDayRecord record = await today;
+      expect(record.streak!.lastTrainingDate, CalendarDay(2026, 9, 18));
+      expect(recordedDates(), <int>[15, 18]);
       expect(store.days, isEmpty);
     });
 
