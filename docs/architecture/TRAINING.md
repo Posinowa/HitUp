@@ -138,6 +138,21 @@ A saved session that cannot be read, or one whose status this build does not kno
 
 A **finished** session is never offered for resume; it is left over from a run that ended without being cleared. `discard()` is what a screen calls once a finished session has been recorded (#53, #54); until then the saved copy is the safety net.
 
+## Days finished but not yet recorded
+
+`FinishedDayRecorder` is what a screen records a finished day through. It writes the day to the device as a `PendingDay` first, and forgets it only once `TrainingDayRecorder` has recorded it. Offline the recording does not complete until the device is back online, and the user can close the app well before then; the pending day is what it is recorded from afterwards.
+
+- **It keeps what the recording needs, taken when the day ended:** the account, the session, the date and the time worked. Recorded later with the date it was recorded on, a day would count towards the wrong day of the streak.
+- **Oldest first.** Recording a day also records every older day the same account left pending, in date order, the only order the streak can be counted in. A failure stops there and leaves the rest pending.
+- **One per account and date.** A second session on a date already pending is not kept: the account keeps the first session of a date, and the device matches it.
+- **Another account's days stay** pending for that account.
+- **One call at a time.** Calls queue behind each other, so two cannot both read the list and record the same day twice.
+- **A list that cannot be read is read as nothing.** Guessing at it could record a day that did not happen.
+
+`recordPending(uid)` records what an earlier run left. Nothing calls it yet: it is for the home screen (#23) to call when the app starts, before it builds today's training.
+
 ## Testing
 
 `test/features/training/domain/today_training_engine_test.dart` covers every state above from fixtures, with fake curriculum and progress repositories: each day's order and both totals, determinism, a short day, an empty day, past the last day, a day below one, a hole, an empty programme, and each way the user's day can fail to read.
+
+`test/features/training/application/finished_day_recorder_test.dart` and `test/features/training/data/pending_day_store_test.dart` cover the pending days: kept until recorded, oldest first, one per account and date, other accounts left alone, a failure keeping the rest, calls queued, and the stored form refusing what it cannot read.
