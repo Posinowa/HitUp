@@ -1,0 +1,8 @@
+# Tests that need something `flutter test` does not provide are tagged, and
+# skipped unless asked for, with the reason printed in the run.
+tags:
+  rive-native:
+    skip: >-
+      Needs the rive_native library for this machine. Run with
+      `flutter test --run-skipped --tags rive-native` after the setup in
+      docs/architecture/RIVE.md.
