@@ -17,14 +17,18 @@ class CountdownRenderer implements ExerciseRenderer {
     final int total = context.exercise.durationSeconds;
     final int left = context.remaining.inSeconds.clamp(0, total);
 
+    // Up to 160 across, and smaller where the screen leaves less room.
     return ExcludeSemantics(
-      child: SizedBox.square(
-        dimension: 160,
-        child: CircularProgressIndicator(
-          value: left / total,
-          strokeWidth: 10,
-          backgroundColor: colors.outline,
-          valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 160, maxHeight: 160),
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: CircularProgressIndicator(
+            value: left / total,
+            strokeWidth: 10,
+            backgroundColor: colors.outline,
+            valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
+          ),
         ),
       ),
     );
