@@ -63,7 +63,7 @@ Both are available on Google Fonts and free for commercial use.
 
 ### Logo / icon direction
 
-**The mark is Damga**, a tamga: an upright stem, two dots beside it, three diagonal strokes rising from it, in the seafoam gradient on a dark pine tile. Chosen on #83 (HIT-081) on 14 September 2026 and delivered as the production asset set.
+**The mark is Damga**, a tamga: an upright stem, two dots beside it, three diagonal strokes rising from it, in the seafoam gradient. On the launcher icon it sits on a tile that follows the system appearance: white in light mode, dark pine in dark mode. Chosen on #83 (HIT-081) on 14 September 2026 and delivered as the production asset set.
 
 **This departs from the brief HIT-007 approved**, which read:
 
@@ -79,9 +79,11 @@ The palette, the gradient and the background rule are unchanged; the motif is no
 |---|---|
 | Master | `assets/branding/logo/damga.svg` |
 | Launcher, legacy | `android/app/src/main/res/mipmap-*/ic_launcher.png` |
-| Launcher, adaptive | `mipmap-anydpi-v26/ic_launcher.xml`, `mipmap-*/ic_launcher_foreground.png`, `values/ic_launcher_background.xml` |
+| Launcher, adaptive | `mipmap-anydpi-v26/ic_launcher.xml`, `mipmap-*/ic_launcher_foreground.png`, `values/ic_launcher_background.xml` (light), `values-night/ic_launcher_background.xml` (dark) |
 | Notification, 24 dp monochrome | `android/app/src/main/res/drawable-*/ic_stat_hitup.png` |
-| iOS app icon | `ios/Runner/Assets.xcassets/AppIcon.appiconset/` |
+| iOS app icon | `ios/Runner/Assets.xcassets/AppIcon.appiconset/`, one 1024 px icon per appearance |
+
+**Light and dark.** The launcher tile is white by default and dark pine when the system is in dark mode. White rather than Background (Light) because the mark keeps at least 3:1 contrast against white across its whole gradient, the level WCAG asks of graphics; on Background (Light) its lightest end falls just under it. On Android the adaptive icon reads one colour name, defined in `values/` and again in `values-night/`, so only the tile changes and the foreground is shared. The legacy icon is white only: it serves Android 7, which has no system dark mode. On iOS the catalog holds a single size icon for each appearance. The light one is opaque, as the App Store requires; the dark one is the mark on transparency, because iOS draws its own dark background behind it. No tinted variant is supplied, so iOS generates one.
 
 The notification icon is white on transparent on purpose: Android draws it as a silhouette and tints it, so colour in that file would be discarded.
 
