@@ -90,6 +90,17 @@ abstract interface class UserProgressRepository {
   /// error. Needs the server: a transaction cannot be queued offline.
   Future<StreakUpdate> updateStreak(String uid, CalendarDay today);
 
+  /// Moves the user on to the day after [completedDay] (HIT-053).
+  ///
+  /// Only when they are still on [completedDay]: finishing an older day again,
+  /// or a second device that already advanced, must not push anyone forward
+  /// twice. Read, decide, write in one transaction, for the same reason
+  /// [updateStreak] is.
+  ///
+  /// Returns the day the user is on afterwards, which is unchanged when they
+  /// had already moved on.
+  Future<int> advanceProgramDay(String uid, {required int completedDay});
+
   /// The user's settings.
   Future<UserPreferences> getPreferences(String uid);
 

@@ -1,6 +1,6 @@
 # Training
 
-**STATUS: TODAY'S TRAINING, THE SESSION AND EXERCISE COUNTING IMPLEMENTED (HIT-025, HIT-026, HIT-052).** The screens are HIT-027 onwards, and recording a finished day is HIT-053.
+**STATUS: TODAY'S TRAINING, THE SESSION, AND RECORDING WHAT WAS DONE, IMPLEMENTED (HIT-025, HIT-026, HIT-052, HIT-053).** The screens are HIT-027 onwards.
 
 ## What decides today's training
 
@@ -102,7 +102,25 @@ Completing an exercise also counts it on the account: `saveExerciseCompletion` i
 - **Offline it is queued** by the Firestore SDK and sent when the device is next online.
 - **A signed-out user still runs the session.** There is simply nowhere to count it, and nothing is written under a guessed account.
 
-Recording the finished **day** is separate and comes with HIT-053, which also advances the programme day and calls the streak (HIT-054).
+Recording the finished **day** is separate, and is below.
+
+## Recording a finished day (HIT-053)
+
+`TrainingDayRecorder` writes what a finished session means, in an order chosen so a half-finished run cannot leave a lie behind:
+
+1. **The day itself**, with its minutes, as the one batch `saveTrainingCompletion` makes. A day already recorded stops here.
+2. **The programme day**, moved on only if the user is still on the day they just finished.
+3. **The streak**, counted for that day (`USER_PROGRESS.md`).
+
+Three operations rather than one, because Firestore has no transaction spanning a batch and two read-decide-writes. The history entry is the record of the day, and the two that follow are idempotent, so running them again after a failure changes nothing. If the first fails, nothing else runs: a programme day moved on for a day that was never recorded would be a number nobody could explain.
+
+**The programme day advances once.** Only when `currentProgramDay` still equals the day just finished, so a second device that already advanced, or the same day finished twice, cannot push anyone forward twice.
+
+**Minutes are rounded up.** A session of forty seconds took a minute of someone's day, and a total that counts it as zero is the one number a user can immediately tell is wrong.
+
+**Only completed exercises are recorded.** A day where everything was skipped is refused: it is not a training day, and the rules refuse an entry with an empty list anyway.
+
+**The session has no clock.** How long a day took is measured by the screen that ran it (HIT-028) and passed in, which is also what keeps the state machine free of timers.
 
 ## The unfinished session on the device
 

@@ -675,6 +675,52 @@ void main() {
     });
   });
 
+  group('the programme day', () {
+    test('moves on when the user is still on the day they finished', () async {
+      store.server['users/$uid'] = _profileData()..['currentProgramDay'] = 4;
+
+      expect(await repository.advanceProgramDay(uid, completedDay: 4), 5);
+      expect(store.transactions, 1);
+      expect(store.transactionWrites.single, <String, Object>{
+        'currentProgramDay': 5,
+      });
+    });
+
+    test('does not move when they already moved on', () async {
+      // A second device that already advanced, or the same day finished twice.
+      store.server['users/$uid'] = _profileData()..['currentProgramDay'] = 6;
+
+      expect(await repository.advanceProgramDay(uid, completedDay: 4), 6);
+      expect(store.transactionWrites, isEmpty);
+    });
+
+    test('does not move backwards for an older day', () async {
+      store.server['users/$uid'] = _profileData()..['currentProgramDay'] = 2;
+
+      expect(await repository.advanceProgramDay(uid, completedDay: 5), 2);
+      expect(store.transactionWrites, isEmpty);
+    });
+
+    test('a day below one, or a bad uid, is refused before anything', () {
+      expect(
+        () => repository.advanceProgramDay(uid, completedDay: 0),
+        throwsArgumentError,
+      );
+      expect(
+        () => repository.advanceProgramDay('a/b', completedDay: 1),
+        throwsArgumentError,
+      );
+      expect(store.transactions, 0);
+    });
+
+    test('a profile the server does not have is not found', () async {
+      await _expectCode(
+        () => repository.advanceProgramDay(uid, completedDay: 1),
+        FailureCode.dataNotFound,
+      );
+    });
+  });
+
   group('preferences', () {
     test('reads settings, with and without a reminder time', () async {
       store.server['users/$uid/preferences/settings'] = <String, Object?>{
