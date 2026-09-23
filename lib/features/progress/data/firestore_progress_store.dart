@@ -14,12 +14,12 @@ class FirestoreProgressStore implements ProgressStore {
 
   @override
   Future<StoredDocument> read(String path) async =>
-      _fromSnapshot(await _firestore.doc(path).get());
+      documentFrom(await _firestore.doc(path).get());
 
   @override
   Future<StoredDocument?> readCached(String path) async {
     try {
-      return _fromSnapshot(
+      return documentFrom(
         await _firestore.doc(path).get(const GetOptions(source: Source.cache)),
       );
     } on FirebaseException {
@@ -31,7 +31,7 @@ class FirestoreProgressStore implements ProgressStore {
 
   @override
   Stream<StoredDocument> watch(String path) =>
-      _firestore.doc(path).snapshots().map(_fromSnapshot);
+      _firestore.doc(path).snapshots().map(documentFrom);
 
   @override
   Future<StoredQuery> readCollection(
@@ -48,7 +48,7 @@ class FirestoreProgressStore implements ProgressStore {
     }
     final QuerySnapshot<Map<String, dynamic>> snapshot = await query.get();
     return StoredQuery(
-      documents: snapshot.docs.map(_fromSnapshot).toList(growable: false),
+      documents: snapshot.docs.map(documentFrom).toList(growable: false),
       fromCache: snapshot.metadata.isFromCache,
     );
   }
@@ -61,7 +61,7 @@ class FirestoreProgressStore implements ProgressStore {
           _firestore.doc(write.path);
       final Map<String, Object> fields = <String, Object>{
         for (final MapEntry<String, Object> entry in write.fields.entries)
-          entry.key: _toFirestore(entry.value),
+          entry.key: valueFor(entry.value),
       };
       switch (write.mode) {
         case StoredWriteMode.set:
@@ -75,13 +75,21 @@ class FirestoreProgressStore implements ProgressStore {
     await batch.commit();
   }
 
-  static Object _toFirestore(Object value) => switch (value) {
+  @override
+  Future<T> transaction<T>(Future<T> Function(StoredTransaction tx) body) =>
+      _firestore.runTransaction<T>(
+        (Transaction tx) => body(_FirestoreTransaction(tx, _firestore)),
+      );
+
+  /// Converts one field value into what Firestore expects.
+  static Object valueFor(Object value) => switch (value) {
         final StoredIncrement increment => FieldValue.increment(increment.by),
         StoredServerTime() => FieldValue.serverTimestamp(),
         _ => value,
       };
 
-  static StoredDocument _fromSnapshot(
+  /// Converts a snapshot into a [StoredDocument].
+  static StoredDocument documentFrom(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
   ) =>
       StoredDocument(
@@ -100,4 +108,24 @@ class FirestoreProgressStore implements ProgressStore {
         final List<Object?> list => List<Object?>.unmodifiable(list),
         _ => value,
       };
+}
+
+/// [StoredTransaction] over a Firestore transaction.
+class _FirestoreTransaction implements StoredTransaction {
+  const _FirestoreTransaction(this._tx, this._firestore);
+
+  final Transaction _tx;
+  final FirebaseFirestore _firestore;
+
+  @override
+  Future<StoredDocument> read(String path) async =>
+      FirestoreProgressStore.documentFrom(await _tx.get(_firestore.doc(path)));
+
+  @override
+  void update(String path, Map<String, Object> fields) {
+    _tx.update(_firestore.doc(path), <String, Object>{
+      for (final MapEntry<String, Object> entry in fields.entries)
+        entry.key: FirestoreProgressStore.valueFor(entry.value),
+    });
+  }
 }

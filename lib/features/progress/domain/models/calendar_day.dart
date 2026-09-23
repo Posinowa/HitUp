@@ -69,6 +69,32 @@ class CalendarDay implements Comparable<CalendarDay> {
       '${month.toString().padLeft(2, '0')}-'
       '${day.toString().padLeft(2, '0')}';
 
+  /// The day [days] after this one, or before it when [days] is negative.
+  ///
+  /// Computed in UTC on purpose. A calendar day has no time and no timezone,
+  /// so adding one to it must not depend on where the device is: local
+  /// arithmetic across a daylight saving change can land on the same day
+  /// twice, or skip one, and the streak counts days rather than hours.
+  CalendarDay addDays(int days) {
+    final DateTime moved = DateTime.utc(year, month, day).add(
+      Duration(days: days),
+    );
+    return CalendarDay(moved.year, moved.month, moved.day);
+  }
+
+  /// The day after this one.
+  CalendarDay get next => addDays(1);
+
+  /// The day before this one.
+  CalendarDay get previous => addDays(-1);
+
+  /// How many days lie between this day and [other], negative when [other] is
+  /// earlier.
+  int daysUntil(CalendarDay other) =>
+      DateTime.utc(other.year, other.month, other.day)
+          .difference(DateTime.utc(year, month, day))
+          .inDays;
+
   @override
   int compareTo(CalendarDay other) => key.compareTo(other.key);
 
