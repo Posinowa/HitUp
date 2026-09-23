@@ -35,7 +35,7 @@ Every method takes the uid. A call never finds the signed-in user by itself, so 
 3. The history entry and `totalTrainingMinutes` are written in **one batch**, the minutes as an increment. The rules refuse any write to an existing entry, and a refused batch takes its minutes with it, so a day is never counted twice.
 4. If the batch is refused with a permission error, the entry is read back. Only when the **server** confirms it exists is the result `alreadySaved`, for instance after the day was completed on another device. Otherwise the original error is thrown: a signed-out user gets the same refusal.
 
-`currentProgramDay` is not written here; HIT-053 decides when it changes. The streak fields are written by `updateStreak` below, which HIT-053 calls once the day is recorded.
+`currentProgramDay` is not written here; `advanceProgramDay` moves it, and the streak fields are written by `updateStreak` below. `TrainingDayRecorder` calls both after the day is recorded, and again on a repeat so a half-recorded day is finished (`TRAINING.md`).
 
 ## The streak (HIT-054)
 

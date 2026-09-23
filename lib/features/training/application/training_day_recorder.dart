@@ -24,8 +24,11 @@ class TrainingDayRecord {
   /// The day of the programme the user is on afterwards.
   final int programDay;
 
-  /// The streak after the day was counted, or null when nothing was counted
-  /// because the day was already recorded.
+  /// The streak after the day was counted.
+  ///
+  /// Present on every call that found a day to record, including a repeat,
+  /// where it comes back unchanged. Null only when the entry the save refused
+  /// as already there turned out to be gone.
   final StreakUpdate? streak;
 
   /// True when this call is what recorded the day.
@@ -53,16 +56,28 @@ class TrainingDayRecord {
 /// behind:
 ///
 /// 1. **The day itself**, with its minutes, as one batch the rules accept.
-///    A day already recorded stops here: nothing after this runs twice.
 /// 2. **The programme day**, moved on only if the user is still on the day
-///    they just finished.
+///    recorded in step 1.
 /// 3. **The streak**, counted for that day.
 ///
 /// They are three operations rather than one, because Firestore has no
-/// transaction across a batch and two read-decide-writes. The order is what
-/// makes a half-finished run safe: the history entry is the record of the day,
-/// and the two that follow are both idempotent, so running them again after a
-/// failure changes nothing (`USER_PROGRESS.md`).
+/// transaction across a batch and two read-decide-writes. So a run can stop
+/// between them: the app is killed, or step 2 or 3 fails, and both are
+/// transactions, which need the server.
+///
+/// **What makes that safe is that steps 2 and 3 run again** every time the
+/// day is recorded, including when step 1 finds it already recorded (HIT-100).
+/// Both are idempotent, so on a day that was fully recorded they write
+/// nothing, and on a day left half-recorded they finish the job:
+///
+/// - The programme day advances only if the user is still on the stored
+///   entry's day, so it cannot advance twice.
+/// - The streak counts a day it has already counted as no change.
+///
+/// Step 2 reads the programme day from the **stored** entry, not from the
+/// session. A second session on a date that is already recorded would
+/// otherwise advance a day that has no history entry of its own
+/// (`USER_PROGRESS.md`).
 class TrainingDayRecorder {
   /// Creates a recorder over [progress].
   const TrainingDayRecorder(this._progress);
@@ -114,19 +129,32 @@ class TrainingDayRecorder {
       ),
     );
 
+    // The programme day this date is recorded under. For a new entry that is
+    // the session's; for one already there it is whatever was stored, which
+    // may be a different session's if the user trained twice today.
+    int recordedDay = session.programDay;
     if (result == TrainingSaveResult.alreadySaved) {
-      // The day is already in the history, so its minutes, its programme day
-      // and its streak were all counted with it.
-      return TrainingDayRecord(
-        result: result,
-        programDay: await _progress.getCurrentProgramDay(uid),
-        streak: null,
+      final TrainingHistoryEntry? stored = await _progress.getTrainingDay(
+        uid,
+        today,
       );
+      if (stored == null) {
+        // Refused as already saved, yet the server has no entry: it was
+        // deleted in between. There is no day to finish recording.
+        return TrainingDayRecord(
+          result: result,
+          programDay: await _progress.getCurrentProgramDay(uid),
+          streak: null,
+        );
+      }
+      recordedDay = stored.programDay;
     }
 
+    // Run on every call, not only the first. On a fully recorded day both
+    // are no-ops; on a half-recorded one they are what finishes it.
     final int programDay = await _progress.advanceProgramDay(
       uid,
-      completedDay: session.programDay,
+      completedDay: recordedDay,
     );
     final StreakUpdate streak = await _progress.updateStreak(uid, today);
 

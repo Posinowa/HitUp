@@ -1,6 +1,6 @@
 # Training
 
-**STATUS: TODAY'S TRAINING, THE SESSION, AND RECORDING WHAT WAS DONE, IMPLEMENTED (HIT-025, HIT-026, HIT-052, HIT-053).** The screens are HIT-027 onwards.
+**STATUS: TODAY'S TRAINING, THE SESSION, RECORDING WHAT WAS DONE, AND THE EXERCISE SCREEN, IMPLEMENTED (HIT-025, HIT-026, HIT-028, HIT-052, HIT-053).** The other screens are HIT-027 onwards.
 
 ## What decides today's training
 
@@ -104,17 +104,23 @@ Completing an exercise also counts it on the account: `saveExerciseCompletion` i
 
 Recording the finished **day** is separate, and is below.
 
-## Recording a finished day (HIT-053)
+## Recording a finished day (HIT-053, HIT-100)
 
-`TrainingDayRecorder` writes what a finished session means, in an order chosen so a half-finished run cannot leave a lie behind:
+`TrainingDayRecorder` writes what a finished session means, in three steps:
 
-1. **The day itself**, with its minutes, as the one batch `saveTrainingCompletion` makes. A day already recorded stops here.
-2. **The programme day**, moved on only if the user is still on the day they just finished.
+1. **The day itself**, with its minutes, as the one batch `saveTrainingCompletion` makes.
+2. **The programme day**, moved on only if the user is still on the day recorded in step 1.
 3. **The streak**, counted for that day (`USER_PROGRESS.md`).
 
-Three operations rather than one, because Firestore has no transaction spanning a batch and two read-decide-writes. The history entry is the record of the day, and the two that follow are idempotent, so running them again after a failure changes nothing. If the first fails, nothing else runs: a programme day moved on for a day that was never recorded would be a number nobody could explain.
+Three operations rather than one, because Firestore has no transaction spanning a batch and two read-decide-writes. So a run can stop between them: the app is killed, or step 2 or 3 fails, and both are transactions, which need the server.
 
-**The programme day advances once.** Only when `currentProgramDay` still equals the day just finished, so a second device that already advanced, or the same day finished twice, cannot push anyone forward twice.
+**If step 1 fails, nothing else runs.** A programme day moved on for a day that was never recorded would be a number nobody could explain.
+
+**Steps 2 and 3 run on every call, including a repeat.** When step 1 finds the day already recorded, the recorder reads the stored entry and runs steps 2 and 3 again. On a day that was fully recorded they write nothing: the programme day has already moved past the stored entry's day, and the streak treats a day it has counted as no change. On a day left half-recorded they finish the job. Returning early on "already recorded" would leave such a day half-done for good: the user would repeat it, and it would never count towards the streak (HIT-100).
+
+**Step 2 uses the stored entry's programme day, not the session's.** There is one history entry per date. A second session on a date already recorded, day 5 trained in the evening after day 4 in the morning, has no entry of its own, so it must not move the user past it.
+
+**The programme day advances once.** Only when `currentProgramDay` still equals the recorded day, so a second device that already advanced, or the same day finished twice, cannot push anyone forward twice.
 
 **Minutes are rounded up.** A session of forty seconds took a minute of someone's day, and a total that counts it as zero is the one number a user can immediately tell is wrong.
 
@@ -132,6 +138,80 @@ A saved session that cannot be read, or one whose status this build does not kno
 
 A **finished** session is never offered for resume; it is left over from a run that ended without being cleared. `discard()` is what a screen calls once a finished session has been recorded (#53, #54); until then the saved copy is the safety net.
 
+## The exercise screen (HIT-028)
+
+`ExerciseContainerScreen` runs a day, one exercise at a time. It is the same screen for every kind of exercise: there is no screen per exercise and no branch on an exercise id.
+
+| File | Holds |
+|---|---|
+| `features/training/presentation/exercise_container_screen.dart` | The screen: the shared chrome, the controls, the end of the day |
+| `features/training/presentation/renderers/exercise_renderer.dart` | `ExerciseRenderer`, `ExerciseRendererRegistry`, the plain renderer |
+| `features/training/presentation/renderers/exercise_renderers.dart` | `exerciseRendererRegistryProvider`: which renderer each type gets |
+| `features/training/presentation/renderers/countdown_renderer.dart` | The `timer` type's ring |
+| `features/training/presentation/exercise_clock.dart` | The countdown, and the time the day was worked |
+| `features/training/application/finished_day_recorder.dart` | Records finished days, keeping each on the device until it is |
+| `features/training/data/pending_day_store.dart` | The finished days on the device that are not recorded yet |
+
+```text
+ExerciseContainerScreen(today)
+  chrome:    close, "2 / 5", progress bar, title, instructions, time, controls
+  body:      registry.rendererFor(exercise.presentationType)
+  session:   TrainingSessionController (start, pause, resume, complete, skip, finish)
+  day end:   FinishedDayRecorder (pending day, then TrainingDayRecorder), then discard()
+```
+
+**The chrome is shared; the body is the renderer's.** The screen draws what every exercise has: the title, the instructions, the time left and the controls. A renderer draws only what its presentation type adds, and gets the exercise, the time left and whether the session is running. It is keyed by position, so one with state of its own starts fresh on the next exercise, even one of the same type.
+
+**Adding a kind of exercise** is one class implementing `ExerciseRenderer` and one line in `exerciseRendererRegistryProvider`. A type with no renderer yet falls back to the plain one, which adds nothing to the title and instructions, so a day still runs while its renderers land. Today `text`, `timer`, `rive`, `articulation`, `tongueTwister`, `letter` and `breathing` have theirs; `rive` and `articulation` share `RiveExerciseRenderer` (`RIVE.md`).
+
+**The tongue twister drill (HIT-042)** shows the twisters the content names, one at a time, in large text with a difficulty chip, and counts each saying against the repetitions the content asks for. Once a twister has its repetitions the next one follows, and the set ends after the last. There is no scoring: whether it was said right is the user's call, which is what the issue asks for. Sayings are not counted while the session is paused. An id the twisters do not have is a content mistake, rather than a set that quietly runs short. The count and its button stay in view under the twister (`PinnedActionLayout`): on a small phone it is the twister that scrolls, not the button tapped after every saying.
+
+**The letter ladder (HIT-038)** works a Turkish letter in rungs: the sound with the note the content gives, then its syllables, then its words, each said as many times as the content asks. A rung the content leaves empty is skipped, so a letter with no words yet is a shorter ladder rather than an empty screen. Sayings are not counted while the session is paused, and a letter key `letters.json` does not have is a content mistake. The count and its button stay in view under the rung, as in the tongue twister drill.
+
+**The breathing exercise (HIT-030)** draws the pattern the content gives (`BreathingConfig`) as a circle that grows on the in-breath, holds, and shrinks on the out-breath. The phase, the seconds left in it and the cycle are written under the circle, not in it: at its smallest the circle cannot hold them at 130% text, and text over a shape that comes and goes would have to hold its contrast against the shape and the background both. They are what the exercise is followed by, so on a small phone they stay in view and the circle gives way: it takes the height they leave, up to 200, and where that is less than 120 it moves beside them. Once every cycle is done, where the room is short, the circle is left out for the words and the button that starts again. The timing is `BreathingEngine`'s (HIT-029) and nothing here keeps its own clock, so what is drawn is only what the engine says is true now. A pattern with no hold goes straight from the in-breath to the out-breath. The breathing stops with the session and carries on from where it stopped. Once every cycle is done it says so in place of the phase and can be run again. **Where the device asks for less motion** the circle stays still and the phase, its seconds and the cycle carry the exercise: a circle breathing in and out is exactly the steady pulsing that setting is turned on for. What the circle shows, the phase or that it is paused, and the seconds left are read out together for a screen reader. An exercise with no breathing pattern is a content mistake.
+
+**Every exercise the content ships** is rendered in the exercise screen at 390x844, 360x640 and 320x568, at normal and 130% text, with the app's own fonts, and must not overflow (`renderers_on_real_content_test.dart`). What a drill is worked with must also be in view without scrolling: the button a saying is counted with, and the phase and cycle of a breathing exercise, paused as well as running.
+
+**The session is the controller's.** The screen asks it for each transition and never changes a session itself. Every button asks the session first (`canAdvance`, `canPause`, `canResume`): two taps in one frame arrive before the buttons rebuild, and a transition the session no longer allows would throw.
+
+**Opening.** A session already in hand for the same day, one the home screen restored, is carried on with, paused if it was paused. Anything else is replaced by a new session for the day. A day with nothing to run (`TodayTraining.isEmpty`) says so and starts nothing.
+
+**Time.** The countdown is the exercise's `durationSeconds`, and reaching zero says so without moving on: the user decides when an exercise is done. The time the day was worked counts only while the session runs, so a pause, the question before finishing early, and time spent outside the app are not training minutes. Leaving the app pauses the session; it stays paused on return until the user picks it up. The time counts from when the screen opened: a session resumed after the app was closed counts from the resume.
+
+**Finishing early** asks first, and says whether anything will be recorded. The system back button asks the same question.
+
+**The end of the day.** What was done is shown at once, because the device knows it. The recording (`FinishedDayRecorder`) is not waited for: offline its first write does not complete until the device is back online (`USER_PROGRESS.md`), and a summary held behind a spinner would tell the user their training was lost. The streak, which only the account can decide, appears once the recording is in. The screen can be left while the recording is out, and the recording goes on.
+
+- The date is the one the day **ended** on, taken then, so a day finished before midnight and retried after it is still recorded under its own date.
+- The session is cleared only once the day is recorded. Until then the saved copy is the safety net.
+- A failed recording can be retried from the screen, which is safe because the recorder finishes a half-recorded day on a repeat (HIT-100).
+- A day with nothing completed is not a training day: nothing is recorded and the session is cleared.
+- Nobody signed in: nothing is recorded under a guessed account, and the session is kept.
+
+**Keeping the account loaded.** The screen watches the auth state for as long as it is open. The controller reads the account off it to count each completion (HIT-052), and a provider nobody listens to is still loading when first read.
+
+**Not yet wired to a route.** The screen takes a `TodayTraining`, which the home screen (#23) or the training overview (#29) builds; opening it is theirs.
+
+## Days finished but not yet recorded
+
+A finished day is written to the device as a `PendingDay` before it is recorded, and forgotten only once `TrainingDayRecorder` has recorded it. Offline the recording does not complete until the device is back online, and the user can close the app well before then; the pending day is what it is recorded from afterwards.
+
+- **It keeps what the recording needs, taken when the day ended:** the account, the session, the date and the time worked. Recorded later with the date it was recorded on, a day would count towards the wrong day of the streak.
+- **Oldest first.** Recording a day also records every older day the same account left pending, in date order, the only order the streak can be counted in. A failure stops there and leaves the rest pending.
+- **One per account and date.** A second session on a date already pending is not kept: the account keeps the first session of a date, and the device matches it.
+- **Another account's days stay** pending for that account.
+- **Kept at once, recorded in turn.** Keeping or forgetting a day is a read, a change and a write of the list, so those take turns with each other, and each is over in moments. Recordings take turns with each other separately: offline one can wait until the device is back online, and a day finished meanwhile is kept at once rather than waiting behind it, where closing the app would lose it.
+- **Whichever call records a day, the one that finished it hears what happened.** A recording queued earlier can read the list after today's day was kept and record it first; what each recording returned is remembered, so the screen still shows its streak.
+- **A list that cannot be read is read as nothing.** Guessing at it could record a day that did not happen.
+
+**When the app starts.** `pendingDaysProvider` records what an earlier run left, as soon as someone is signed in, and again when the account changes. The app root listens to it, so it starts with the app. It reads the list on the device first and does not reach the account at all when that account has nothing pending, which is almost every launch.
+
+A screen that builds today's training (#23) can wait for it, briefly: offline it does not complete until the device is back online, and today's training should not wait that long. A failure is held in the provider rather than thrown, and the days stay pending for the next launch or the next finished day.
+
 ## Testing
 
 `test/features/training/domain/today_training_engine_test.dart` covers every state above from fixtures, with fake curriculum and progress repositories: each day's order and both totals, determinism, a short day, an empty day, past the last day, a day below one, a hole, an empty programme, and each way the user's day can fail to read.
+
+`test/features/training/application/finished_day_recorder_test.dart` and `test/features/training/data/pending_day_store_test.dart` cover the pending days: kept until recorded, oldest first, one per account and date, other accounts left alone, a failure keeping the rest, a day kept at once while a recording waits, a day recorded by an earlier call still reported, both queues checked on a store that takes its time, the stored form refusing what it cannot read, and the start-up recording, which does not reach the account when nothing is pending. `test/app/pending_days_on_start_test.dart` holds that the app starts it.
+
+`test/features/training/presentation/` covers the exercise screen with the real session controller and fake storage, progress and recorder: the shared chrome, each renderer chosen by type, the clock through pauses, the question and the app being left, every way the day can end, and the order the session is saved and cleared in.

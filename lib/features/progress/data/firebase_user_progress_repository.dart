@@ -42,6 +42,26 @@ class FirebaseUserProgressRepository implements UserProgressRepository {
       (await getUserProfile(uid)).currentProgramDay;
 
   @override
+  Future<TrainingHistoryEntry?> getTrainingDay(
+    String uid,
+    CalendarDay date,
+  ) async {
+    _requireSegment(uid, 'uid');
+    final StoredDocument doc = await _store.read(
+      '${_userPath(uid)}/trainingHistory/${date.key}',
+    );
+    if (!doc.exists) {
+      // Missing on the server is an answer. Missing from a local copy that
+      // could not ask the server is not one.
+      if (doc.fromCache) {
+        _requireExists(doc, 'training day');
+      }
+      return null;
+    }
+    return _historyFrom(doc);
+  }
+
+  @override
   Future<List<TrainingHistoryEntry>> getTrainingHistory(
     String uid, {
     int? limit,

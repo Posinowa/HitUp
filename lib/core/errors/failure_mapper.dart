@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:hitup/core/errors/app_exception.dart';
 import 'package:hitup/core/errors/failure.dart';
 import 'package:hitup/core/errors/failure_code.dart';
+import 'package:rive/rive.dart' show RiveException, RiveFileLoaderException;
 
 /// Turns anything thrown anywhere into a [Failure].
 ///
@@ -45,6 +46,7 @@ Failure mapErrorToFailure(Object error) {
         code: FailureCode.contentMediaUnavailable,
         technicalDetail: detail,
       ),
+    final RiveException e => _fromRive(e, detail),
     _ => UnknownFailure(technicalDetail: detail),
   };
 }
@@ -130,6 +132,24 @@ Failure _fromFirebaseGeneric(FirebaseException e, String detail) {
 }
 
 /// `rootBundle` reports a missing asset as a [FlutterError].
+/// A Rive file that could not be shown (HIT-032).
+///
+/// Rive's loader wraps a missing bundled file in its own exception, with the
+/// asset bundle's message inside it. That case keeps its meaning: the file is
+/// not there, which updating the app fixes. Anything else, a file that would
+/// not decode or an artboard or state machine the content names but the file
+/// does not have, is media that cannot be shown.
+Failure _fromRive(RiveException e, String detail) {
+  final missingAsset = e is RiveFileLoaderException &&
+      e.message.contains('Unable to load asset');
+  return ContentFailure(
+    code: missingAsset
+        ? FailureCode.contentAssetMissing
+        : FailureCode.contentMediaUnavailable,
+    technicalDetail: detail,
+  );
+}
+
 Failure _fromFlutterError(FlutterError e, String detail) {
   final missingAsset = e.message.contains('Unable to load asset');
   return ContentFailure(
