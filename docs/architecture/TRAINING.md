@@ -1,6 +1,6 @@
 # Training
 
-**STATUS: TODAY'S TRAINING, THE SESSION, AND RECORDING WHAT WAS DONE, IMPLEMENTED (HIT-025, HIT-026, HIT-052, HIT-053).** The screens are HIT-027 onwards.
+**STATUS: TODAY'S TRAINING, THE SESSION, RECORDING WHAT WAS DONE, AND THE EXERCISE SCREEN, IMPLEMENTED (HIT-025, HIT-026, HIT-028, HIT-052, HIT-053).** The other screens are HIT-027 onwards.
 
 ## What decides today's training
 
@@ -138,9 +138,55 @@ A saved session that cannot be read, or one whose status this build does not kno
 
 A **finished** session is never offered for resume; it is left over from a run that ended without being cleared. `discard()` is what a screen calls once a finished session has been recorded (#53, #54); until then the saved copy is the safety net.
 
+## The exercise screen (HIT-028)
+
+`ExerciseContainerScreen` runs a day, one exercise at a time. It is the same screen for every kind of exercise: there is no screen per exercise and no branch on an exercise id.
+
+| File | Holds |
+|---|---|
+| `features/training/presentation/exercise_container_screen.dart` | The screen: the shared chrome, the controls, the end of the day |
+| `features/training/presentation/renderers/exercise_renderer.dart` | `ExerciseRenderer`, `ExerciseRendererRegistry`, the plain renderer |
+| `features/training/presentation/renderers/exercise_renderers.dart` | `exerciseRendererRegistryProvider`: which renderer each type gets |
+| `features/training/presentation/renderers/countdown_renderer.dart` | The `timer` type's ring |
+| `features/training/presentation/exercise_clock.dart` | The countdown, and the time the day was worked |
+| `features/training/application/finished_day_recorder.dart` | Records finished days, keeping each on the device until it is |
+| `features/training/data/pending_day_store.dart` | The finished days on the device that are not recorded yet |
+
+```text
+ExerciseContainerScreen(today)
+  chrome:    close, "2 / 5", progress bar, title, instructions, time, controls
+  body:      registry.rendererFor(exercise.presentationType)
+  session:   TrainingSessionController (start, pause, resume, complete, skip, finish)
+  day end:   FinishedDayRecorder (pending day, then TrainingDayRecorder), then discard()
+```
+
+**The chrome is shared; the body is the renderer's.** The screen draws what every exercise has: the title, the instructions, the time left and the controls. A renderer draws only what its presentation type adds, and gets the exercise, the time left and whether the session is running. It is keyed by position, so one with state of its own starts fresh on the next exercise, even one of the same type.
+
+**Adding a kind of exercise** is one class implementing `ExerciseRenderer` and one line in `exerciseRendererRegistryProvider`. A type with no renderer yet falls back to the plain one, which adds nothing to the title and instructions, so a day still runs while its renderers land. Today `text` and `timer` have theirs.
+
+**The session is the controller's.** The screen asks it for each transition and never changes a session itself. Every button asks the session first (`canAdvance`, `canPause`, `canResume`): two taps in one frame arrive before the buttons rebuild, and a transition the session no longer allows would throw.
+
+**Opening.** A session already in hand for the same day, one the home screen restored, is carried on with, paused if it was paused. Anything else is replaced by a new session for the day. A day with nothing to run (`TodayTraining.isEmpty`) says so and starts nothing.
+
+**Time.** The countdown is the exercise's `durationSeconds`, and reaching zero says so without moving on: the user decides when an exercise is done. The time the day was worked counts only while the session runs, so a pause, the question before finishing early, and time spent outside the app are not training minutes. Leaving the app pauses the session; it stays paused on return until the user picks it up. The time counts from when the screen opened: a session resumed after the app was closed counts from the resume.
+
+**Finishing early** asks first, and says whether anything will be recorded. The system back button asks the same question.
+
+**The end of the day.** What was done is shown at once, because the device knows it. The recording (`FinishedDayRecorder`) is not waited for: offline its first write does not complete until the device is back online (`USER_PROGRESS.md`), and a summary held behind a spinner would tell the user their training was lost. The streak, which only the account can decide, appears once the recording is in. The screen can be left while the recording is out, and the recording goes on.
+
+- The date is the one the day **ended** on, taken then, so a day finished before midnight and retried after it is still recorded under its own date.
+- The session is cleared only once the day is recorded. Until then the saved copy is the safety net.
+- A failed recording can be retried from the screen, which is safe because the recorder finishes a half-recorded day on a repeat (HIT-100).
+- A day with nothing completed is not a training day: nothing is recorded and the session is cleared.
+- Nobody signed in: nothing is recorded under a guessed account, and the session is kept.
+
+**Keeping the account loaded.** The screen watches the auth state for as long as it is open. The controller reads the account off it to count each completion (HIT-052), and a provider nobody listens to is still loading when first read.
+
+**Not yet wired to a route.** The screen takes a `TodayTraining`, which the home screen (#23) or the training overview (#29) builds; opening it is theirs.
+
 ## Days finished but not yet recorded
 
-`FinishedDayRecorder` is what a screen records a finished day through. It writes the day to the device as a `PendingDay` first, and forgets it only once `TrainingDayRecorder` has recorded it. Offline the recording does not complete until the device is back online, and the user can close the app well before then; the pending day is what it is recorded from afterwards.
+A finished day is written to the device as a `PendingDay` before it is recorded, and forgotten only once `TrainingDayRecorder` has recorded it. Offline the recording does not complete until the device is back online, and the user can close the app well before then; the pending day is what it is recorded from afterwards.
 
 - **It keeps what the recording needs, taken when the day ended:** the account, the session, the date and the time worked. Recorded later with the date it was recorded on, a day would count towards the wrong day of the streak.
 - **Oldest first.** Recording a day also records every older day the same account left pending, in date order, the only order the streak can be counted in. A failure stops there and leaves the rest pending.
@@ -159,3 +205,5 @@ A screen that builds today's training (#23) can wait for it, briefly: offline it
 `test/features/training/domain/today_training_engine_test.dart` covers every state above from fixtures, with fake curriculum and progress repositories: each day's order and both totals, determinism, a short day, an empty day, past the last day, a day below one, a hole, an empty programme, and each way the user's day can fail to read.
 
 `test/features/training/application/finished_day_recorder_test.dart` and `test/features/training/data/pending_day_store_test.dart` cover the pending days: kept until recorded, oldest first, one per account and date, other accounts left alone, a failure keeping the rest, a day kept at once while a recording waits, a day recorded by an earlier call still reported, both queues checked on a store that takes its time, the stored form refusing what it cannot read, and the start-up recording, which does not reach the account when nothing is pending. `test/app/pending_days_on_start_test.dart` holds that the app starts it.
+
+`test/features/training/presentation/` covers the exercise screen with the real session controller and fake storage, progress and recorder: the shared chrome, each renderer chosen by type, the clock through pauses, the question and the app being left, every way the day can end, and the order the session is saved and cleared in.
