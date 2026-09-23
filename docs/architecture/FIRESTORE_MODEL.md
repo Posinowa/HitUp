@@ -159,12 +159,11 @@ Every field check in the rules is marked `HIT-010`. Now that the model is
 settled, those marks say which checks follow this document, so a later change
 here moves the rule and its test with it.
 
-**One check is still looser than this document.** The rules do not require a
-history document's id to equal its `trainingDate`. Adding that means rewriting
-the paths in most of the history tests, which sit in an open pull request, so it
-follows on #12 rather than colliding with it. Nothing depends on it yet: the id
-is written by the repository (HIT-079), and the cost of the gap is a user able
-to file their own history under an odd id.
+**The id is the day, and the rules now require it.** A history document is
+refused unless its id equals its `trainingDate`. Without that check a second
+completion of the same day could be filed under a different id, which is the
+one way the "one day, one entry" rule above could be worked around, and the
+totals written with it would then be counted twice.
 
 **What rules cannot do.** HitUp has no backend, so progress is computed on the
 device. Rules stop history being rewritten or backdated and refuse impossible
