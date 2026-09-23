@@ -6,6 +6,7 @@ import 'package:hitup/features/training/presentation/renderers/countdown_rendere
 import 'package:hitup/features/training/presentation/renderers/exercise_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/exercise_renderers.dart';
 import 'package:hitup/features/training/presentation/renderers/rive_renderer.dart';
+import 'package:hitup/features/training/presentation/renderers/tongue_twister_renderer.dart';
 
 class _Marker implements ExerciseRenderer {
   const _Marker(this.name);
@@ -86,8 +87,8 @@ void main() {
     });
 
     test(
-        'a countdown for timer, Rive for rive and articulation, and the '
-        'plain body for everything else', () {
+        'each type with a renderer gets its own, and the plain body for '
+        'everything else', () {
       for (final ExercisePresentationType type
           in ExercisePresentationType.values) {
         expect(
@@ -97,6 +98,8 @@ void main() {
             ExercisePresentationType.rive ||
             ExercisePresentationType.articulation =>
               isA<RiveExerciseRenderer>(),
+            ExercisePresentationType.tongueTwister =>
+              isA<TongueTwisterRenderer>(),
             _ => isA<PlainExerciseRenderer>(),
           },
           reason: type.name,
