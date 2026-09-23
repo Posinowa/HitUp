@@ -124,14 +124,14 @@ describe("an authenticated user cannot touch another user's data", () => {
   });
 
   test("cannot read or write another user's training history", async () => {
-    await seed('users/alice/trainingHistory/h1', { programDay: 1 });
-    await assertFails(getDoc(doc(bob(), 'users/alice/trainingHistory/h1')));
-    await assertFails(setDoc(doc(bob(), 'users/alice/trainingHistory/h2'), validHistory()));
+    await seed('users/alice/trainingHistory/2026-09-14', { programDay: 1 });
+    await assertFails(getDoc(doc(bob(), 'users/alice/trainingHistory/2026-09-14')));
+    await assertFails(setDoc(doc(bob(), 'users/alice/trainingHistory/2026-09-15'), validHistory()));
   });
 
   test("cannot delete another user's training history entry", async () => {
-    await seed('users/alice/trainingHistory/h1', { programDay: 1 });
-    await assertFails(deleteDoc(doc(bob(), 'users/alice/trainingHistory/h1')));
+    await seed('users/alice/trainingHistory/2026-09-14', { programDay: 1 });
+    await assertFails(deleteDoc(doc(bob(), 'users/alice/trainingHistory/2026-09-14')));
   });
 
   test("cannot read or delete another user's exercise progress", async () => {
@@ -256,62 +256,77 @@ describe('user document', () => {
 
 describe('training history is append-only', () => {
   test('the owner can append an entry stamped with the server time', async () => {
-    await assertSucceeds(setDoc(doc(alice(), 'users/alice/trainingHistory/h1'), validHistory()));
+    await assertSucceeds(setDoc(doc(alice(), 'users/alice/trainingHistory/2026-09-14'), validHistory()));
   });
 
   test('an entry cannot be backdated', async () => {
     await assertFails(
-      setDoc(doc(alice(), 'users/alice/trainingHistory/h1'), validHistory({ completedAt: aPastTime() })),
+      setDoc(doc(alice(), 'users/alice/trainingHistory/2026-09-14'), validHistory({ completedAt: aPastTime() })),
     );
   });
 
   test('an existing entry cannot be edited', async () => {
-    await seed('users/alice/trainingHistory/h1', {
+    await seed('users/alice/trainingHistory/2026-09-14', {
       trainingDate: '2026-09-14',
       programDay: 1,
       completedExerciseIds: ['breathing_diaphragm_01'],
       durationMinutes: 15,
       completedAt: aPastTime(),
     });
-    await assertFails(updateDoc(doc(alice(), 'users/alice/trainingHistory/h1'), { durationMinutes: 90 }));
+    await assertFails(updateDoc(doc(alice(), 'users/alice/trainingHistory/2026-09-14'), { durationMinutes: 90 }));
   });
 
   test('the owner can delete their own entry', async () => {
-    await seed('users/alice/trainingHistory/h1', { programDay: 1 });
-    await assertSucceeds(deleteDoc(doc(alice(), 'users/alice/trainingHistory/h1')));
+    await seed('users/alice/trainingHistory/2026-09-14', { programDay: 1 });
+    await assertSucceeds(deleteDoc(doc(alice(), 'users/alice/trainingHistory/2026-09-14')));
+  });
+
+  test('the document id must be the training date', async () => {
+    // One day, one entry. The repository (HIT-079) writes the day as the id,
+    // and a second completion of that day is then refused rather than filed
+    // under a new id with its minutes counted again.
+    await assertSucceeds(
+      setDoc(doc(alice(), 'users/alice/trainingHistory/2026-09-14'), validHistory()),
+    );
+    await assertFails(
+      setDoc(doc(alice(), 'users/alice/trainingHistory/2026-09-15'), validHistory()),
+    );
+    await assertFails(
+      setDoc(doc(alice(), 'users/alice/trainingHistory/h1'), validHistory()),
+    );
   });
 
   test('a malformed training date is refused', async () => {
     await assertFails(
-      setDoc(doc(alice(), 'users/alice/trainingHistory/h1'), validHistory({ trainingDate: '14.09.2026' })),
+      setDoc(doc(alice(), 'users/alice/trainingHistory/2026-09-14'), validHistory({ trainingDate: '14.09.2026' })),
     );
   });
 
   test('a session with no completed exercises is refused', async () => {
     await assertFails(
-      setDoc(doc(alice(), 'users/alice/trainingHistory/h1'), validHistory({ completedExerciseIds: [] })),
+      setDoc(doc(alice(), 'users/alice/trainingHistory/2026-09-14'), validHistory({ completedExerciseIds: [] })),
     );
   });
 
   test('a missing required field is refused', async () => {
     const { programDay, ...withoutDay } = validHistory();
-    await assertFails(setDoc(doc(alice(), 'users/alice/trainingHistory/h1'), withoutDay));
+    await assertFails(setDoc(doc(alice(), 'users/alice/trainingHistory/2026-09-14'), withoutDay));
   });
 
   test('an entry with a field outside the model is refused', async () => {
     await assertFails(
-      setDoc(doc(alice(), 'users/alice/trainingHistory/h1'), validHistory({ verified: true })),
+      setDoc(doc(alice(), 'users/alice/trainingHistory/2026-09-14'), validHistory({ verified: true })),
     );
   });
 
   test('programDay must be a whole number of at least one', async () => {
-    const path = 'users/alice/trainingHistory/h1';
+    const path = 'users/alice/trainingHistory/2026-09-14';
     await assertFails(setDoc(doc(alice(), path), validHistory({ programDay: 0 })));
     await assertFails(setDoc(doc(alice(), path), validHistory({ programDay: 1.5 })));
   });
 
   test('completedExerciseIds must be a list of at most 50', async () => {
-    const path = 'users/alice/trainingHistory/h1';
+    const path = 'users/alice/trainingHistory/2026-09-14';
     const ids = (n) => Array.from({ length: n }, (_, i) => `exercise_${i}`);
     await assertFails(
       setDoc(doc(alice(), path), validHistory({ completedExerciseIds: 'breathing_diaphragm_01' })),
@@ -321,7 +336,7 @@ describe('training history is append-only', () => {
   });
 
   test('durationMinutes must be a whole number from 0 to 1440', async () => {
-    const path = 'users/alice/trainingHistory/h1';
+    const path = 'users/alice/trainingHistory/2026-09-14';
     await assertFails(setDoc(doc(alice(), path), validHistory({ durationMinutes: -1 })));
     await assertFails(setDoc(doc(alice(), path), validHistory({ durationMinutes: 1441 })));
     await assertSucceeds(setDoc(doc(alice(), path), validHistory({ durationMinutes: 1440 })));

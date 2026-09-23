@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark appearance: Background (Dark) in docs/design/IDENTITY.md. -->
+    <color name="ic_launcher_background">#101A18</color>
+</resources>
