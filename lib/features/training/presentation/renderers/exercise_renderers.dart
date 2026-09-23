@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/models.dart';
 import 'countdown_renderer.dart';
 import 'exercise_renderer.dart';
+import 'letter_ladder_renderer.dart';
 import 'rive_renderer.dart';
 import 'tongue_twister_renderer.dart';
 
@@ -22,6 +23,7 @@ final Provider<ExerciseRendererRegistry> exerciseRendererRegistryProvider =
       ExercisePresentationType.rive: RiveExerciseRenderer(),
       ExercisePresentationType.articulation: RiveExerciseRenderer(),
       ExercisePresentationType.tongueTwister: TongueTwisterRenderer(),
+      ExercisePresentationType.letter: LetterLadderRenderer(),
     },
     fallback: const PlainExerciseRenderer(),
   ),

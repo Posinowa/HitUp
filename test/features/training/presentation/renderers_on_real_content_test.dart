@@ -11,6 +11,7 @@ import 'package:hitup/features/training/data/session_store.dart';
 import 'package:hitup/features/training/domain/models/models.dart';
 import 'package:hitup/features/training/domain/training_session.dart';
 import 'package:hitup/features/training/presentation/exercise_container_screen.dart';
+import 'package:hitup/features/training/presentation/renderers/letter_ladder_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/tongue_twister_renderer.dart';
 import 'package:hitup/shared/providers/auth_providers.dart';
 
@@ -42,6 +43,7 @@ class _MemorySessions implements SessionStore {
 void main() {
   late ExerciseLibrary library;
   late TongueTwisterLibrary twisters;
+  late LetterLadderLibrary letters;
 
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +53,7 @@ void main() {
     // unfinished when that test ends never completes, and every later test
     // waiting on it hangs.
     twisters = await AssetCurriculumRepository().loadTongueTwisters();
+    letters = await AssetCurriculumRepository().loadLetters();
     // The app's own fonts, not the test font, whose square glyphs are far
     // wider than real text: a layout that fits here fits on a phone.
     for (final (String family, List<String> files)
@@ -92,6 +95,7 @@ void main() {
         ),
         riveRuntimeProvider.overrideWithValue(_NoRive()),
         tongueTwistersProvider.overrideWith((Ref ref) async => twisters),
+        letterLaddersProvider.overrideWith((Ref ref) async => letters),
       ],
     );
     addTearDown(container.dispose);
@@ -151,6 +155,52 @@ void main() {
       for (final Exercise exercise in library.exercises) {
         await showExercise(tester, exercise, screen, textScale: scale);
         expect(tester.takeException(), isNull, reason: exercise.id);
+        await tester.pumpWidget(const SizedBox());
+      }
+    });
+  }
+
+  for (final (Size screen, double scale) in screens) {
+    testWidgets(
+        'every letter exercise shows its ladder and fits at '
+        '${screen.width.toInt()}x${screen.height.toInt()}, text x$scale',
+        (WidgetTester tester) async {
+      final List<Exercise> drills = library.exercises
+          .where(
+            (Exercise e) =>
+                e.presentationType == ExercisePresentationType.letter,
+          )
+          .toList();
+      expect(drills, hasLength(14));
+
+      for (final Exercise drill in drills) {
+        await showExercise(tester, drill, screen, textScale: scale);
+        await tester.pump();
+        final LetterConfig config = drill.configAs<LetterConfig>()!;
+        final LetterLadder ladder = letters.byKey(config.letterKey)!;
+        expect(find.text(ladder.letter), findsOneWidget, reason: drill.id);
+        // The button every saying is counted with is in view.
+        expect(
+          find.text('Söyledim').hitTestable(),
+          findsOneWidget,
+          reason: drill.id,
+        );
+        // So is the whole letter above it, but on the smallest phone at 130%
+        // text, where the rung scrolls under the count.
+        if (screen != const Size(320, 568) || scale == 1) {
+          final Rect room = tester.getRect(
+            find.descendant(
+              of: find.byType(LetterLadderView),
+              matching: find.byType(SingleChildScrollView),
+            ),
+          );
+          expect(
+            tester.getRect(find.text(ladder.letter)).bottom,
+            lessThanOrEqualTo(room.bottom + 0.5),
+            reason: drill.id,
+          );
+        }
+        expect(tester.takeException(), isNull, reason: drill.id);
         await tester.pumpWidget(const SizedBox());
       }
     });

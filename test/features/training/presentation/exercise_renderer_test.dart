@@ -5,6 +5,7 @@ import 'package:hitup/features/training/domain/models/models.dart';
 import 'package:hitup/features/training/presentation/renderers/countdown_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/exercise_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/exercise_renderers.dart';
+import 'package:hitup/features/training/presentation/renderers/letter_ladder_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/rive_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/tongue_twister_renderer.dart';
 
@@ -100,6 +101,7 @@ void main() {
               isA<RiveExerciseRenderer>(),
             ExercisePresentationType.tongueTwister =>
               isA<TongueTwisterRenderer>(),
+            ExercisePresentationType.letter => isA<LetterLadderRenderer>(),
             _ => isA<PlainExerciseRenderer>(),
           },
           reason: type.name,
