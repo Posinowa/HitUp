@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hitup/features/training/domain/models/models.dart';
+import 'package:hitup/features/training/presentation/renderers/breathing_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/countdown_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/exercise_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/exercise_renderers.dart';
@@ -102,6 +103,7 @@ void main() {
             ExercisePresentationType.tongueTwister =>
               isA<TongueTwisterRenderer>(),
             ExercisePresentationType.letter => isA<LetterLadderRenderer>(),
+            ExercisePresentationType.breathing => isA<BreathingRenderer>(),
             _ => isA<PlainExerciseRenderer>(),
           },
           reason: type.name,

@@ -11,6 +11,7 @@ import 'package:hitup/features/training/data/session_store.dart';
 import 'package:hitup/features/training/domain/models/models.dart';
 import 'package:hitup/features/training/domain/training_session.dart';
 import 'package:hitup/features/training/presentation/exercise_container_screen.dart';
+import 'package:hitup/features/training/presentation/renderers/breathing_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/letter_ladder_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/tongue_twister_renderer.dart';
 import 'package:hitup/shared/providers/auth_providers.dart';
@@ -155,6 +156,63 @@ void main() {
       for (final Exercise exercise in library.exercises) {
         await showExercise(tester, exercise, screen, textScale: scale);
         expect(tester.takeException(), isNull, reason: exercise.id);
+        await tester.pumpWidget(const SizedBox());
+      }
+    });
+  }
+
+  for (final (Size screen, double scale) in screens) {
+    testWidgets(
+        'every breathing exercise runs and fits at '
+        '${screen.width.toInt()}x${screen.height.toInt()}, text x$scale',
+        (WidgetTester tester) async {
+      final List<Exercise> drills = library.exercises
+          .where(
+            (Exercise e) =>
+                e.presentationType == ExercisePresentationType.breathing,
+          )
+          .toList();
+      expect(drills, isNotEmpty);
+
+      for (final Exercise drill in drills) {
+        await showExercise(tester, drill, screen, textScale: scale);
+        await tester.pump(const Duration(seconds: 2));
+        // What the exercise is followed by is in view, not below the fold.
+        expect(
+          find
+              .text('Tur 1 / ${drill.configAs<BreathingConfig>()!.cycles}')
+              .hitTestable(),
+          findsOneWidget,
+          reason: drill.id,
+        );
+        expect(
+          find
+              .byWidgetPredicate(
+                (Widget w) =>
+                    w is Text &&
+                    const <String>{'Al', 'Tut', 'Ver'}.contains(w.data),
+              )
+              .hitTestable(),
+          findsOneWidget,
+          reason: drill.id,
+        );
+        expect(tester.takeException(), isNull, reason: drill.id);
+
+        // Paused, the longest word is in view and in one piece.
+        await tester.tap(find.text('Duraklat'));
+        await tester.pump();
+        final Finder paused = find.descendant(
+          of: find.byType(BreathingView),
+          matching: find.text('Duraklatıldı'),
+        );
+        expect(paused.hitTestable(), findsOneWidget, reason: drill.id);
+        // One line of the title style (22 at a line height of 1.25).
+        expect(
+          tester.getSize(paused).height,
+          lessThan(22 * 1.25 * scale * 1.5),
+          reason: drill.id,
+        );
+        expect(tester.takeException(), isNull, reason: drill.id);
         await tester.pumpWidget(const SizedBox());
       }
     });
