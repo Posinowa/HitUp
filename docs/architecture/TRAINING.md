@@ -104,17 +104,23 @@ Completing an exercise also counts it on the account: `saveExerciseCompletion` i
 
 Recording the finished **day** is separate, and is below.
 
-## Recording a finished day (HIT-053)
+## Recording a finished day (HIT-053, HIT-100)
 
-`TrainingDayRecorder` writes what a finished session means, in an order chosen so a half-finished run cannot leave a lie behind:
+`TrainingDayRecorder` writes what a finished session means, in three steps:
 
-1. **The day itself**, with its minutes, as the one batch `saveTrainingCompletion` makes. A day already recorded stops here.
-2. **The programme day**, moved on only if the user is still on the day they just finished.
+1. **The day itself**, with its minutes, as the one batch `saveTrainingCompletion` makes.
+2. **The programme day**, moved on only if the user is still on the day recorded in step 1.
 3. **The streak**, counted for that day (`USER_PROGRESS.md`).
 
-Three operations rather than one, because Firestore has no transaction spanning a batch and two read-decide-writes. The history entry is the record of the day, and the two that follow are idempotent, so running them again after a failure changes nothing. If the first fails, nothing else runs: a programme day moved on for a day that was never recorded would be a number nobody could explain.
+Three operations rather than one, because Firestore has no transaction spanning a batch and two read-decide-writes. So a run can stop between them: the app is killed, or step 2 or 3 fails, and both are transactions, which need the server.
 
-**The programme day advances once.** Only when `currentProgramDay` still equals the day just finished, so a second device that already advanced, or the same day finished twice, cannot push anyone forward twice.
+**If step 1 fails, nothing else runs.** A programme day moved on for a day that was never recorded would be a number nobody could explain.
+
+**Steps 2 and 3 run on every call, including a repeat.** When step 1 finds the day already recorded, the recorder reads the stored entry and runs steps 2 and 3 again. On a day that was fully recorded they write nothing: the programme day has already moved past the stored entry's day, and the streak treats a day it has counted as no change. On a day left half-recorded they finish the job. Returning early on "already recorded" would leave such a day half-done for good: the user would repeat it, and it would never count towards the streak (HIT-100).
+
+**Step 2 uses the stored entry's programme day, not the session's.** There is one history entry per date. A second session on a date already recorded, day 5 trained in the evening after day 4 in the morning, has no entry of its own, so it must not move the user past it.
+
+**The programme day advances once.** Only when `currentProgramDay` still equals the recorded day, so a second device that already advanced, or the same day finished twice, cannot push anyone forward twice.
 
 **Minutes are rounded up.** A session of forty seconds took a minute of someone's day, and a total that counts it as zero is the one number a user can immediately tell is wrong.
 

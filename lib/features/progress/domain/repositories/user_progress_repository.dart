@@ -49,6 +49,12 @@ abstract interface class UserProgressRepository {
   /// The day of the programme the user is on.
   Future<int> getCurrentProgramDay(String uid);
 
+  /// The history entry for [date], or null when the server says there is none.
+  ///
+  /// Offline it answers from the local copy; a day the local copy has never
+  /// seen is a network error, not a missing entry.
+  Future<TrainingHistoryEntry?> getTrainingDay(String uid, CalendarDay date);
+
   /// Completed training days, newest first, at most [limit] if given.
   Future<List<TrainingHistoryEntry>> getTrainingHistory(
     String uid, {
