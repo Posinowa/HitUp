@@ -1,6 +1,6 @@
 # Training
 
-**STATUS: TODAY'S TRAINING AND THE SESSION IMPLEMENTED (HIT-025, HIT-026).** The screens are HIT-027 onwards, and recording a finished day is HIT-052 and HIT-053.
+**STATUS: TODAY'S TRAINING, THE SESSION AND EXERCISE COUNTING IMPLEMENTED (HIT-025, HIT-026, HIT-052).** The screens are HIT-027 onwards, and recording a finished day is HIT-053.
 
 ## What decides today's training
 
@@ -92,6 +92,17 @@ notStarted  --start-->  inProgress  --pause-->  paused  --resume-->  inProgress
 **Finishing early keeps what was done.** A user who leaves after two of five exercises has two completions, and `isFullyCompleted` is false.
 
 **A double tap records once.** A screen that fires the callback twice before it rebuilds cannot count the same exercise twice.
+
+## Counting completions on the account (HIT-052)
+
+Completing an exercise also counts it on the account: `saveExerciseCompletion` increments `users/{uid}/exerciseProgress/{exerciseId}` (`USER_PROGRESS.md`).
+
+- **Only completions count.** A skipped exercise is not counted, which is what keeps the numbers honest.
+- **The write is not waited for and cannot fail the session.** The exercise was done on the device; whether the count reached the server yet is a separate question, and not one the user is doing. A failure is logged and dropped.
+- **Offline it is queued** by the Firestore SDK and sent when the device is next online.
+- **A signed-out user still runs the session.** There is simply nowhere to count it, and nothing is written under a guessed account.
+
+Recording the finished **day** is separate and comes with HIT-053, which also advances the programme day and calls the streak (HIT-054).
 
 ## The unfinished session on the device
 
