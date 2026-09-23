@@ -138,6 +138,24 @@ A saved session that cannot be read, or one whose status this build does not kno
 
 A **finished** session is never offered for resume; it is left over from a run that ended without being cleared. `discard()` is what a screen calls once a finished session has been recorded (#53, #54); until then the saved copy is the safety net.
 
+## Days finished but not yet recorded
+
+`FinishedDayRecorder` is what a screen records a finished day through. It writes the day to the device as a `PendingDay` first, and forgets it only once `TrainingDayRecorder` has recorded it. Offline the recording does not complete until the device is back online, and the user can close the app well before then; the pending day is what it is recorded from afterwards.
+
+- **It keeps what the recording needs, taken when the day ended:** the account, the session, the date and the time worked. Recorded later with the date it was recorded on, a day would count towards the wrong day of the streak.
+- **Oldest first.** Recording a day also records every older day the same account left pending, in date order, the only order the streak can be counted in. A failure stops there and leaves the rest pending.
+- **One per account and date.** A second session on a date already pending is not kept: the account keeps the first session of a date, and the device matches it.
+- **Another account's days stay** pending for that account.
+- **Kept at once, recorded in turn.** Keeping or forgetting a day is a read, a change and a write of the list, so those take turns with each other, and each is over in moments. Recordings take turns with each other separately: offline one can wait until the device is back online, and a day finished meanwhile is kept at once rather than waiting behind it, where closing the app would lose it.
+- **Whichever call records a day, the one that finished it hears what happened.** A recording queued earlier can read the list after today's day was kept and record it first; what each recording returned is remembered, so the screen still shows its streak.
+- **A list that cannot be read is read as nothing.** Guessing at it could record a day that did not happen.
+
+**When the app starts.** `pendingDaysProvider` records what an earlier run left, as soon as someone is signed in, and again when the account changes. The app root listens to it, so it starts with the app. It reads the list on the device first and does not reach the account at all when that account has nothing pending, which is almost every launch.
+
+A screen that builds today's training (#23) can wait for it, briefly: offline it does not complete until the device is back online, and today's training should not wait that long. A failure is held in the provider rather than thrown, and the days stay pending for the next launch or the next finished day.
+
 ## Testing
 
 `test/features/training/domain/today_training_engine_test.dart` covers every state above from fixtures, with fake curriculum and progress repositories: each day's order and both totals, determinism, a short day, an empty day, past the last day, a day below one, a hole, an empty programme, and each way the user's day can fail to read.
+
+`test/features/training/application/finished_day_recorder_test.dart` and `test/features/training/data/pending_day_store_test.dart` cover the pending days: kept until recorded, oldest first, one per account and date, other accounts left alone, a failure keeping the rest, a day kept at once while a recording waits, a day recorded by an earlier call still reported, both queues checked on a store that takes its time, the stored form refusing what it cannot read, and the start-up recording, which does not reach the account when nothing is pending. `test/app/pending_days_on_start_test.dart` holds that the app starts it.
