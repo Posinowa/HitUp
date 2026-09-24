@@ -37,6 +37,7 @@ Firebase client SDKs  |  Local Assets
 1. Presentation widgets **MUST NOT** directly depend on `FirebaseAuth` or `FirebaseFirestore`.
 2. There is **no** custom REST/GraphQL backend and **no** Cloud Functions in MVP.
 3. User progress sync goes through **UserProgressRepository** (HIT-079) — one abstraction, no duplicates.
+   It lives in `lib/features/progress/`, and `userProgressRepositoryProvider` is how the app reaches it (`USER_PROGRESS.md`).
 4. Curriculum content is **not** stored in Firestore for MVP.
 5. Never embed Cloudflare R2 secrets in the client.
 6. Do not mix Bloc / competing state libraries.
@@ -107,5 +108,9 @@ Local curriculum JSON must remain usable without network. Firestore sync may req
 - `R2_MEDIA.md`
 - `RIVE.md`
 - `NOTIFICATIONS.md`
+- `USER_PROGRESS.md`
+- `ANALYTICS.md`
+- `CRASH_REPORTING.md`
+- `TRAINING.md`
 - `../design/IDENTITY.md`
 - `../development/ISSUE_EXECUTION_ORDER.md`
