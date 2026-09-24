@@ -162,7 +162,7 @@ ExerciseContainerScreen(today)
 
 **The chrome is shared; the body is the renderer's.** The screen draws what every exercise has: the title, the instructions, the time left and the controls. A renderer draws only what its presentation type adds, and gets the exercise, the time left and whether the session is running. It is keyed by position, so one with state of its own starts fresh on the next exercise, even one of the same type.
 
-**Adding a kind of exercise** is one class implementing `ExerciseRenderer` and one line in `exerciseRendererRegistryProvider`. A type with no renderer yet falls back to the plain one, which adds nothing to the title and instructions, so a day still runs while its renderers land. Today `text` and `timer` have theirs.
+**Adding a kind of exercise** is one class implementing `ExerciseRenderer` and one line in `exerciseRendererRegistryProvider`. A type with no renderer yet falls back to the plain one, which adds nothing to the title and instructions, so a day still runs while its renderers land. Today `text`, `timer`, `rive` and `articulation` have theirs; the last two share `RiveExerciseRenderer` (`RIVE.md`).
 
 **The session is the controller's.** The screen asks it for each transition and never changes a session itself. Every button asks the session first (`canAdvance`, `canPause`, `canResume`): two taps in one frame arrive before the buttons rebuild, and a transition the session no longer allows would throw.
 
