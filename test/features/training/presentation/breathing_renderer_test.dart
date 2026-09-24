@@ -134,6 +134,39 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('the circle moves with every frame, not in steps',
+      (WidgetTester tester) async {
+    await show(tester);
+
+    // Two frames at sixty a second: the in-breath shows in each.
+    await tester.pump(const Duration(milliseconds: 16));
+    final double first = circleWidth(tester);
+    await tester.pump(const Duration(milliseconds: 16));
+    expect(circleWidth(tester), greaterThan(first));
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('asks for no frames while paused, or once every cycle is done',
+      (WidgetTester tester) async {
+    final ValueNotifier<bool> running = ValueNotifier<bool>(true);
+    addTearDown(running.dispose);
+    await show(tester, running: running);
+    await tester.pump(const Duration(seconds: 1));
+    expect(tester.binding.transientCallbackCount, greaterThan(0));
+
+    running.value = false;
+    await tester.pump();
+    expect(tester.binding.transientCallbackCount, 0);
+
+    running.value = true;
+    await tester.pump();
+    expect(tester.binding.transientCallbackCount, greaterThan(0));
+    await tester.pump(const Duration(seconds: 12));
+    expect(find.text('Nefes çalışması tamam'), findsOneWidget);
+    expect(tester.binding.transientCallbackCount, 0);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('where the device asks for less motion, the circle stays still',
       (WidgetTester tester) async {
     await show(tester, stillness: true);

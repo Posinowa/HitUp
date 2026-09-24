@@ -1,7 +1,7 @@
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/failure_code.dart';
@@ -85,13 +85,18 @@ class BreathingView extends StatefulWidget {
   State<BreathingView> createState() => _BreathingViewState();
 }
 
-class _BreathingViewState extends State<BreathingView> {
-  /// How often the engine is advanced. Short enough that the circle moves
-  /// smoothly, long enough not to rebuild for nothing.
-  static const Duration _step = Duration(milliseconds: 100);
-
+class _BreathingViewState extends State<BreathingView>
+    with SingleTickerProviderStateMixin {
   BreathingEngine? _engine;
-  Timer? _ticker;
+
+  /// Advances the engine once a frame, by the time the frame took: the
+  /// circle moves with every frame drawn, and the breath keeps to the clock
+  /// the screen is drawn by, with no second clock beside it to drift.
+  late final Ticker _ticker = createTicker(_frame);
+
+  /// Where the ticker was at the frame before. It counts from nought each
+  /// time it starts.
+  Duration _lastFrame = Duration.zero;
 
   @override
   void initState() {
@@ -113,7 +118,7 @@ class _BreathingViewState extends State<BreathingView> {
 
   @override
   void dispose() {
-    _stop();
+    _ticker.dispose();
     super.dispose();
   }
 
@@ -132,21 +137,31 @@ class _BreathingViewState extends State<BreathingView> {
       return;
     }
     engine.resume();
-    _ticker ??= Timer.periodic(_step, (_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() => engine.advance(_step));
-      if (engine.isComplete) {
-        _stop();
-      }
-    });
+    if (!_ticker.isActive) {
+      _lastFrame = Duration.zero;
+      _ticker.start();
+    }
   }
 
+  void _frame(Duration elapsed) {
+    final BreathingEngine? engine = _engine;
+    if (engine == null) {
+      return;
+    }
+    final Duration step = elapsed - _lastFrame;
+    _lastFrame = elapsed;
+    setState(() => engine.advance(step));
+    if (engine.isComplete) {
+      _stop();
+    }
+  }
+
+  /// Stops the frames too, so a paused or finished exercise draws nothing.
   void _stop() {
     _engine?.pause();
-    _ticker?.cancel();
-    _ticker = null;
+    if (_ticker.isActive) {
+      _ticker.stop();
+    }
   }
 
   void _again() {
