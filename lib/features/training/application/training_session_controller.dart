@@ -1,7 +1,11 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/providers/auth_providers.dart';
+import '../../../shared/providers/progress_providers.dart';
+import '../../progress/domain/repositories/user_progress_repository.dart';
 import '../data/session_store.dart';
 import '../domain/models/models.dart';
 import '../domain/training_session.dart';
@@ -21,6 +25,12 @@ class TrainingSessionController extends Notifier<TrainingSession?> {
   TrainingSession? build() => null;
 
   SessionStore get _store => ref.read(sessionStoreProvider);
+
+  UserProgressRepository get _progress =>
+      ref.read(userProgressRepositoryProvider);
+
+  /// The signed-in account, or null when nobody is.
+  String? get _uid => ref.read(authStateChangesProvider).valueOrNull?.uid;
 
   /// Loads an unfinished session from the device, if there is one.
   ///
@@ -54,8 +64,19 @@ class TrainingSessionController extends Notifier<TrainingSession?> {
   void resume() => _apply((TrainingSession s) => s.resume());
 
   /// Records the current exercise and moves on.
-  void completeCurrentExercise() =>
-      _apply((TrainingSession s) => s.completeCurrentExercise());
+  ///
+  /// The completion is also counted on the account (HIT-052). That write is
+  /// not waited for and cannot fail the session: the exercise was done on the
+  /// device, and whether the count reached the server yet is a separate
+  /// question. Offline, the SDK queues it and sends it when it can
+  /// (`USER_PROGRESS.md`).
+  void completeCurrentExercise() {
+    final String? exerciseId = state?.currentExerciseId;
+    _apply((TrainingSession s) => s.completeCurrentExercise());
+    if (exerciseId != null) {
+      _record(exerciseId);
+    }
+  }
 
   /// Moves past the current exercise without recording it.
   void skipCurrentExercise() =>
@@ -71,6 +92,25 @@ class TrainingSessionController extends Notifier<TrainingSession?> {
   Future<void> discard() async {
     state = null;
     await _store.clear();
+  }
+
+  /// Counts [exerciseId] on the account, if there is one.
+  ///
+  /// A signed-out user still runs the session; there is simply nowhere to
+  /// count it. A failed write is logged and dropped, because the session has
+  /// already moved on and the count is not what the user came for.
+  void _record(String exerciseId) {
+    final String? uid = _uid;
+    if (uid == null) {
+      return;
+    }
+    unawaited(
+      _progress.saveExerciseCompletion(uid, exerciseId).catchError(
+            (Object error) => debugPrint(
+              'HIT-052: could not count $exerciseId. Cause: $error',
+            ),
+          ),
+    );
   }
 
   void _apply(TrainingSession Function(TrainingSession session) transition) {

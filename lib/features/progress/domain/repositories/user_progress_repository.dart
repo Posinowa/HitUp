@@ -49,6 +49,12 @@ abstract interface class UserProgressRepository {
   /// The day of the programme the user is on.
   Future<int> getCurrentProgramDay(String uid);
 
+  /// The history entry for [date], or null when the server says there is none.
+  ///
+  /// Offline it answers from the local copy; a day the local copy has never
+  /// seen is a network error, not a missing entry.
+  Future<TrainingHistoryEntry?> getTrainingDay(String uid, CalendarDay date);
+
   /// Completed training days, newest first, at most [limit] if given.
   Future<List<TrainingHistoryEntry>> getTrainingHistory(
     String uid, {
@@ -89,6 +95,17 @@ abstract interface class UserProgressRepository {
   /// writes nothing, and comes back with `changed` false rather than as an
   /// error. Needs the server: a transaction cannot be queued offline.
   Future<StreakUpdate> updateStreak(String uid, CalendarDay today);
+
+  /// Moves the user on to the day after [completedDay] (HIT-053).
+  ///
+  /// Only when they are still on [completedDay]: finishing an older day again,
+  /// or a second device that already advanced, must not push anyone forward
+  /// twice. Read, decide, write in one transaction, for the same reason
+  /// [updateStreak] is.
+  ///
+  /// Returns the day the user is on afterwards, which is unchanged when they
+  /// had already moved on.
+  Future<int> advanceProgramDay(String uid, {required int completedDay});
 
   /// The user's settings.
   Future<UserPreferences> getPreferences(String uid);

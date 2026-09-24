@@ -8,6 +8,12 @@ import 'package:hitup/core/errors/app_exception.dart';
 import 'package:hitup/core/errors/failure.dart';
 import 'package:hitup/core/errors/failure_code.dart';
 import 'package:hitup/core/errors/failure_mapper.dart';
+import 'package:rive/rive.dart'
+    show
+        RiveArtboardException,
+        RiveException,
+        RiveFileLoaderException,
+        RiveStateMachineException;
 
 void main() {
   group('authentication errors', () {
@@ -158,6 +164,43 @@ void main() {
       );
       expect(failure, isA<ContentFailure>());
       expect(failure.code, FailureCode.contentAssetMissing);
+    });
+
+    test(
+        'a missing Rive file is a missing asset, even wrapped in the Rive '
+        'loader', () {
+      // The message the loader builds around the asset bundle's error, as
+      // rive 0.14.11 writes it.
+      final failure = mapErrorToFailure(
+        RiveFileLoaderException(
+          'Failed to load Rive file from asset: assets/rive/ux_lips.riv. '
+          'Error: Unable to load asset: "assets/rive/ux_lips.riv".',
+        ),
+      );
+      expect(failure, isA<ContentFailure>());
+      expect(failure.code, FailureCode.contentAssetMissing);
+      expect(failure.isRetryable, isFalse);
+    });
+
+    test('any other Rive failure is media that cannot be shown', () {
+      for (final RiveException error in <RiveException>[
+        RiveFileLoaderException(
+          'Failed to decode Rive file from asset: assets/rive/ux_lips.riv',
+        ),
+        RiveStateMachineException(
+          'State machine with name "LipStates" not found.',
+        ),
+        RiveArtboardException('Default artboard not found.'),
+      ]) {
+        final failure = mapErrorToFailure(error);
+        expect(failure, isA<ContentFailure>(), reason: '$error');
+        expect(
+          failure.code,
+          FailureCode.contentMediaUnavailable,
+          reason: '$error',
+        );
+        expect(failure.technicalDetail, contains(error.message));
+      }
     });
   });
 
