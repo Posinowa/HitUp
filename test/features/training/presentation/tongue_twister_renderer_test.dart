@@ -22,6 +22,7 @@ void main() {
     WidgetTester tester,
     TongueTwisterConfig? config, {
     ValueNotifier<bool>? running,
+    TongueTwisterLibrary? twisters,
     Size? room,
   }) async {
     final ValueNotifier<bool> isRunning = running ?? ValueNotifier<bool>(true);
@@ -33,7 +34,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: <Override>[
-          tongueTwistersProvider.overrideWith((Ref ref) async => library),
+          tongueTwistersProvider.overrideWith(
+            (Ref ref) async => twisters ?? library,
+          ),
         ],
         child: MaterialApp(
           home: Scaffold(
@@ -92,6 +95,70 @@ void main() {
     expect(first.difficulty, TongueTwisterDifficulty.easy);
     expect(find.text('Kolay'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a difficulty this build does not know gets no chip',
+      (WidgetTester tester) async {
+    // The same twister, with a difficulty a newer content file might name.
+    final TongueTwister first = library.byId('tt_a_01')!;
+    await show(
+      tester,
+      const TongueTwisterConfig(
+        tongueTwisterIds: <String>['tt_a_01'],
+        repetitions: 2,
+      ),
+      twisters: TongueTwisterLibrary(
+        envelope: library.envelope,
+        tongueTwisters: <TongueTwister>[
+          TongueTwister(
+            id: first.id,
+            text: first.text,
+            difficulty: TongueTwisterDifficulty.unknown,
+            category: first.category,
+            recommendedDurationSeconds: first.recommendedDurationSeconds,
+            targetLetter: first.targetLetter,
+          ),
+        ],
+      ),
+    );
+
+    expect(find.text(first.text), findsOneWidget);
+    // The place alone, with no chip beside it.
+    final Wrap header = tester.widget<Wrap>(
+      find
+          .ancestor(
+            of: find.text('Tekerleme 1 / 1'),
+            matching: find.byType(Wrap),
+          )
+          .first,
+    );
+    expect(header.children, hasLength(1));
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('twisters that cannot be loaded are shown as a failure',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          tongueTwistersProvider.overrideWith(
+            (Ref ref) async => throw FlutterError(
+              'Unable to load asset: "assets/content/tongue_twisters.json".',
+            ),
+          ),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(body: TongueTwisterView(config: set, running: true)),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      find.text(failureMessagesTr[FailureCode.contentAssetMissing]!),
+      findsOneWidget,
+    );
+    expect(find.text('Söyledim'), findsNothing);
   });
 
   testWidgets(
