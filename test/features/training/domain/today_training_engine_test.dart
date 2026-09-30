@@ -221,6 +221,18 @@ void main() {
       expect(today.toString(), contains('programme finished'));
     });
 
+    test('a finished programme keeps whether the day was assumed', () {
+      final TodayTraining today = engine.build(
+        programDay: 4,
+        program: program,
+        library: library,
+        programDayAssumed: true,
+      );
+
+      expect(today.isProgramFinished, isTrue);
+      expect(today.programDayAssumed, isTrue);
+    });
+
     test('a day below one starts at day one', () {
       for (final int stored in <int>[0, -3]) {
         final TodayTraining today = engine.build(
