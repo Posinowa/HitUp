@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hitup/core/theme/app_colors.dart';
@@ -69,6 +71,45 @@ void main() {
         theme.textTheme.labelLarge?.fontFamily,
         AppTypography.bodyFontFamily,
       );
+    });
+
+    test("every slot is the app's own face, in a weight the app bundles", () {
+      // A slot the theme leaves out is filled in the platform's font, Roboto
+      // on Android, and widgets use slots no screen names: a dialog title is
+      // headlineSmall, a field's error text bodySmall.
+      final Map<String, TextStyle?> slots = <String, TextStyle?>{
+        'displayLarge': theme.textTheme.displayLarge,
+        'displayMedium': theme.textTheme.displayMedium,
+        'displaySmall': theme.textTheme.displaySmall,
+        'headlineLarge': theme.textTheme.headlineLarge,
+        'headlineMedium': theme.textTheme.headlineMedium,
+        'headlineSmall': theme.textTheme.headlineSmall,
+        'titleLarge': theme.textTheme.titleLarge,
+        'titleMedium': theme.textTheme.titleMedium,
+        'titleSmall': theme.textTheme.titleSmall,
+        'bodyLarge': theme.textTheme.bodyLarge,
+        'bodyMedium': theme.textTheme.bodyMedium,
+        'bodySmall': theme.textTheme.bodySmall,
+        'labelLarge': theme.textTheme.labelLarge,
+        'labelMedium': theme.textTheme.labelMedium,
+        'labelSmall': theme.textTheme.labelSmall,
+      };
+      final Map<String, Set<int>> bundled = _bundledWeights();
+
+      for (final MapEntry<String, TextStyle?> slot in slots.entries) {
+        final bool heading = slot.key.startsWith('display') ||
+            slot.key.startsWith('headline') ||
+            slot.key.startsWith('title');
+        final String family = heading
+            ? AppTypography.headingFontFamily
+            : AppTypography.bodyFontFamily;
+        expect(slot.value?.fontFamily, family, reason: slot.key);
+        expect(
+          bundled[family],
+          contains(slot.value!.fontWeight!.value),
+          reason: '${slot.key} asks for a weight the app does not bundle',
+        );
+      }
     });
 
     test('the button radius comes from the radius scale', () {
@@ -143,4 +184,24 @@ void main() {
       expect(resolved, AppColors.background);
     });
   });
+}
+
+/// The weights `pubspec.yaml` bundles for each font family.
+Map<String, Set<int>> _bundledWeights() {
+  final Map<String, Set<int>> weights = <String, Set<int>>{};
+  String? family;
+  for (final String line in File('pubspec.yaml').readAsLinesSync()) {
+    final RegExpMatch? named =
+        RegExp(r'^\s*- family:\s*(\S+)').firstMatch(line);
+    if (named != null) {
+      family = named.group(1);
+      weights[family!] = <int>{};
+      continue;
+    }
+    final RegExpMatch? weight = RegExp(r'^\s*weight:\s*(\d+)').firstMatch(line);
+    if (weight != null && family != null) {
+      weights[family]!.add(int.parse(weight.group(1)!));
+    }
+  }
+  return weights;
 }
