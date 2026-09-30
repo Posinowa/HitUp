@@ -1,6 +1,6 @@
 # Analytics
 
-**STATUS: SERVICE AND TAXONOMY IMPLEMENTED (HIT-063).** The call sites land with the screens that raise these events (HIT-064 wiring, #18 onwards). Crash reporting is HIT-065.
+**STATUS: SERVICE AND TAXONOMY IMPLEMENTED (HIT-063); THE TRAINING CALL SITES WIRED (HIT-064).** The rest land with the screens that raise them: sign-up and login with the auth screens (#18, #19), onboarding (#16), the reminder (#62), the speaking challenge with its renderer (#52), and the programme's end with the home screen (#23), which is where a finished programme is known. Crash reporting is HIT-065.
 
 ## The shape
 
@@ -14,6 +14,7 @@ screen / controller  ->  AnalyticsService  ->  Firebase Analytics
 | `core/analytics/analytics_event.dart` | Every event, its name and its parameters |
 | `core/analytics/analytics_service.dart` | `AnalyticsService`, `FirebaseAnalyticsService`, `NoopAnalyticsService` |
 | `shared/providers/analytics_providers.dart` | `analyticsServiceProvider` |
+| `shared/providers/reporting_identity_provider.dart` | `reportingIdentityProvider`, which ties reports to the signed-in uid |
 | `app/bootstrap/app_bootstrap.dart` | Creates the real service and sets collection for the build |
 
 A caller holds `AnalyticsService` and builds an `AnalyticsEvent`. There is no way to log a name of one's own from a screen, which is the point: `training_completed` spelled two ways is two events in the console and a number nobody trusts.
@@ -41,12 +42,29 @@ A caller holds `AnalyticsService` and builds an `AnalyticsEvent`. There is no wa
 
 **The reminder carries the hour, not the time.** What the product asks is whether people pick mornings or evenings. An exact minute makes every bucket smaller for no extra answer.
 
+## Where each is raised
+
+Each event is raised once, from the one place that sees the moment happen. A number counted twice is as wrong as one never counted.
+
+| Event | From | Raised when |
+|---|---|---|
+| `training_started` | `ExerciseContainerScreen` | A day is begun. A day carried on from the device was counted when it began. |
+| `exercise_started` | `ExerciseContainerScreen` | The first exercise of a day just begun, and each exercise the day moves on to. |
+| `exercise_completed` | `ExerciseContainerScreen` | An exercise is completed. A skipped one is not. |
+| `training_completed` | `ExerciseContainerScreen` | The day ends on the screen with something completed: by its last exercise or ended early. `exercise_count` is what was completed, and `duration_minutes` the time worked, rounded up as on the account (`trainingMinutes`). A day with nothing completed is not a training day, and one that had ended before the screen opened was counted when it ended. |
+| `tongue_twister_completed` | `TongueTwisterView` | A twister of the set gets its repetitions. |
+| `streak_advanced` | `TrainingDayRecorder` | Recording a day moves the streak, which happens once for a date: a retry of a half-recorded day finds it counted. After a gap the run reached is 1. |
+
+**`presentation_type` is the type's name in snake case** (`tongue_twister`, `timed_reading`), since a string value has to be lower case. A test builds the exercise events for every exercise the content ships, so content that could not be reported fails a test instead of a session.
+
+**Nothing waits for analytics.** An event is sent and not awaited, and the service swallows what its calls throw, so a slow or failing report never holds up the day.
+
 ## What never goes in an event
 
 - **No personal data.** No email, no display name, no text a user typed or read. Every parameter is an id, a count or a duration, and a string value has to look like a content id: lower case, starting with a letter. An email or a name cannot match that, so `AnalyticsEvent` throws rather than sending it.
 - **No exercise content.** Ids only. The words of a twister live in `assets/content/` and can be looked up from the id (`CONTENT_SCHEMA.md`).
 - **No audio, ever.** Recording is post-MVP (#78) and is local to the device.
-- **The user id is the Firebase uid** and nothing else. `setUserId` takes that uid, which is what the data model already keys on (`FIRESTORE_MODEL.md`).
+- **The user id is the Firebase uid** and nothing else. `setUserId` takes that uid, which is what the data model already keys on (`FIRESTORE_MODEL.md`). `reportingIdentityProvider` sets it when someone signs in and clears it when they sign out, for analytics and crash reports alike; the app root keeps it listened to. While the account is still being read nothing is sent, since that is not the same as nobody signed in.
 
 ## Debug builds do not report
 

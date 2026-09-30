@@ -1,10 +1,16 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hitup/core/analytics/analytics_event.dart';
 import 'package:hitup/features/progress/domain/models/calendar_day.dart';
 import 'package:hitup/features/progress/domain/models/training_history_entry.dart';
 import 'package:hitup/features/progress/domain/repositories/user_progress_repository.dart';
 import 'package:hitup/features/progress/domain/streak.dart';
 import 'package:hitup/features/training/application/training_day_recorder.dart';
 import 'package:hitup/features/training/domain/training_session.dart';
+import 'package:hitup/shared/providers/analytics_providers.dart';
+import 'package:hitup/shared/providers/progress_providers.dart';
+
+import '../../../support/recording_analytics.dart';
 
 /// A progress repository that keeps state the way the real one does, so a
 /// run that stops halfway can be retried and its result read back.
@@ -360,6 +366,56 @@ void main() {
       expect(progress.calls, <String>['save']);
       expect(progress.programDay, 4);
       expect(progress.currentStreak, 2);
+    });
+  });
+
+  group('analytics', () {
+    test('a day the streak counts is reported once, with the run it reached',
+        () async {
+      final RecordingAnalytics analytics = RecordingAnalytics();
+      recorder = TrainingDayRecorder(progress, analytics: analytics);
+
+      final TrainingDayRecord first = await record();
+      // Already counted: the retry after a half-recorded day gets no change.
+      await record();
+
+      expect(first.streak!.currentStreak, 3);
+      expect(analytics.events, <AnalyticsEvent>[
+        AnalyticsEvent.streakAdvanced(
+          currentStreak: 3,
+          longestStreak: first.streak!.longestStreak,
+        ),
+      ]);
+    });
+
+    test("the app's recorder reports to the app's analytics", () async {
+      final RecordingAnalytics analytics = RecordingAnalytics();
+      final ProviderContainer container = ProviderContainer(
+        overrides: <Override>[
+          userProgressRepositoryProvider.overrideWithValue(progress),
+          analyticsServiceProvider.overrideWithValue(analytics),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(trainingDayRecorderProvider).record(
+            uid: 'uid-1',
+            session: _finished(),
+            today: today,
+            elapsed: const Duration(minutes: 13),
+          );
+
+      expect(
+        analytics.events.map((AnalyticsEvent event) => event.name),
+        <String>['streak_advanced'],
+      );
+    });
+
+    test('minutes are rounded up, and nothing counts as none', () {
+      expect(trainingMinutes(Duration.zero), 0);
+      expect(trainingMinutes(const Duration(seconds: 1)), 1);
+      expect(trainingMinutes(const Duration(seconds: 60)), 1);
+      expect(trainingMinutes(const Duration(seconds: 61)), 2);
     });
   });
 

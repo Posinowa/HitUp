@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hitup/core/analytics/analytics_event.dart';
 import 'package:hitup/core/errors/failure_code.dart';
 import 'package:hitup/core/errors/failure_messages.dart';
 import 'package:hitup/features/training/data/asset_curriculum_repository.dart';
 import 'package:hitup/features/training/domain/models/models.dart';
 import 'package:hitup/features/training/presentation/renderers/tongue_twister_renderer.dart';
+import 'package:hitup/shared/providers/analytics_providers.dart';
+
+import '../../../support/recording_analytics.dart';
 
 // Expected text is written out, not asked of the labels.
 
@@ -23,6 +27,7 @@ void main() {
     TongueTwisterConfig? config, {
     ValueNotifier<bool>? running,
     TongueTwisterLibrary? twisters,
+    RecordingAnalytics? analytics,
     Size? room,
   }) async {
     final ValueNotifier<bool> isRunning = running ?? ValueNotifier<bool>(true);
@@ -37,6 +42,8 @@ void main() {
           tongueTwistersProvider.overrideWith(
             (Ref ref) async => twisters ?? library,
           ),
+          if (analytics != null)
+            analyticsServiceProvider.overrideWithValue(analytics),
         ],
         child: MaterialApp(
           home: Scaffold(
@@ -184,6 +191,30 @@ void main() {
     await tester.pump();
     expect(find.text('Tekerleme 1 / 2'), findsOneWidget);
     expect(find.text('Tekrar 0 / 2'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('each twister is reported once it has its repetitions',
+      (WidgetTester tester) async {
+    final RecordingAnalytics analytics = RecordingAnalytics();
+    await show(tester, set, analytics: analytics);
+
+    await say(tester);
+    expect(analytics.events, isEmpty);
+    await say(tester);
+    await say(tester);
+    await say(tester);
+
+    expect(analytics.events, <AnalyticsEvent>[
+      AnalyticsEvent.tongueTwisterCompleted(
+        tongueTwisterId: 'tt_a_01',
+        repetitions: 2,
+      ),
+      AnalyticsEvent.tongueTwisterCompleted(
+        tongueTwisterId: 'tt_m_01',
+        repetitions: 2,
+      ),
+    ]);
     await tester.pumpWidget(const SizedBox());
   });
 
