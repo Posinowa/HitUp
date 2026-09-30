@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/models/models.dart';
+import 'breathing_renderer.dart';
 import 'countdown_renderer.dart';
 import 'exercise_renderer.dart';
 import 'letter_ladder_renderer.dart';
@@ -24,6 +25,7 @@ final Provider<ExerciseRendererRegistry> exerciseRendererRegistryProvider =
       ExercisePresentationType.articulation: RiveExerciseRenderer(),
       ExercisePresentationType.tongueTwister: TongueTwisterRenderer(),
       ExercisePresentationType.letter: LetterLadderRenderer(),
+      ExercisePresentationType.breathing: BreathingRenderer(),
     },
     fallback: const PlainExerciseRenderer(),
   ),
