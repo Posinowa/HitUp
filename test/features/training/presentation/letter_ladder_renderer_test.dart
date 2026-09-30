@@ -217,4 +217,34 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     }
   });
+
+  testWidgets('ladders that cannot be loaded are shown as a failure',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          letterLaddersProvider.overrideWith(
+            (Ref ref) async => throw FlutterError(
+              'Unable to load asset: "assets/content/letters.json".',
+            ),
+          ),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(
+            body: LetterLadderView(
+              config: LetterConfig(letterKey: 'a', repetitions: 2),
+              running: true,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      find.text(failureMessagesTr[FailureCode.contentAssetMissing]!),
+      findsOneWidget,
+    );
+    expect(find.text('Söyledim'), findsNothing);
+  });
 }
