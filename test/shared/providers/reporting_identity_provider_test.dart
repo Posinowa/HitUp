@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hitup/core/analytics/analytics_service.dart';
+import 'package:hitup/core/observability/crash_reporter.dart';
 import 'package:hitup/features/auth/domain/models/auth_user.dart';
 import 'package:hitup/shared/providers/analytics_providers.dart';
 import 'package:hitup/shared/providers/auth_providers.dart';
@@ -82,18 +84,36 @@ void main() {
   });
 
   test('a service that replaces another is told the account too', () async {
-    await emit(const AuthUser(uid: 'uid-1'));
-    final RecordingAnalytics nextAnalytics = RecordingAnalytics();
-    final RecordingCrashReporter nextCrashes = RecordingCrashReporter();
-
-    container.updateOverrides(<Override>[
-      authStateChangesProvider.overrideWith((Ref ref) => auth.stream),
-      analyticsServiceProvider.overrideWithValue(nextAnalytics),
-      crashReporterProvider.overrideWithValue(nextCrashes),
-    ]);
+    // The services come from providers that can change, while the account
+    // stays the same, so only a change of service can bring the uid again.
+    final StateProvider<AnalyticsService> analyticsIn =
+        StateProvider<AnalyticsService>((Ref ref) => analytics);
+    final StateProvider<CrashReporter> crashesIn =
+        StateProvider<CrashReporter>((Ref ref) => crashes);
+    final ProviderContainer swapping = ProviderContainer(
+      overrides: <Override>[
+        authStateChangesProvider.overrideWith(
+          (Ref ref) => Stream<AuthUser?>.value(const AuthUser(uid: 'uid-1')),
+        ),
+        analyticsServiceProvider.overrideWith(
+          (Ref ref) => ref.watch(analyticsIn),
+        ),
+        crashReporterProvider.overrideWith((Ref ref) => ref.watch(crashesIn)),
+      ],
+    );
+    addTearDown(swapping.dispose);
+    swapping.listen<String?>(reportingIdentityProvider, (_, __) {});
     await pumpEventQueue();
 
+    // One at a time: a change to either one alone has to be enough.
+    final RecordingAnalytics nextAnalytics = RecordingAnalytics();
+    swapping.read(analyticsIn.notifier).state = nextAnalytics;
+    await pumpEventQueue();
     expect(nextAnalytics.userIds, <String?>['uid-1']);
+
+    final RecordingCrashReporter nextCrashes = RecordingCrashReporter();
+    swapping.read(crashesIn.notifier).state = nextCrashes;
+    await pumpEventQueue();
     expect(nextCrashes.userIds, <String?>['uid-1']);
   });
 
