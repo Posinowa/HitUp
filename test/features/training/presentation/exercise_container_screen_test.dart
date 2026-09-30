@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hitup/core/analytics/analytics_event.dart';
 import 'package:hitup/core/errors/failure.dart';
 import 'package:hitup/core/errors/failure_code.dart';
 import 'package:hitup/core/errors/failure_messages.dart';
@@ -15,6 +16,7 @@ import 'package:hitup/features/progress/domain/streak.dart';
 import 'package:hitup/features/training/application/finished_day_recorder.dart';
 import 'package:hitup/features/training/application/training_day_recorder.dart';
 import 'package:hitup/features/training/application/training_session_controller.dart';
+import 'package:hitup/features/training/data/asset_curriculum_repository.dart';
 import 'package:hitup/features/training/data/pending_day_store.dart';
 import 'package:hitup/features/training/data/session_store.dart';
 import 'package:hitup/features/training/domain/models/models.dart';
@@ -22,8 +24,11 @@ import 'package:hitup/features/training/domain/training_session.dart';
 import 'package:hitup/features/training/presentation/exercise_container_screen.dart';
 import 'package:hitup/features/training/presentation/renderers/exercise_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/exercise_renderers.dart';
+import 'package:hitup/shared/providers/analytics_providers.dart';
 import 'package:hitup/shared/providers/auth_providers.dart';
 import 'package:hitup/shared/providers/progress_providers.dart';
+
+import '../../../support/recording_analytics.dart';
 
 typedef _L = ExerciseContainerLabelsTr;
 
@@ -213,6 +218,7 @@ void main() {
   late _FakeSessionStore store;
   late _FakeRecorder recorder;
   late _MemoryPending pending;
+  late RecordingAnalytics analytics;
   late ProviderContainer container;
   late DateTime now;
 
@@ -221,6 +227,7 @@ void main() {
     store = _FakeSessionStore();
     recorder = _FakeRecorder();
     pending = _MemoryPending();
+    analytics = RecordingAnalytics();
     now = DateTime(2026, 9, 18, 10);
   });
 
@@ -243,6 +250,7 @@ void main() {
         userProgressRepositoryProvider.overrideWithValue(progress),
         trainingDayRecorderProvider.overrideWithValue(recorder),
         pendingDayStoreProvider.overrideWithValue(pending),
+        analyticsServiceProvider.overrideWithValue(analytics),
         authStateChangesProvider.overrideWith(
           (Ref ref) => Stream<AuthUser?>.value(
             uid == null ? null : AuthUser(uid: uid),
@@ -892,6 +900,191 @@ void main() {
       // other way round would leave it on the device.
       expect(store.ops.last, 'clear');
       expect(store.saved, isNull);
+    });
+  });
+
+  group('analytics', () {
+    AnalyticsEvent started(String id, String type) =>
+        AnalyticsEvent.exerciseStarted(
+          exerciseId: id,
+          presentationType: type,
+          programDay: 2,
+        );
+    AnalyticsEvent completed(String id, String type) =>
+        AnalyticsEvent.exerciseCompleted(
+          exerciseId: id,
+          presentationType: type,
+          programDay: 2,
+        );
+
+    Future<void> endEarly(WidgetTester tester) async {
+      await tester.tap(find.byTooltip(_L.finishTooltip));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_L.finishConfirm));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a new day is reported as started, with its first exercise',
+        (WidgetTester tester) async {
+      await open(tester);
+
+      expect(analytics.events, <AnalyticsEvent>[
+        AnalyticsEvent.trainingStarted(programDay: 2, exerciseCount: 3),
+        started('a', 'timer'),
+      ]);
+      await close(tester);
+    });
+
+    testWidgets(
+        'completing reports the exercise and the next one; skipping only the '
+        'next one', (WidgetTester tester) async {
+      await open(tester);
+      analytics.events.clear();
+
+      await tapText(tester, _L.complete);
+      await tapText(tester, _L.skip);
+
+      expect(analytics.events, <AnalyticsEvent>[
+        completed('a', 'timer'),
+        started('b', 'text'),
+        started('c', 'breathing'),
+      ]);
+      await close(tester);
+    });
+
+    testWidgets(
+        'the last exercise finishes the day, reported after it with what was '
+        'done and the minutes worked', (WidgetTester tester) async {
+      await open(tester);
+      await tester.pump(const Duration(seconds: 50));
+      await tapText(tester, _L.complete);
+      await tester.pump(const Duration(seconds: 30));
+      await tapText(tester, _L.skip);
+      analytics.events.clear();
+
+      await tapText(tester, _L.complete);
+      await tester.pump();
+
+      expect(analytics.events, <AnalyticsEvent>[
+        completed('c', 'breathing'),
+        // Eighty seconds worked is two minutes, as on the account.
+        AnalyticsEvent.trainingCompleted(
+          programDay: 2,
+          exerciseCount: 2,
+          durationMinutes: 2,
+        ),
+      ]);
+      await close(tester);
+    });
+
+    testWidgets('a day ended early is reported with what was done',
+        (WidgetTester tester) async {
+      await open(tester);
+      await tester.pump(const Duration(seconds: 61));
+      await tapText(tester, _L.complete);
+      analytics.events.clear();
+
+      await endEarly(tester);
+
+      expect(analytics.events, <AnalyticsEvent>[
+        AnalyticsEvent.trainingCompleted(
+          programDay: 2,
+          exerciseCount: 1,
+          durationMinutes: 2,
+        ),
+      ]);
+      await close(tester);
+    });
+
+    testWidgets('a day ended with nothing done is not reported as finished',
+        (WidgetTester tester) async {
+      await open(tester);
+      analytics.events.clear();
+
+      await endEarly(tester);
+
+      expect(find.text(_L.nothingToSave), findsOneWidget);
+      expect(analytics.events, isEmpty);
+      await close(tester);
+    });
+
+    testWidgets(
+        'a day carried on from the device is not reported as started again, '
+        'and goes on being reported', (WidgetTester tester) async {
+      store.saved = TrainingSession(
+        programDay: 2,
+        exerciseIds: const <String>['a', 'b', 'c'],
+        status: SessionStatus.paused,
+        currentIndex: 1,
+        completedExerciseIds: const <String>['a'],
+      );
+      await open(
+        tester,
+        before: () async {
+          await container
+              .read(trainingSessionControllerProvider.notifier)
+              .restore();
+        },
+      );
+      expect(analytics.events, isEmpty);
+
+      await tapText(tester, _L.resume);
+      await tapText(tester, _L.complete);
+
+      expect(analytics.events, <AnalyticsEvent>[
+        completed('b', 'text'),
+        started('c', 'breathing'),
+      ]);
+      await close(tester);
+    });
+
+    testWidgets(
+        'a day that had ended before the screen opened is not reported again',
+        (WidgetTester tester) async {
+      await open(
+        tester,
+        before: () async {
+          container.read(trainingSessionControllerProvider.notifier)
+            ..begin(_today())
+            ..completeCurrentExercise()
+            ..finish();
+        },
+      );
+      await tester.pump();
+
+      expect(find.text(_L.dayEnded), findsOneWidget);
+      expect(analytics.events, isEmpty);
+      await close(tester);
+    });
+
+    test('every exercise the content ships can be reported', () async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      final ExerciseLibrary library =
+          await AssetCurriculumRepository().loadExercises();
+
+      for (final Exercise exercise in library.exercises) {
+        expect(
+          () => AnalyticsEvent.exerciseCompleted(
+            exerciseId: exercise.id,
+            presentationType: analyticsTypeName(exercise.presentationType),
+            programDay: 1,
+          ),
+          returnsNormally,
+          reason: exercise.id,
+        );
+      }
+      for (final ExercisePresentationType type
+          in ExercisePresentationType.values) {
+        expect(
+          analyticsTypeName(type),
+          matches(RegExp(r'^[a-z][a-z0-9_]*$')),
+          reason: type.name,
+        );
+      }
+      expect(
+        analyticsTypeName(ExercisePresentationType.tongueTwister),
+        'tongue_twister',
+      );
     });
   });
 

@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/analytics/analytics_event.dart';
+import '../../../core/analytics/analytics_service.dart';
+import '../../../shared/providers/analytics_providers.dart';
 import '../../../shared/providers/progress_providers.dart';
 import '../../progress/domain/models/calendar_day.dart';
 import '../../progress/domain/models/training_history_entry.dart';
@@ -78,11 +83,18 @@ class TrainingDayRecord {
 /// session. A second session on a date that is already recorded would
 /// otherwise advance a day that has no history entry of its own
 /// (`USER_PROGRESS.md`).
+///
+/// A streak the day moved is reported as `streak_advanced` (`ANALYTICS.md`),
+/// once: a run that finds the day already counted gets no change back.
 class TrainingDayRecorder {
-  /// Creates a recorder over [progress].
-  const TrainingDayRecorder(this._progress);
+  /// Creates a recorder over [progress], reporting to [analytics].
+  const TrainingDayRecorder(
+    this._progress, {
+    AnalyticsService analytics = const NoopAnalyticsService(),
+  }) : _analytics = analytics;
 
   final UserProgressRepository _progress;
+  final AnalyticsService _analytics;
 
   /// Records [session] as finished on [today].
   ///
@@ -120,12 +132,7 @@ class TrainingDayRecorder {
         date: today,
         programDay: session.programDay,
         completedExerciseIds: session.completedExerciseIds,
-        // Rounded up: a session of forty seconds took a minute of someone's
-        // day, and a total that counts it as zero is the one number a user
-        // can immediately tell is wrong.
-        durationMinutes: elapsed.inSeconds <= 0
-            ? 0
-            : (elapsed.inSeconds / Duration.secondsPerMinute).ceil(),
+        durationMinutes: trainingMinutes(elapsed),
       ),
     );
 
@@ -157,6 +164,16 @@ class TrainingDayRecorder {
       completedDay: recordedDay,
     );
     final StreakUpdate streak = await _progress.updateStreak(uid, today);
+    if (streak.changed) {
+      unawaited(
+        _analytics.log(
+          AnalyticsEvent.streakAdvanced(
+            currentStreak: streak.currentStreak,
+            longestStreak: streak.longestStreak,
+          ),
+        ),
+      );
+    }
 
     return TrainingDayRecord(
       result: result,
@@ -166,8 +183,20 @@ class TrainingDayRecorder {
   }
 }
 
+/// How many minutes [elapsed] counts as, on the account and in analytics.
+///
+/// Rounded up: a session of forty seconds took a minute of someone's day,
+/// and a total that counts it as zero is the one number a user can
+/// immediately tell is wrong.
+int trainingMinutes(Duration elapsed) => elapsed.inSeconds <= 0
+    ? 0
+    : (elapsed.inSeconds / Duration.secondsPerMinute).ceil();
+
 /// Records finished training days.
 final Provider<TrainingDayRecorder> trainingDayRecorderProvider =
     Provider<TrainingDayRecorder>(
-  (Ref ref) => TrainingDayRecorder(ref.watch(userProgressRepositoryProvider)),
+  (Ref ref) => TrainingDayRecorder(
+    ref.watch(userProgressRepositoryProvider),
+    analytics: ref.watch(analyticsServiceProvider),
+  ),
 );

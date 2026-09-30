@@ -42,7 +42,7 @@ Under `flutter test` the default provider is `NoopCrashReporter`, which reports 
 
 ## What a report may carry
 
-The same rule as analytics (`ANALYTICS.md`): no email, no display name, no text a user typed. `setUserId` takes the Firebase uid, which is what the data model already keys on. Stack traces and error messages come from the code, not from user input; a message built by interpolating user data into it would break that rule, which is why `AuthUser` and `UserProfile` print their uid only.
+The same rule as analytics (`ANALYTICS.md`): no email, no display name, no text a user typed. `setUserId` takes the Firebase uid, which is what the data model already keys on, and `reportingIdentityProvider` sets it on sign-in and clears it on sign-out (`ANALYTICS.md`). Stack traces and error messages come from the code, not from user input; a message built by interpolating user data into it would break that rule, which is why `AuthUser` and `UserProfile` print their uid only.
 
 ## Verifying it
 

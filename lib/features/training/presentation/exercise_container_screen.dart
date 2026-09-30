@@ -4,10 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/analytics/analytics_event.dart';
 import '../../../core/errors/failure.dart';
 import '../../../core/errors/failure_mapper.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/async_state_views.dart';
+import '../../../shared/providers/analytics_providers.dart';
 import '../../../shared/providers/auth_providers.dart';
 import '../../auth/domain/models/auth_user.dart';
 import '../../progress/domain/models/calendar_day.dart';
@@ -102,6 +104,14 @@ abstract final class ExerciseContainerLabelsTr {
   static String secondsLeft(int seconds) => '$seconds saniye kaldı';
 }
 
+/// [type] as analytics names it: in snake case, since an analytics value has
+/// to be lower case (`ANALYTICS.md`) and `tongueTwister` would be refused.
+String analyticsTypeName(ExercisePresentationType type) =>
+    type.wireName.replaceAllMapped(
+      RegExp('[A-Z]'),
+      (Match letter) => '_${letter[0]!.toLowerCase()}',
+    );
+
 /// Runs a training day, one exercise at a time (HIT-028).
 ///
 /// The same screen for every kind of exercise. It draws what they share (the
@@ -113,6 +123,13 @@ abstract final class ExerciseContainerLabelsTr {
 /// transition and never changes a session itself. When the session is over,
 /// the screen records the day with `FinishedDayRecorder` and shows what was
 /// recorded.
+///
+/// It is also where the day's analytics come from (`ANALYTICS.md`), since it
+/// is the one place that sees each transition as the user makes it and knows
+/// the exercise and the time worked: the day started, each exercise started
+/// and completed, and the day finished. A day carried on from the device,
+/// or one that had already ended when the screen opened, is not counted a
+/// second time.
 class ExerciseContainerScreen extends ConsumerStatefulWidget {
   /// Creates the screen for [today].
   ///
@@ -165,6 +182,11 @@ class _ExerciseContainerScreenState
   /// The time the session was worked, as it stood when it ended.
   Duration _worked = Duration.zero;
 
+  /// Whether this screen saw the session running. Only a day that ends here
+  /// is counted as finished; one that had ended before the screen opened was
+  /// counted when it did.
+  bool _sawItRun = false;
+
   _Outcome? _outcome;
   TrainingDayRecord? _record;
   Failure? _failure;
@@ -205,7 +227,40 @@ class _ExerciseContainerScreenState
     final TrainingSession? inHand = ref.read(
       trainingSessionControllerProvider,
     );
-    _sync(_isToday(inHand) ? inHand! : _controller.begin(widget.today));
+    if (_isToday(inHand)) {
+      // Carried on: the day and its exercise were counted when they started.
+      _sync(inHand);
+      return;
+    }
+    final TrainingSession session = _controller.begin(widget.today);
+    _log(
+      AnalyticsEvent.trainingStarted(
+        programDay: session.programDay,
+        exerciseCount: session.exerciseCount,
+      ),
+    );
+    _logExerciseStarted(session);
+    _sync(session);
+  }
+
+  /// Sends [event] without waiting for it: the service swallows what its
+  /// calls throw, so analytics never holds up the day (`ANALYTICS.md`).
+  void _log(AnalyticsEvent event) =>
+      unawaited(ref.read(analyticsServiceProvider).log(event));
+
+  /// Counts [session]'s current exercise as started, if the day goes on.
+  void _logExerciseStarted(TrainingSession? session) {
+    if (session == null || session.status != SessionStatus.inProgress) {
+      return;
+    }
+    final Exercise exercise = _exercises[session.currentExerciseId]!;
+    _log(
+      AnalyticsEvent.exerciseStarted(
+        exerciseId: exercise.id,
+        presentationType: analyticsTypeName(exercise.presentationType),
+        programDay: session.programDay,
+      ),
+    );
   }
 
   /// Brings the clock, and the end of the day, in line with [session].
@@ -220,12 +275,24 @@ class _ExerciseContainerScreenState
         _finishedOn = CalendarDay.fromDateTime(widget.now());
         _worked = _clock.elapsed;
       });
+      // A day with nothing completed is not a training day (the recorder
+      // refuses one), so it is not counted as finished either.
+      if (_sawItRun && session.completedExerciseIds.isNotEmpty) {
+        _log(
+          AnalyticsEvent.trainingCompleted(
+            programDay: session.programDay,
+            exerciseCount: session.completedExerciseIds.length,
+            durationMinutes: trainingMinutes(_worked),
+          ),
+        );
+      }
       // Not now: this runs while the controller is still inside the
       // transition, before it has saved the finished session. Clearing the
       // session from here would race that save and could lose to it.
       scheduleMicrotask(() => unawaited(_recordDay()));
       return;
     }
+    _sawItRun = true;
     _clock.showExercise(
       session.currentIndex,
       _exercises[session.currentExerciseId]!.duration,
@@ -316,14 +383,31 @@ class _ExerciseContainerScreenState
   // throw.
 
   void _complete() {
-    if (ref.read(trainingSessionControllerProvider)?.canAdvance ?? false) {
-      _controller.completeCurrentExercise();
+    final TrainingSession? session = ref.read(
+      trainingSessionControllerProvider,
+    );
+    if (session == null || !session.canAdvance) {
+      return;
     }
+    // Counted before the transition, so that on the last exercise it comes
+    // ahead of the day it finishes.
+    final Exercise exercise = _exercises[session.currentExerciseId]!;
+    _log(
+      AnalyticsEvent.exerciseCompleted(
+        exerciseId: exercise.id,
+        presentationType: analyticsTypeName(exercise.presentationType),
+        programDay: session.programDay,
+      ),
+    );
+    _controller.completeCurrentExercise();
+    _logExerciseStarted(ref.read(trainingSessionControllerProvider));
   }
 
+  /// Moves on without counting the exercise as completed.
   void _skip() {
     if (ref.read(trainingSessionControllerProvider)?.canAdvance ?? false) {
       _controller.skipCurrentExercise();
+      _logExerciseStarted(ref.read(trainingSessionControllerProvider));
     }
   }
 

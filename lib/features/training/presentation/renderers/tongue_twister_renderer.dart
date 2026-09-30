@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/analytics/analytics_event.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/failure_code.dart';
 import '../../../../core/errors/failure_mapper.dart';
 import '../../../../core/errors/failure_messages.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/providers/analytics_providers.dart';
 import '../../../../shared/providers/training_providers.dart';
 import '../../domain/models/models.dart';
 import 'exercise_renderer.dart';
@@ -104,14 +108,28 @@ class _TongueTwisterViewState extends ConsumerState<TongueTwisterView> {
     }
   }
 
-  void _count(int twisters, int repetitions) {
+  void _count(List<TongueTwister> twisters, int repetitions) {
+    final TongueTwister saying = twisters[_twister];
+    final bool reachesRepetitions = _said + 1 >= repetitions;
     setState(() {
       _said++;
-      if (_said >= repetitions && _twister < twisters - 1) {
+      if (_said >= repetitions && _twister < twisters.length - 1) {
         _twister++;
         _said = 0;
       }
     });
+    // Once a twister, the saying that gives it its repetitions
+    // (`ANALYTICS.md`).
+    if (reachesRepetitions) {
+      unawaited(
+        ref.read(analyticsServiceProvider).log(
+              AnalyticsEvent.tongueTwisterCompleted(
+                tongueTwisterId: saying.id,
+                repetitions: repetitions,
+              ),
+            ),
+      );
+    }
   }
 
   void _again() => setState(() {
@@ -244,7 +262,7 @@ class _TongueTwisterViewState extends ConsumerState<TongueTwisterView> {
                 ),
                 ElevatedButton(
                   onPressed: widget.running
-                      ? () => _count(twisters.length, repetitions)
+                      ? () => _count(twisters, repetitions)
                       : null,
                   child: const Text(TongueTwisterLabelsTr.said),
                 ),
