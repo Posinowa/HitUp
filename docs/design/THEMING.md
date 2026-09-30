@@ -70,6 +70,8 @@ Use the named slots. Never build a `TextStyle` with a font family by hand.
 | `bodyMedium` | Plus Jakarta Sans | Supporting text, already muted |
 | `labelLarge` | Plus Jakarta Sans | Button and tab labels |
 
+The other eight slots (`displayLarge`, `displayMedium`, `headlineLarge`, `headlineSmall`, `titleSmall`, `bodySmall`, `labelMedium`, `labelSmall`) are set too, in the same two faces: Manrope for display, headline and title, Plus Jakarta Sans for body and label, at Material 3's sizes. Screens rarely name them, but Material's own widgets do (a dialog title is `headlineSmall`, a field's error and helper text `bodySmall`), and a slot the theme leaves out falls back to the platform's font. `app_theme_test.dart` checks that every slot is one of the two faces, in a weight `pubspec.yaml` bundles.
+
 To vary one property, copy the slot instead of rebuilding it:
 
 ```dart
