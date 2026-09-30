@@ -23,6 +23,14 @@ void main() {
       expect(CalendarDay(2028, 2, 29).key, '2028-02-29');
     });
 
+    test('refuses a year the stored form cannot hold', () {
+      // Four digits and no sign, as `yyyy-MM-dd` has.
+      expect(() => CalendarDay(10000, 1, 1), throwsArgumentError);
+      expect(() => CalendarDay(-1, 12, 31), throwsArgumentError);
+      expect(CalendarDay(9999, 12, 31).key, '9999-12-31');
+      expect(CalendarDay(0, 1, 1).key, '0000-01-01');
+    });
+
     test('parse refuses every other shape, and impossible days', () {
       for (final String bad in <String>[
         '',
