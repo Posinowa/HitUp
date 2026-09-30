@@ -70,16 +70,19 @@ void main() {
     });
 
     test('an index outside the day, or a day below one, is refused', () {
-      expect(
-        () => TrainingSession(
-          programDay: 1,
-          exerciseIds: const <String>['a'],
-          status: SessionStatus.inProgress,
-          currentIndex: 1,
-          completedExerciseIds: const <String>[],
-        ),
-        throwsArgumentError,
-      );
+      for (final int index in <int>[1, -1]) {
+        expect(
+          () => TrainingSession(
+            programDay: 1,
+            exerciseIds: const <String>['a'],
+            status: SessionStatus.inProgress,
+            currentIndex: index,
+            completedExerciseIds: const <String>[],
+          ),
+          throwsArgumentError,
+          reason: 'index $index',
+        );
+      }
       expect(
         () => TrainingSession(
           programDay: 0,
@@ -248,22 +251,44 @@ void main() {
       expect(inState(SessionStatus.paused).canAdvance, isFalse);
       expect(inState(SessionStatus.completed).canFinish, isFalse);
     });
+
+    test('only a started session that is not over can be resumed', () {
+      expect(inState(SessionStatus.notStarted).isResumable, isFalse);
+      expect(inState(SessionStatus.inProgress).isResumable, isTrue);
+      expect(inState(SessionStatus.paused).isResumable, isTrue);
+      expect(inState(SessionStatus.completed).isResumable, isFalse);
+    });
   });
 
   group('as a value', () {
     test('compares by every field, and prints where it is', () {
-      TrainingSession session({int day = 1, int index = 0}) => TrainingSession(
+      TrainingSession session({
+        int day = 1,
+        List<String> ids = const <String>['a', 'b'],
+        SessionStatus status = SessionStatus.inProgress,
+        int index = 0,
+        List<String> completed = const <String>['a'],
+      }) =>
+          TrainingSession(
             programDay: day,
-            exerciseIds: const <String>['a', 'b'],
-            status: SessionStatus.inProgress,
+            exerciseIds: ids,
+            status: status,
             currentIndex: index,
-            completedExerciseIds: const <String>['a'],
+            completedExerciseIds: completed,
           );
 
       expect(session(), session());
       expect(session().hashCode, session().hashCode);
+      // Equal lists, not the same list, are the same session.
+      expect(
+        session(ids: <String>['a', 'b'], completed: <String>['a']),
+        session(),
+      );
       expect(session(day: 2), isNot(session()));
+      expect(session(ids: const <String>['a', 'c']), isNot(session()));
+      expect(session(status: SessionStatus.paused), isNot(session()));
       expect(session(index: 1), isNot(session()));
+      expect(session(completed: const <String>[]), isNot(session()));
       expect(session().toString(), 'TrainingSession(day 1, inProgress, 1/2)');
     });
 
@@ -273,6 +298,29 @@ void main() {
       expect(() => session.exerciseIds.add('c'), throwsUnsupportedError);
       expect(
         () => session.completedExerciseIds.add('a'),
+        throwsUnsupportedError,
+      );
+    });
+
+    test('the lists it is given are copied, not kept', () {
+      final List<String> ids = <String>['a', 'b'];
+      final List<String> completed = <String>['a'];
+      final TrainingSession session = TrainingSession(
+        programDay: 1,
+        exerciseIds: ids,
+        status: SessionStatus.inProgress,
+        currentIndex: 1,
+        completedExerciseIds: completed,
+      );
+
+      ids.add('c');
+      completed.add('b');
+
+      expect(session.exerciseIds, <String>['a', 'b']);
+      expect(session.completedExerciseIds, <String>['a']);
+      expect(() => session.exerciseIds.add('c'), throwsUnsupportedError);
+      expect(
+        () => session.completedExerciseIds.add('b'),
         throwsUnsupportedError,
       );
     });
