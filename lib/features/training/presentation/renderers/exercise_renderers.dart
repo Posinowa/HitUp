@@ -6,6 +6,7 @@ import 'countdown_renderer.dart';
 import 'exercise_renderer.dart';
 import 'letter_ladder_renderer.dart';
 import 'rive_renderer.dart';
+import 'timed_reading_renderer.dart';
 import 'tongue_twister_renderer.dart';
 
 /// The renderers this build has (HIT-028).
@@ -23,6 +24,7 @@ final Provider<ExerciseRendererRegistry> exerciseRendererRegistryProvider =
       // drills, which content names apart from other Rive exercises.
       ExercisePresentationType.rive: RiveExerciseRenderer(),
       ExercisePresentationType.articulation: RiveExerciseRenderer(),
+      ExercisePresentationType.timedReading: TimedReadingRenderer(),
       ExercisePresentationType.tongueTwister: TongueTwisterRenderer(),
       ExercisePresentationType.letter: LetterLadderRenderer(),
       ExercisePresentationType.breathing: BreathingRenderer(),
