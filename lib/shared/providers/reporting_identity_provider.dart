@@ -18,7 +18,9 @@ import 'crash_providers.dart';
 /// arriving again from the auth stream is not sent twice.
 ///
 /// The app root keeps it listened to, so it follows the account from the
-/// start. Neither call is awaited: both services swallow what they throw.
+/// start. The services are watched, so one that replaces another is told
+/// the account too. Neither call is awaited: both services swallow what they
+/// throw.
 final Provider<String?> reportingIdentityProvider = Provider<String?>((
   Ref ref,
 ) {
@@ -28,8 +30,8 @@ final Provider<String?> reportingIdentityProvider = Provider<String?>((
     ),
   );
   if (known) {
-    unawaited(ref.read(analyticsServiceProvider).setUserId(uid));
-    unawaited(ref.read(crashReporterProvider).setUserId(uid));
+    unawaited(ref.watch(analyticsServiceProvider).setUserId(uid));
+    unawaited(ref.watch(crashReporterProvider).setUserId(uid));
   }
   return uid;
 });

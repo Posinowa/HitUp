@@ -81,6 +81,22 @@ void main() {
     expect(crashes.userIds, <String?>['uid-1']);
   });
 
+  test('a service that replaces another is told the account too', () async {
+    await emit(const AuthUser(uid: 'uid-1'));
+    final RecordingAnalytics nextAnalytics = RecordingAnalytics();
+    final RecordingCrashReporter nextCrashes = RecordingCrashReporter();
+
+    container.updateOverrides(<Override>[
+      authStateChangesProvider.overrideWith((Ref ref) => auth.stream),
+      analyticsServiceProvider.overrideWithValue(nextAnalytics),
+      crashReporterProvider.overrideWithValue(nextCrashes),
+    ]);
+    await pumpEventQueue();
+
+    expect(nextAnalytics.userIds, <String?>['uid-1']);
+    expect(nextCrashes.userIds, <String?>['uid-1']);
+  });
+
   test('an account that cannot be read ties reports to nobody new', () async {
     auth.addError(StateError('auth unavailable'));
     await pumpEventQueue();
