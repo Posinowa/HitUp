@@ -10,9 +10,11 @@ import 'package:hitup/features/training/data/asset_curriculum_repository.dart';
 import 'package:hitup/features/training/data/session_store.dart';
 import 'package:hitup/features/training/domain/models/models.dart';
 import 'package:hitup/features/training/domain/training_session.dart';
+import 'package:hitup/features/training/domain/words_per_minute.dart';
 import 'package:hitup/features/training/presentation/exercise_container_screen.dart';
 import 'package:hitup/features/training/presentation/renderers/breathing_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/letter_ladder_renderer.dart';
+import 'package:hitup/features/training/presentation/renderers/timed_reading_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/tongue_twister_renderer.dart';
 import 'package:hitup/shared/providers/auth_providers.dart';
 
@@ -45,6 +47,8 @@ void main() {
   late ExerciseLibrary library;
   late TongueTwisterLibrary twisters;
   late LetterLadderLibrary letters;
+  // The wall clock a timed reading is timed with, moved by hand.
+  DateTime readingNow = DateTime(2026);
 
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
@@ -95,6 +99,7 @@ void main() {
           (Ref ref) => Stream<AuthUser?>.value(null),
         ),
         riveRuntimeProvider.overrideWithValue(_NoRive()),
+        readingClockProvider.overrideWithValue(() => readingNow),
         tongueTwistersProvider.overrideWith((Ref ref) async => twisters),
         letterLaddersProvider.overrideWith((Ref ref) async => letters),
       ],
@@ -295,6 +300,94 @@ void main() {
         );
         expect(tester.takeException(), isNull, reason: set.id);
         await tester.pumpWidget(const SizedBox());
+      }
+    });
+  }
+
+  for (final (Size screen, double scale) in screens) {
+    testWidgets(
+        'every timed reading in the content fits the exercise screen at '
+        '${screen.width.toInt()}x${screen.height.toInt()}, text x$scale',
+        (WidgetTester tester) async {
+      final List<Exercise> readings = library.exercises
+          .where(
+            (Exercise e) =>
+                e.presentationType == ExercisePresentationType.timedReading,
+          )
+          .toList();
+      expect(readings, isNotEmpty);
+
+      for (final Exercise reading in readings) {
+        final TimedReadingConfig config =
+            reading.configAs<TimedReadingConfig>()!;
+        // Read in forty seconds, and read with no time in it, whose result
+        // runs longer.
+        for (final Duration took in const <Duration>[
+          Duration(seconds: 40),
+          Duration.zero,
+        ]) {
+          await showExercise(tester, reading, screen, textScale: scale);
+
+          expect(tester.takeException(), isNull, reason: reading.id);
+          expect(find.text(config.text), findsOneWidget, reason: reading.id);
+          // In view without scrolling, however little room there is: the
+          // button that starts the reading, then the one that ends it.
+          expect(
+            find.text(TimedReadingLabelsTr.start).hitTestable(),
+            findsOneWidget,
+            reason: reading.id,
+          );
+          await tester.tap(find.text(TimedReadingLabelsTr.start));
+          await tester.pump();
+          readingNow = readingNow.add(took);
+          await tester.pump(took);
+          expect(
+            find.text(TimedReadingLabelsTr.done).hitTestable(),
+            findsOneWidget,
+            reason: reading.id,
+          );
+          await tester.tap(find.text(TimedReadingLabelsTr.done));
+          await tester.pump();
+
+          // Read, the whole result is in view, and so is the button that
+          // starts another reading.
+          final int? pace =
+              wordsPerMinute(wordCount: config.wordCount, elapsed: took);
+          final Rect result = tester.getRect(
+            find.text(
+              pace == null
+                  ? TimedReadingLabelsTr.notMeasured
+                  : TimedReadingLabelsTr.pace(pace),
+            ),
+          );
+          final Rect room = tester.getRect(
+            find.descendant(
+              of: find.byType(TimedReadingView),
+              matching: find.byType(SingleChildScrollView),
+            ),
+          );
+          expect(
+            result.top,
+            greaterThanOrEqualTo(room.top - 0.5),
+            reason: '${reading.id} read in $took',
+          );
+          expect(
+            result.bottom,
+            lessThanOrEqualTo(room.bottom + 0.5),
+            reason: '${reading.id} read in $took',
+          );
+          expect(
+            find.text(TimedReadingLabelsTr.again).hitTestable(),
+            findsOneWidget,
+            reason: '${reading.id} read in $took',
+          );
+          expect(
+            tester.takeException(),
+            isNull,
+            reason: '${reading.id} read in $took',
+          );
+          await tester.pumpWidget(const SizedBox());
+        }
       }
     });
   }
