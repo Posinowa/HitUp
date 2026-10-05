@@ -14,6 +14,7 @@ import 'package:hitup/features/training/domain/words_per_minute.dart';
 import 'package:hitup/features/training/presentation/exercise_container_screen.dart';
 import 'package:hitup/features/training/presentation/renderers/breathing_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/letter_ladder_renderer.dart';
+import 'package:hitup/features/training/presentation/renderers/speaking_challenge_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/timed_reading_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/tongue_twister_renderer.dart';
 import 'package:hitup/shared/providers/auth_providers.dart';
@@ -45,6 +46,7 @@ class _MemorySessions implements SessionStore {
 /// not fit shows up.
 void main() {
   late ExerciseLibrary library;
+  late SpeakingChallengeLibrary challenges;
   late TongueTwisterLibrary twisters;
   late LetterLadderLibrary letters;
   // The wall clock a timed reading is timed with, moved by hand.
@@ -57,6 +59,7 @@ void main() {
     // the future of a load; one started inside a test's fake clock and left
     // unfinished when that test ends never completes, and every later test
     // waiting on it hangs.
+    challenges = await AssetCurriculumRepository().loadSpeakingChallenges();
     twisters = await AssetCurriculumRepository().loadTongueTwisters();
     letters = await AssetCurriculumRepository().loadLetters();
     // The app's own fonts, not the test font, whose square glyphs are far
@@ -100,6 +103,9 @@ void main() {
         ),
         riveRuntimeProvider.overrideWithValue(_NoRive()),
         readingClockProvider.overrideWithValue(() => readingNow),
+        speakingChallengesProvider.overrideWith(
+          (Ref ref) async => challenges,
+        ),
         tongueTwistersProvider.overrideWith((Ref ref) async => twisters),
         letterLaddersProvider.overrideWith((Ref ref) async => letters),
       ],
@@ -299,6 +305,56 @@ void main() {
           reason: set.id,
         );
         expect(tester.takeException(), isNull, reason: set.id);
+        await tester.pumpWidget(const SizedBox());
+      }
+    });
+  }
+
+  for (final (Size screen, double scale) in screens) {
+    testWidgets(
+        'every speaking challenge fits through all its phases at '
+        '${screen.width.toInt()}x${screen.height.toInt()}, text x$scale',
+        (WidgetTester tester) async {
+      final List<Exercise> challenges = library.exercises
+          .where(
+            (Exercise e) =>
+                e.presentationType ==
+                ExercisePresentationType.speakingChallenge,
+          )
+          .toList();
+      expect(challenges, isNotEmpty);
+
+      for (final Exercise challenge in challenges) {
+        await showExercise(tester, challenge, screen, textScale: scale);
+        await tester.pump();
+        // In view without scrolling, however little room there is.
+        expect(
+          find.text('Hazırlan').hitTestable(),
+          findsOneWidget,
+          reason: challenge.id,
+        );
+        expect(tester.takeException(), isNull, reason: '${challenge.id} ready');
+
+        await tester.tap(find.text('Hazırlan'));
+        await tester.pump();
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: '${challenge.id} preparing',
+        );
+
+        await tester.pump(const Duration(seconds: 20));
+        await tester.pump();
+        expect(
+          find.text('Bitirdim').hitTestable(),
+          findsOneWidget,
+          reason: challenge.id,
+        );
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: '${challenge.id} speaking',
+        );
         await tester.pumpWidget(const SizedBox());
       }
     });
