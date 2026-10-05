@@ -306,6 +306,50 @@ void main() {
 
   for (final (Size screen, double scale) in screens) {
     testWidgets(
+        'every emphasis, intonation and pause drill in the content fits at '
+        '${screen.width.toInt()}x${screen.height.toInt()}, text x$scale',
+        (WidgetTester tester) async {
+      final List<Exercise> drills = library.exercises
+          .where(
+            (Exercise e) => const <ExercisePresentationType>{
+              ExercisePresentationType.emphasis,
+              ExercisePresentationType.intonation,
+              ExercisePresentationType.pause,
+            }.contains(e.presentationType),
+          )
+          .toList();
+      expect(drills, hasLength(6));
+
+      for (final Exercise drill in drills) {
+        await showExercise(tester, drill, screen, textScale: scale);
+
+        expect(tester.takeException(), isNull, reason: drill.id);
+        // The next reading of an emphasis drill is in view without
+        // scrolling.
+        final EmphasisConfig? emphasis = drill.configAs<EmphasisConfig>();
+        if (emphasis != null && emphasis.wordIndexes.length > 1) {
+          expect(
+            find.text('Sonraki okuyuş').hitTestable(),
+            findsOneWidget,
+            reason: drill.id,
+          );
+        }
+        // Every word of the sentence is on screen.
+        final TextMarkupConfig config = drill.config! as TextMarkupConfig;
+        for (final String word in config.words) {
+          expect(
+            find.textContaining(word),
+            findsWidgets,
+            reason: '${drill.id}: $word',
+          );
+        }
+        await tester.pumpWidget(const SizedBox());
+      }
+    });
+  }
+
+  for (final (Size screen, double scale) in screens) {
+    testWidgets(
         'every timed reading in the content fits the exercise screen at '
         '${screen.width.toInt()}x${screen.height.toInt()}, text x$scale',
         (WidgetTester tester) async {

@@ -5,6 +5,7 @@ import 'breathing_renderer.dart';
 import 'countdown_renderer.dart';
 import 'exercise_renderer.dart';
 import 'letter_ladder_renderer.dart';
+import 'marked_sentence_renderers.dart';
 import 'rive_renderer.dart';
 import 'timed_reading_renderer.dart';
 import 'tongue_twister_renderer.dart';
@@ -25,6 +26,9 @@ final Provider<ExerciseRendererRegistry> exerciseRendererRegistryProvider =
       ExercisePresentationType.rive: RiveExerciseRenderer(),
       ExercisePresentationType.articulation: RiveExerciseRenderer(),
       ExercisePresentationType.timedReading: TimedReadingRenderer(),
+      ExercisePresentationType.emphasis: EmphasisRenderer(),
+      ExercisePresentationType.intonation: IntonationRenderer(),
+      ExercisePresentationType.pause: PauseRenderer(),
       ExercisePresentationType.tongueTwister: TongueTwisterRenderer(),
       ExercisePresentationType.letter: LetterLadderRenderer(),
       ExercisePresentationType.breathing: BreathingRenderer(),

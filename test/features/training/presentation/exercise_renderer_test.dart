@@ -7,6 +7,7 @@ import 'package:hitup/features/training/presentation/renderers/countdown_rendere
 import 'package:hitup/features/training/presentation/renderers/exercise_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/exercise_renderers.dart';
 import 'package:hitup/features/training/presentation/renderers/letter_ladder_renderer.dart';
+import 'package:hitup/features/training/presentation/renderers/marked_sentence_renderers.dart';
 import 'package:hitup/features/training/presentation/renderers/rive_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/timed_reading_renderer.dart';
 import 'package:hitup/features/training/presentation/renderers/tongue_twister_renderer.dart';
@@ -103,6 +104,9 @@ void main() {
               isA<RiveExerciseRenderer>(),
             ExercisePresentationType.timedReading =>
               isA<TimedReadingRenderer>(),
+            ExercisePresentationType.emphasis => isA<EmphasisRenderer>(),
+            ExercisePresentationType.intonation => isA<IntonationRenderer>(),
+            ExercisePresentationType.pause => isA<PauseRenderer>(),
             ExercisePresentationType.tongueTwister =>
               isA<TongueTwisterRenderer>(),
             ExercisePresentationType.letter => isA<LetterLadderRenderer>(),
