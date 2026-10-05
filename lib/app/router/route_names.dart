@@ -8,8 +8,11 @@ abstract final class RouteNames {
 
   static const auth = '/auth';
   static const login = '/auth/login';
-  static const register = '/auth/register';
-  static const forgotPassword = '/auth/forgot-password';
+
+  // Under login, so going to either keeps login under it for the back
+  // button, and the router sees which one is showing (HIT-020).
+  static const register = '/auth/login/register';
+  static const forgotPassword = '/auth/login/forgot-password';
 
   static const app = '/app';
   static const home = '/app/home';

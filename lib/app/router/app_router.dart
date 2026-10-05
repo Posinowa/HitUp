@@ -10,19 +10,23 @@ import '../../features/auth/presentation/registration_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import '../../shared/providers/startup_providers.dart';
 import '../startup/startup_destination.dart';
+import 'route_guard.dart';
 import 'route_names.dart';
 
-/// The app's routes, and the one redirect that opens it (HIT-014).
+/// The app's routes, and the one redirect that opens it (HIT-014) and keeps
+/// the user where the account allows (HIT-020).
 ///
 /// Every cold start lands on the splash. The redirect sends it on as soon as
 /// `startupProvider` knows where to go, and leaves it there while it does not,
 /// so the destination is decided once, in one place, from answers rather than
-/// from guesses.
+/// from guesses. Startup's answer is worked out again whenever the account or
+/// the onboarding flag changes, and the router asks again with it, so a
+/// sign-out anywhere in the app leads to login and a sign-in on the account
+/// screens leads home (`guardedRoute`).
 ///
 /// Onboarding (HIT-015) and the shell behind home (HIT-021) are still
 /// placeholders. The account screens are HIT-017 to HIT-019: login, and the
-/// registration and forgot-password screens it leads to. Each opens home once
-/// it is done; the guard that routes on the auth state is HIT-020.
+/// registration and forgot-password screens it leads to.
 final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
   return GoRouter(
     initialLocation: RouteNames.splash,
@@ -36,11 +40,11 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         loading: () => onSplash ? null : RouteNames.splash,
         // Failed. The splash is also where the message and the retry live.
         error: (Object _, StackTrace __) => onSplash ? null : RouteNames.splash,
-        // Known. Leave the splash for the destination, and leave every other
-        // route alone, so this redirect cannot fight later navigation
-        // (HIT-020 owns the guard that does).
-        data: (StartupDestination destination) =>
-            onSplash ? destination.route : null,
+        // Known. Leave the splash for the destination; anywhere else, follow
+        // the account and the onboarding flag as they change (HIT-020).
+        data: (StartupDestination destination) => onSplash
+            ? destination.route
+            : guardedRoute(destination, state.matchedLocation),
       );
     },
     routes: <RouteBase>[
@@ -64,21 +68,26 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         name: 'login',
         builder: (BuildContext context, GoRouterState state) =>
             const LoginScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.register,
-        name: 'register',
-        builder: (BuildContext context, GoRouterState state) =>
-            const RegistrationScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.forgotPassword,
-        name: 'forgotPassword',
-        // The address the login screen had, so it is not typed twice.
-        builder: (BuildContext context, GoRouterState state) =>
-            ForgotPasswordScreen(
-          initialEmail: state.extra is String ? state.extra! as String : '',
-        ),
+        // Gone to, not pushed: login stays under each for the back button,
+        // and the location the guard reads is the screen showing. A pushed
+        // route is left out of it.
+        routes: <RouteBase>[
+          GoRoute(
+            path: 'register',
+            name: 'register',
+            builder: (BuildContext context, GoRouterState state) =>
+                const RegistrationScreen(),
+          ),
+          GoRoute(
+            path: 'forgot-password',
+            name: 'forgotPassword',
+            // The address the login screen had, so it is not typed twice.
+            builder: (BuildContext context, GoRouterState state) =>
+                ForgotPasswordScreen(
+              initialEmail: state.extra is String ? state.extra! as String : '',
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: RouteNames.home,
