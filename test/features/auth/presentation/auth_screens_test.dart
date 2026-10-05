@@ -13,6 +13,7 @@ import 'package:hitup/features/auth/presentation/auth_labels.dart';
 import 'package:hitup/features/auth/presentation/forgot_password_screen.dart';
 import 'package:hitup/features/auth/presentation/login_screen.dart';
 import 'package:hitup/features/auth/presentation/registration_screen.dart';
+import 'package:hitup/features/home/presentation/home_screen.dart';
 import 'package:hitup/features/onboarding/data/onboarding_store.dart';
 import 'package:hitup/shared/providers/auth_providers.dart';
 import 'package:hitup/shared/providers/startup_providers.dart';
@@ -129,7 +130,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(auth.calls, <String>['signIn  ali@ornek.com  abc123']);
-      expect(find.text('Bugünün antrenmanı'), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
     });
 
     testWidgets('a refused password stays here and says so, with no retry',
@@ -165,7 +166,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(auth.calls, hasLength(2));
-      expect(find.text('Bugünün antrenmanı'), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
     });
 
     testWidgets('only a sign-in that worked is offered for saving',
@@ -293,7 +294,7 @@ void main() {
       expect(auth.calls, <String>[
         'register [Emir Rende] emir@ornek.com kirmizi kalem',
       ]);
-      expect(find.text('Bugünün antrenmanı'), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
     });
 
     testWidgets('an address already in use says so, and stays here',

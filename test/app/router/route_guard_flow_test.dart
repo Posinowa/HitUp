@@ -9,6 +9,7 @@ import 'package:hitup/features/auth/domain/models/auth_user.dart';
 import 'package:hitup/features/auth/presentation/forgot_password_screen.dart';
 import 'package:hitup/features/auth/presentation/login_screen.dart';
 import 'package:hitup/features/auth/presentation/registration_screen.dart';
+import 'package:hitup/features/home/presentation/home_screen.dart';
 import 'package:hitup/features/onboarding/data/onboarding_store.dart';
 import 'package:hitup/features/training/application/finished_day_recorder.dart';
 import 'package:hitup/features/training/data/pending_day_store.dart';
@@ -101,7 +102,7 @@ void main() {
     await become(tester, const AuthUser(uid: 'uid-1'));
 
     expect(find.byType(MainShell), findsOneWidget);
-    expect(find.text('Bugünün antrenmanı'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 
   testWidgets('the forgot-password screen leads home once signed in',

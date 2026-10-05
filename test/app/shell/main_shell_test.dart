@@ -6,6 +6,7 @@ import 'package:hitup/app/app.dart';
 import 'package:hitup/app/router/route_names.dart';
 import 'package:hitup/app/shell/main_shell.dart';
 import 'package:hitup/features/auth/domain/models/auth_user.dart';
+import 'package:hitup/features/home/presentation/home_screen.dart';
 import 'package:hitup/features/onboarding/data/onboarding_store.dart';
 import 'package:hitup/features/training/application/finished_day_recorder.dart';
 import 'package:hitup/features/training/data/pending_day_store.dart';
@@ -70,7 +71,7 @@ void main() {
     await open(tester);
 
     expect(find.byType(MainShell), findsOneWidget);
-    expect(find.text('Bugünün antrenmanı'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
     expect(selected(tester), 0);
     for (final String tab in <String>[
       'Ana Sayfa',
@@ -93,18 +94,17 @@ void main() {
   testWidgets('each tab opens its own page', (WidgetTester tester) async {
     await open(tester);
 
-    for (final (String tab, int index, String detail)
-        in <(String, int, String)>[
-      ('Eğitim', 1, 'HIT-027 bu ekranı yazacak.'),
-      ('Pratik', 2, 'HIT-021C bu ekranı yazacak.'),
-      ('İlerleme', 3, 'HIT-055 bu ekranı yazacak.'),
-      ('Profil', 4, 'HIT-060 bu ekranı yazacak.'),
-      ('Ana Sayfa', 0, 'HIT-021B bu ekranı yazacak.'),
+    for (final (String tab, int index, Finder page) in <(String, int, Finder)>[
+      ('Eğitim', 1, find.text('HIT-027 bu ekranı yazacak.')),
+      ('Pratik', 2, find.text('HIT-021C bu ekranı yazacak.')),
+      ('İlerleme', 3, find.text('HIT-055 bu ekranı yazacak.')),
+      ('Profil', 4, find.text('HIT-060 bu ekranı yazacak.')),
+      ('Ana Sayfa', 0, find.byType(HomeScreen)),
     ]) {
       await choose(tester, tab);
 
       expect(selected(tester), index, reason: tab);
-      expect(find.text(detail), findsOneWidget, reason: tab);
+      expect(page, findsOneWidget, reason: tab);
     }
   });
 
@@ -129,18 +129,15 @@ void main() {
   testWidgets('a tab left comes back as it was, not built again',
       (WidgetTester tester) async {
     await open(tester);
-    final Element home = tester.element(find.text('Bugünün antrenmanı'));
+    final Element home = tester.element(find.byType(HomeScreen));
 
     await choose(tester, 'İlerleme');
     // Out of sight, not gone.
-    expect(find.text('Bugünün antrenmanı'), findsNothing);
-    expect(
-      find.text('Bugünün antrenmanı', skipOffstage: false),
-      findsOneWidget,
-    );
+    expect(find.byType(HomeScreen), findsNothing);
+    expect(find.byType(HomeScreen, skipOffstage: false), findsOneWidget);
 
     await choose(tester, 'Ana Sayfa');
-    expect(tester.element(find.text('Bugünün antrenmanı')), same(home));
+    expect(tester.element(find.byType(HomeScreen)), same(home));
   });
 
   testWidgets('choosing the tab already showing keeps it showing',
@@ -150,7 +147,7 @@ void main() {
     await choose(tester, 'Ana Sayfa');
 
     expect(selected(tester), 0);
-    expect(find.text('Bugünün antrenmanı'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 
   testWidgets(

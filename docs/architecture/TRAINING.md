@@ -202,7 +202,7 @@ A drill whose config is missing is shown as a content mistake. All three scroll,
 
 **Keeping the account loaded.** The screen watches the auth state for as long as it is open. The controller reads the account off it to count each completion (HIT-052), and a provider nobody listens to is still loading when first read.
 
-**Not yet wired to a route.** The screen takes a `TodayTraining`, which the home screen (#23) or the training overview (#29) builds; opening it is theirs.
+**Opened from home (#23)**, over the tabs at `/app/session`, with the `TodayTraining` it runs. The route has no link of its own: without a day it goes home (`HOME.md`).
 
 ## Days finished but not yet recorded
 
@@ -218,7 +218,7 @@ A finished day is written to the device as a `PendingDay` before it is recorded,
 
 **When the app starts.** `pendingDaysProvider` records what an earlier run left, as soon as someone is signed in, and again when the account changes. The app root listens to it, so it starts with the app. It reads the list on the device first and does not reach the account at all when that account has nothing pending, which is almost every launch.
 
-A screen that builds today's training (#23) can wait for it, briefly: offline it does not complete until the device is back online, and today's training should not wait that long. A failure is held in the provider rather than thrown, and the days stay pending for the next launch or the next finished day.
+Today's training does not wait for it: offline it does not complete until the device is back online, and a day waiting on the device already moves today on (`HOME.md`). A failure is held in the provider rather than thrown, and the days stay pending for the next launch or the next finished day.
 
 ## Testing
 
