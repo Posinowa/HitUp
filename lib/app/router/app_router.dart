@@ -7,6 +7,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/registration_screen.dart';
+import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import '../../shared/providers/startup_providers.dart';
 import '../shell/main_shell.dart';
@@ -25,10 +26,10 @@ import 'route_names.dart';
 /// sign-out anywhere in the app leads to login and a sign-in on the account
 /// screens leads home (`guardedRoute`).
 ///
-/// Onboarding (HIT-015) is still a placeholder. The account screens are
-/// HIT-017 to HIT-019: login, and the registration and forgot-password
-/// screens it leads to. Home is the first of the main app's five tabs
-/// (HIT-021, `MainShell`), whose screens are still placeholders.
+/// Onboarding is HIT-015. The account screens are HIT-017 to HIT-019: login,
+/// and the registration and forgot-password screens it leads to. Home is the
+/// first of the main app's five tabs (HIT-021, `MainShell`), whose screens
+/// are still placeholders.
 final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
   return GoRouter(
     initialLocation: RouteNames.splash,
@@ -60,10 +61,7 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         path: RouteNames.onboarding,
         name: 'onboarding',
         builder: (BuildContext context, GoRouterState state) =>
-            const _PlaceholderScreen(
-          title: 'Onboarding',
-          detail: 'HIT-015 bu ekranı yazacak.',
-        ),
+            const OnboardingScreen(),
       ),
       GoRoute(
         path: RouteNames.login,
