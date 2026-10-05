@@ -1,6 +1,6 @@
 # Analytics
 
-**STATUS: SERVICE AND TAXONOMY IMPLEMENTED (HIT-063); THE TRAINING CALL SITES WIRED (HIT-064).** The rest land with the screens that raise them: sign-up and login with the auth screens (#18, #19), onboarding (#16), the reminder (#62), the speaking challenge with its renderer (#52), and the programme's end with the home screen (#23), which is where a finished programme is known. Crash reporting is HIT-065.
+**STATUS: SERVICE AND TAXONOMY IMPLEMENTED (HIT-063); THE TRAINING CALL SITES WIRED (HIT-064); THE SPEAKING CHALLENGE WIRED (HIT-048).** The rest land with the screens that raise them: sign-up and login with the auth screens (#18, #19), onboarding (#16), the reminder (#62), and the programme's end with the home screen (#23), which is where a finished programme is known. Crash reporting is HIT-065.
 
 ## The shape
 
@@ -53,6 +53,8 @@ Each event is raised once, from the one place that sees the moment happen. A num
 | `exercise_completed` | `ExerciseContainerScreen` | An exercise is completed. A skipped one is not. |
 | `training_completed` | `ExerciseContainerScreen` | The day ends on the screen with something completed: by its last exercise or ended early. `exercise_count` is what was completed, and `duration_minutes` the time worked, rounded up as on the account (`trainingMinutes`). A day with nothing completed is not a training day, and one that had ended before the screen opened was counted when it ended. |
 | `tongue_twister_completed` | `TongueTwisterView` | A twister of the set gets its repetitions. |
+| `speaking_challenge_started` | `SpeakingChallengeView` | The speaking phase begins, once the preparation is over. |
+| `speaking_challenge_completed` | `SpeakingChallengeView` | The speaking ends, by its time or by "Bitirdim". `duration_seconds` is the seconds the clock ran, so time the session spent paused is not counted. A speaking left before its end, for another challenge or another screen, is not completed. |
 | `streak_advanced` | `TrainingDayRecorder` | Recording a day moves the streak, which happens once for a date: a retry of a half-recorded day finds it counted. After a gap the run reached is 1. |
 
 **`presentation_type` is the type's name in snake case** (`tongue_twister`, `timed_reading`), since a string value has to be lower case. A test builds the exercise events for every exercise the content ships, so content that could not be reported fails a test instead of a session.
