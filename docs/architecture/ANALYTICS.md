@@ -1,6 +1,6 @@
 # Analytics
 
-**STATUS: SERVICE AND TAXONOMY IMPLEMENTED (HIT-063); THE TRAINING CALL SITES WIRED (HIT-064); THE SPEAKING CHALLENGE WIRED (HIT-048).** The rest land with the screens that raise them: sign-up and login with the auth screens (#18, #19), onboarding (#16), the reminder (#62), and the programme's end with the home screen (#23), which is where a finished programme is known. Crash reporting is HIT-065.
+**STATUS: SERVICE AND TAXONOMY IMPLEMENTED (HIT-063); THE TRAINING CALL SITES WIRED (HIT-064); THE SPEAKING CHALLENGE WIRED (HIT-048); SIGN-UP AND LOGIN RAISED BY THE ACCOUNT CONTROLLERS (HIT-017, HIT-018), WHICH THEIR SCREENS WILL CALL.** The rest land with the screens that raise them: onboarding (#16), the reminder (#62), and the programme's end with the home screen (#23), which is where a finished programme is known. Crash reporting is HIT-065.
 
 ## The shape
 
@@ -48,6 +48,8 @@ Each event is raised once, from the one place that sees the moment happen. A num
 
 | Event | From | Raised when |
 |---|---|---|
+| `sign_up` | `RegistrationController` | An account is created, with `method` `password`. A registration that fails is not counted. |
+| `login` | `SignInController` | A sign-in works, with `method` `password`. A refused one is not counted. |
 | `training_started` | `ExerciseContainerScreen` | A day is begun. A day carried on from the device was counted when it began. |
 | `exercise_started` | `ExerciseContainerScreen` | The first exercise of a day just begun, and each exercise the day moves on to. |
 | `exercise_completed` | `ExerciseContainerScreen` | An exercise is completed. A skipped one is not. |
