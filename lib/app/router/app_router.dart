@@ -9,6 +9,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/registration_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import '../../shared/providers/startup_providers.dart';
+import '../shell/main_shell.dart';
 import '../startup/startup_destination.dart';
 import 'route_guard.dart';
 import 'route_names.dart';
@@ -24,9 +25,10 @@ import 'route_names.dart';
 /// sign-out anywhere in the app leads to login and a sign-in on the account
 /// screens leads home (`guardedRoute`).
 ///
-/// Onboarding (HIT-015) and the shell behind home (HIT-021) are still
-/// placeholders. The account screens are HIT-017 to HIT-019: login, and the
-/// registration and forgot-password screens it leads to.
+/// Onboarding (HIT-015) is still a placeholder. The account screens are
+/// HIT-017 to HIT-019: login, and the registration and forgot-password
+/// screens it leads to. Home is the first of the main app's five tabs
+/// (HIT-021, `MainShell`), whose screens are still placeholders.
 final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
   return GoRouter(
     initialLocation: RouteNames.splash,
@@ -89,18 +91,70 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
           ),
         ],
       ),
-      GoRoute(
-        path: RouteNames.home,
-        name: 'home',
-        builder: (BuildContext context, GoRouterState state) =>
-            const _PlaceholderScreen(
-          title: 'Bugünün antrenmanı',
-          detail: 'HIT-021B bu ekranı yazacak.',
-        ),
+      // The main app: five tabs, each a branch with a navigator of its own
+      // (HIT-021). The order is the tab bar's.
+      StatefulShellRoute.indexedStack(
+        builder: (
+          BuildContext context,
+          GoRouterState state,
+          StatefulNavigationShell navigationShell,
+        ) =>
+            MainShell(navigationShell: navigationShell),
+        branches: <StatefulShellBranch>[
+          _tab(
+            RouteNames.home,
+            'home',
+            'Bugünün antrenmanı',
+            'HIT-021B bu ekranı yazacak.',
+          ),
+          _tab(
+            RouteNames.training,
+            'training',
+            MainShellLabelsTr.training,
+            'HIT-027 bu ekranı yazacak.',
+          ),
+          _tab(
+            RouteNames.practice,
+            'practice',
+            MainShellLabelsTr.practice,
+            'HIT-021C bu ekranı yazacak.',
+          ),
+          _tab(
+            RouteNames.progress,
+            'progress',
+            MainShellLabelsTr.progress,
+            'HIT-055 bu ekranı yazacak.',
+          ),
+          _tab(
+            RouteNames.profile,
+            'profile',
+            MainShellLabelsTr.profile,
+            'HIT-060 bu ekranı yazacak.',
+          ),
+        ],
       ),
     ],
   );
 });
+
+/// A tab whose screen is still to be built: its route, and a placeholder that
+/// names the issue that builds it.
+StatefulShellBranch _tab(
+  String path,
+  String name,
+  String title,
+  String detail,
+) =>
+    StatefulShellBranch(
+      routes: <RouteBase>[
+        GoRoute(
+          path: path,
+          name: name,
+          builder: (BuildContext context, GoRouterState state) =>
+              _PlaceholderScreen(title: title, detail: detail),
+        ),
+      ],
+    );
 
 /// The splash, told what startup is doing.
 class _SplashRoute extends ConsumerWidget {
