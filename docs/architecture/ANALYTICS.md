@@ -1,6 +1,6 @@
 # Analytics
 
-**STATUS: SERVICE AND TAXONOMY IMPLEMENTED (HIT-063); THE TRAINING CALL SITES WIRED (HIT-064); THE SPEAKING CHALLENGE WIRED (HIT-048); SIGN-UP AND LOGIN RAISED BY THE ACCOUNT CONTROLLERS (HIT-017, HIT-018), WHICH THEIR SCREENS WILL CALL.** The rest land with the screens that raise them: onboarding (#16), the reminder (#62), and the programme's end with the home screen (#23), which is where a finished programme is known. Crash reporting is HIT-065.
+**STATUS: SERVICE AND TAXONOMY IMPLEMENTED (HIT-063); THE TRAINING CALL SITES WIRED (HIT-064); THE SPEAKING CHALLENGE WIRED (HIT-048); SIGN-UP AND LOGIN WIRED WITH THE ACCOUNT SCREENS (HIT-017, HIT-018).** The rest land with the screens that raise them: onboarding (#16), the reminder (#62), and the programme's end with the home screen (#23), which is where a finished programme is known. Crash reporting is HIT-065.
 
 ## The shape
 

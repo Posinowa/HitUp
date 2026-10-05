@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../features/auth/presentation/forgot_password_screen.dart';
+import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/registration_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import '../../shared/providers/startup_providers.dart';
 import '../startup/startup_destination.dart';
@@ -16,9 +19,10 @@ import 'route_names.dart';
 /// so the destination is decided once, in one place, from answers rather than
 /// from guesses.
 ///
-/// The screens behind the three destinations are placeholders. Onboarding is
-/// HIT-015, the auth screens are HIT-017 to HIT-019, and the shell behind home
-/// is HIT-021. What this issue owns is that a cold start reaches the right one.
+/// Onboarding (HIT-015) and the shell behind home (HIT-021) are still
+/// placeholders. The account screens are HIT-017 to HIT-019: login, and the
+/// registration and forgot-password screens it leads to. Each opens home once
+/// it is done; the guard that routes on the auth state is HIT-020.
 final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
   return GoRouter(
     initialLocation: RouteNames.splash,
@@ -59,9 +63,21 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         path: RouteNames.login,
         name: 'login',
         builder: (BuildContext context, GoRouterState state) =>
-            const _PlaceholderScreen(
-          title: 'Giriş',
-          detail: 'HIT-018 bu ekranı yazacak.',
+            const LoginScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.register,
+        name: 'register',
+        builder: (BuildContext context, GoRouterState state) =>
+            const RegistrationScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.forgotPassword,
+        name: 'forgotPassword',
+        // The address the login screen had, so it is not typed twice.
+        builder: (BuildContext context, GoRouterState state) =>
+            ForgotPasswordScreen(
+          initialEmail: state.extra is String ? state.extra! as String : '',
         ),
       ),
       GoRoute(

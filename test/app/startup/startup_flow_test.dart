@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hitup/app/app.dart';
 import 'package:hitup/core/widgets/damga_mark.dart';
 import 'package:hitup/features/auth/domain/models/auth_user.dart';
+import 'package:hitup/features/auth/presentation/login_screen.dart';
 import 'package:hitup/features/onboarding/data/onboarding_store.dart';
 import 'package:hitup/shared/providers/auth_providers.dart';
 import 'package:hitup/shared/providers/startup_providers.dart';
@@ -106,7 +107,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Giriş'), findsOneWidget);
+      expect(find.byType(LoginScreen), findsOneWidget);
     });
 
     testWidgets('goes home when onboarding is done and a user is signed in',
@@ -183,7 +184,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(onboarding.reads, 2);
-      expect(find.text('Giriş'), findsOneWidget);
+      expect(find.byType(LoginScreen), findsOneWidget);
     });
 
     testWidgets('trying again re-listens to the auth stream too',
@@ -211,7 +212,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(listens, 2);
-      expect(find.text('Giriş'), findsOneWidget);
+      expect(find.byType(LoginScreen), findsOneWidget);
     });
 
     testWidgets('an auth failure is treated the same way',
