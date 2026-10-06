@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hitup/app/app.dart';
+import 'package:hitup/app/shell/main_shell.dart';
 import 'package:hitup/features/auth/domain/models/auth_user.dart';
 import 'package:hitup/features/auth/presentation/forgot_password_screen.dart';
 import 'package:hitup/features/auth/presentation/login_screen.dart';
@@ -37,8 +38,6 @@ class _NothingPending implements PendingDayStore {
 
 /// The router follows the account from wherever the user is (HIT-020).
 void main() {
-  // Home's placeholder, until the main app's shell (HIT-021).
-  const String home = 'Bugünün antrenmanı';
   late StreamController<AuthUser?> account;
 
   setUp(() => account = StreamController<AuthUser?>.broadcast());
@@ -75,12 +74,23 @@ void main() {
   testWidgets('signing out, from inside the app, leads to login',
       (WidgetTester tester) async {
     await open(tester, const AuthUser(uid: 'uid-1'));
-    expect(find.text(home), findsOneWidget);
+    expect(find.byType(MainShell), findsOneWidget);
 
     await become(tester, null);
 
     expect(find.byType(LoginScreen), findsOneWidget);
-    expect(find.text(home), findsNothing);
+    expect(find.byType(MainShell), findsNothing);
+  });
+
+  testWidgets('signing out from another tab leads to login as well',
+      (WidgetTester tester) async {
+    await open(tester, const AuthUser(uid: 'uid-1'));
+    await tester.tap(find.text('Profil'));
+    await tester.pumpAndSettle();
+
+    await become(tester, null);
+
+    expect(find.byType(LoginScreen), findsOneWidget);
   });
 
   testWidgets('signing in, wherever it came from, leads home from login',
@@ -90,7 +100,8 @@ void main() {
 
     await become(tester, const AuthUser(uid: 'uid-1'));
 
-    expect(find.text(home), findsOneWidget);
+    expect(find.byType(MainShell), findsOneWidget);
+    expect(find.text('Bugünün antrenmanı'), findsOneWidget);
   });
 
   testWidgets('the forgot-password screen leads home once signed in',
@@ -102,7 +113,7 @@ void main() {
 
     await become(tester, const AuthUser(uid: 'uid-1'));
 
-    expect(find.text(home), findsOneWidget);
+    expect(find.byType(MainShell), findsOneWidget);
   });
 
   testWidgets(
@@ -116,7 +127,7 @@ void main() {
     await become(tester, const AuthUser(uid: 'uid-1'));
 
     expect(find.byType(RegistrationScreen), findsOneWidget);
-    expect(find.text(home), findsNothing);
+    expect(find.byType(MainShell), findsNothing);
   });
 
   testWidgets('the account coming and going leaves login as it is',
