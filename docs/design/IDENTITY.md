@@ -27,6 +27,7 @@ Rationale: HitUp's core exercises are breathing, articulation, and voice trainin
 | Success | Positive state, completion, streak kept | `#2ECC71` | Emerald |
 | Error | Errors, destructive actions | `#E74C3C` | Coral Red |
 | Warning | Warnings, at-risk streak, non-blocking issues | `#F39C12` | Soft Ochre |
+| Sunrise | Decoration only: the warm light in an illustration, never text or a control | `#F4A259` | Added with the account screens (HIT-017): the palette had no warm tone that was not a status, and an illustration's warmth should not borrow Warning's meaning. |
 
 ### Accessibility note
 

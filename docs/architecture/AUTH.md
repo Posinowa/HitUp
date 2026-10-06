@@ -1,6 +1,6 @@
 # Authentication
 
-**STATUS: IMPLEMENTED (HIT-016)** for email and password, **with the rules and controllers of its forms (HIT-017 to HIT-019)**. The screens follow, and the auth guard is HIT-020.
+**STATUS: IMPLEMENTED (HIT-016)** for email and password, **with its screens (HIT-017 to HIT-019)**: login, registration and forgot password. The auth guard is HIT-020.
 
 ## Layers
 
@@ -42,9 +42,7 @@ Two consequences for whoever builds the guard and the screens behind it:
 - A guard that routes on every event sends a registering user to the main screens and, on a rollback, straight back. The registration controller knows when a registration is in progress; the guard should hold its redirect until it finishes.
 - A screen reached right after registration can briefly find no `users/{uid}`. That is "not written yet", not an error to show.
 
-## The forms' rules and controllers
-
-What the login, registration and forgot-password screens check and send (HIT-017 to HIT-019); the screens themselves follow.
+## The screens
 
 | File | Holds |
 |---|---|
@@ -54,8 +52,15 @@ What the login, registration and forgot-password screens check and send (HIT-017
 | `features/auth/application/registration_controller.dart` | `RegistrationController` |
 | `features/auth/application/password_reset_controller.dart` | `PasswordResetController` |
 | `features/auth/presentation/auth_labels.dart` | The copy for each `AuthFieldProblem` |
+| `features/auth/presentation/auth_form_parts.dart` | The page, the fields and the button the three screens share |
+| `features/auth/presentation/auth_header.dart` | `AuthHeader`: the cut paper and the sun at the top of each |
+| `features/auth/presentation/login_screen.dart` | `LoginScreen` |
+| `features/auth/presentation/registration_screen.dart` | `RegistrationScreen` |
+| `features/auth/presentation/forgot_password_screen.dart` | `ForgotPasswordScreen` |
 
-Each controller holds where its request is, as `ERROR_HANDLING.md` describes: loading while it runs, then data or the mapped `Failure`. A second submit while one runs is ignored.
+Each controller holds where its request is, as `ERROR_HANDLING.md` describes: loading while it runs, then data or the mapped `Failure`. A second submit while one runs is ignored. A screen checks its fields before it sends anything, then again as they are edited, and shows what Firebase refused through `showFailureSnackBar`, with a retry only where one could help. Once signed in or registered, the screen opens home; routing on the auth state itself is the guard's (HIT-020).
+
+**The look carries on from the splash.** The splash is one cut edge of paper on a pale sheet; the account screens open under the same paper, five layers of it in the palette's greens, with a warm sun behind them (`AppColors.sunrise`) and the mark and the name on the sky. The last layer is the page, so the form sits on the paper the hills are cut from. The header takes 36% of the screen's height, between 180 and 300 points, so a short phone keeps its room for the form: on a 360 by 640 phone the whole login, its button included, is in view without scrolling. `auth_layout_test.dart` checks all three screens at 390x844, 360x640 and 320x568, at normal and 130% text, with the app's fonts.
 
 ### What the fields accept
 
@@ -73,9 +78,13 @@ Each controller holds where its request is, as `ERROR_HANDLING.md` describes: lo
 
 **These rules run on the device.** What the server enforces is Firebase's password policy: six characters by default, or what is set as the password policy in the Firebase console's Authentication settings. Setting its minimum to eight there makes the rule hold for any client; it is a console setting, not something the code can do.
 
-### An unknown address
+### Saving the password
 
-With email enumeration protection on, the default for Firebase projects made since September 2023, Firebase answers a reset request the same for an address with an account and one without. Where it is off, it reports an unknown address, and `PasswordResetController` treats that as sent. Which addresses have an account cannot be learned from a reset, as it cannot at sign in.
+The forms are autofill groups, so a password manager can fill them and offer to save them. It is told to save only after a sign-in or a registration that worked. A group that goes away otherwise, a registration refused and then left, tells it to forget what was typed, so a wrong password is never offered for saving.
+
+### The forgot-password answer
+
+The address typed on the login screen comes along. Once a link is asked for, the screen says it went to that address **if an account has it**, in the same words either way. With email enumeration protection on, the default for Firebase projects made since September 2023, Firebase itself answers the same for both; where it is off, it reports an unknown address, and `PasswordResetController` treats that as sent. Which addresses have an account cannot be learned here, as it cannot at sign in.
 
 ## Errors
 

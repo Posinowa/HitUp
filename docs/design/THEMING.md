@@ -36,6 +36,7 @@ directly only when no `ColorScheme` slot fits, for example the status colours.
 | Destructive, error state | `colorScheme.error` with `colorScheme.onError` |
 | Completion, streak kept | `AppColors.success` |
 | At risk streak, non blocking issue | `AppColors.warning` |
+| The warm light in an illustration | `AppColors.sunrise` |
 
 Always pair a colour with its `on` partner. That pairing is what carries the
 contrast guarantee.
@@ -54,7 +55,9 @@ guards this split, so a swap fails the build rather than shipping.
 ### Status colours are semantic
 
 `success`, `error` and `warning` mean what they say. Do not use them as
-decoration because the shade looks nice.
+decoration because the shade looks nice. A warm touch in an illustration is
+`sunrise`, which means nothing but warmth: the sun behind the account
+screens' cut paper. It is never text or a control, so it has no `on` pair.
 
 ## Type
 

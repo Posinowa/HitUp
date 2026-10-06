@@ -25,6 +25,12 @@ abstract final class AppColors {
   static const Color error = Color(0xFFE74C3C);
   static const Color warning = Color(0xFFF39C12);
 
+  /// The warm light in an illustration: the sun behind the account screens'
+  /// cut paper. Decoration only, never text or a control, so it needs no
+  /// contrast pair; it exists so a warm accent does not borrow [warning],
+  /// whose meaning is a status.
+  static const Color sunrise = Color(0xFFF4A259);
+
   /// Surface behind an error message, and the text that sits on it.
   ///
   /// [error] is the alert tone: strong enough to be noticed, too dark to read
