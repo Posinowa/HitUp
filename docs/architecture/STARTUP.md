@@ -1,6 +1,6 @@
 # Startup
 
-**STATUS: IMPLEMENTED (HIT-014), with the guard that follows the account afterwards (HIT-020).** Onboarding is a placeholder screen until HIT-015 builds it, and the main app's tabs are until their own issues build them.
+**STATUS: IMPLEMENTED (HIT-014), with the guard that follows the account afterwards (HIT-020) and onboarding itself (HIT-015, `ONBOARDING.md`).** The main app's tabs are placeholder screens until their own issues build them.
 
 ## What happens on a cold start
 

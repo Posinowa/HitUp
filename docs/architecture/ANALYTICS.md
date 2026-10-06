@@ -1,6 +1,6 @@
 # Analytics
 
-**STATUS: SERVICE AND TAXONOMY IMPLEMENTED (HIT-063); THE TRAINING CALL SITES WIRED (HIT-064); THE SPEAKING CHALLENGE WIRED (HIT-048); SIGN-UP AND LOGIN WIRED WITH THE ACCOUNT SCREENS (HIT-017, HIT-018).** The rest land with the screens that raise them: onboarding (#16), the reminder (#62), and the programme's end with the home screen (#23), which is where a finished programme is known. Crash reporting is HIT-065.
+**STATUS: SERVICE AND TAXONOMY IMPLEMENTED (HIT-063); THE TRAINING CALL SITES WIRED (HIT-064); THE SPEAKING CHALLENGE WIRED (HIT-048); SIGN-UP AND LOGIN WIRED WITH THE ACCOUNT SCREENS (HIT-017, HIT-018); ONBOARDING'S WITH ITS SCREEN (HIT-015).** The rest land with the screens that raise them: the reminder (#62), and the programme's end with the home screen (#23), which is where a finished programme is known. Crash reporting is HIT-065.
 
 ## The shape
 
@@ -25,7 +25,7 @@ A caller holds `AnalyticsService` and builds an `AnalyticsEvent`. There is no wa
 |---|---|---|
 | `sign_up` | `method` | An account is created (Firebase standard event) |
 | `login` | `method` | A returning user signs in (Firebase standard event) |
-| `onboarding_completed` | none | Onboarding is finished |
+| `onboarding_completed` | none | Onboarding is finished, answered or skipped |
 | `training_started` | `program_day`, `exercise_count` | A training day is started |
 | `training_completed` | `program_day`, `exercise_count`, `duration_minutes` | A training day is finished |
 | `exercise_started` | `exercise_id`, `presentation_type`, `program_day` | An exercise begins |

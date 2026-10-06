@@ -7,6 +7,7 @@ import 'package:hitup/core/widgets/damga_mark.dart';
 import 'package:hitup/features/auth/domain/models/auth_user.dart';
 import 'package:hitup/features/auth/presentation/login_screen.dart';
 import 'package:hitup/features/onboarding/data/onboarding_store.dart';
+import 'package:hitup/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:hitup/shared/providers/auth_providers.dart';
 import 'package:hitup/shared/providers/startup_providers.dart';
 
@@ -95,7 +96,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Onboarding'), findsOneWidget);
+      expect(find.byType(OnboardingScreen), findsOneWidget);
     });
 
     testWidgets('goes to login when onboarding is done and nobody is signed in',
@@ -142,7 +143,7 @@ void main() {
 
       onboarding.release();
       await tester.pumpAndSettle();
-      expect(find.text('Onboarding'), findsOneWidget);
+      expect(find.byType(OnboardingScreen), findsOneWidget);
     });
   });
 

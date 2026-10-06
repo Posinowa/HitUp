@@ -56,8 +56,9 @@ guards this split, so a swap fails the build rather than shipping.
 
 `success`, `error` and `warning` mean what they say. Do not use them as
 decoration because the shade looks nice. A warm touch in an illustration is
-`sunrise`, which means nothing but warmth: the sun behind the account
-screens' cut paper. It is never text or a control, so it has no `on` pair.
+`sunrise`, which means nothing but warmth: the sun behind the cut paper of
+onboarding and the account screens (`CutPaperScene`). It is never text or a
+control, so it has no `on` pair.
 
 ## Type
 
