@@ -1,6 +1,6 @@
 # Authentication
 
-**STATUS: IMPLEMENTED (HIT-016)** for email and password, **with its screens (HIT-017 to HIT-019)**: login, registration and forgot password. The auth guard is HIT-020.
+**STATUS: IMPLEMENTED (HIT-016)** for email and password, **with its screens (HIT-017 to HIT-019)**: login, registration and forgot password, **and the guard (HIT-020)** that follows a sign-in or a sign-out from wherever the user is (`STARTUP.md`).
 
 ## Layers
 
@@ -33,13 +33,13 @@ No widget touches `FirebaseAuth` or `FirebaseFirestore`. CI enforces that for `l
 
 Without step 4, a failed profile write leaves an account that can sign in but has no `users/{uid}`, a user the data model says cannot exist.
 
-## What the auth guard needs to know (HIT-020)
+## What the auth guard does with registration (HIT-020)
 
 `authStateChanges` emits the new user **as soon as the account exists**, which is before its documents are written in step 3. If registration then rolls back, deleting the account signs it out and the stream emits null again. Firebase signs a user in when `createUserWithEmailAndPassword` succeeds, so this is the provider's order, not something this repository can change.
 
-Two consequences for whoever builds the guard and the screens behind it:
+Two consequences:
 
-- A guard that routes on every event sends a registering user to the main screens and, on a rollback, straight back. The registration controller knows when a registration is in progress; the guard should hold its redirect until it finishes.
+- A guard that routed on every event would send a registering user to the main screens and, on a rollback, straight back to login, without the form. So the guard leaves the registration screen alone (`guardedRoute`, `STARTUP.md`): the screen opens home itself once registration has finished, and a rollback leaves the user on it, with the error. Asking the registration controller whether one is running would do the same, but would tie the router to one screen's state, and the location is enough: a signed-in user has no other way onto that screen.
 - A screen reached right after registration can briefly find no `users/{uid}`. That is "not written yet", not an error to show.
 
 ## The screens
@@ -58,7 +58,7 @@ Two consequences for whoever builds the guard and the screens behind it:
 | `features/auth/presentation/registration_screen.dart` | `RegistrationScreen` |
 | `features/auth/presentation/forgot_password_screen.dart` | `ForgotPasswordScreen` |
 
-Each controller holds where its request is, as `ERROR_HANDLING.md` describes: loading while it runs, then data or the mapped `Failure`. A second submit while one runs is ignored. A screen checks its fields before it sends anything, then again as they are edited, and shows what Firebase refused through `showFailureSnackBar`, with a retry only where one could help. Once signed in or registered, the screen opens home; routing on the auth state itself is the guard's (HIT-020).
+Each controller holds where its request is, as `ERROR_HANDLING.md` describes: loading while it runs, then data or the mapped `Failure`. A second submit while one runs is ignored. A screen checks its fields before it sends anything, then again as they are edited, and shows what Firebase refused through `showFailureSnackBar`, with a retry only where one could help. Once signed in or registered, the screen opens home. After a sign-in the guard takes the user there as well; after a registration only the screen does.
 
 **The look carries on from the splash.** The splash is one cut edge of paper on a pale sheet; the account screens open under the same paper, five layers of it in the palette's greens, with a warm sun behind them (`AppColors.sunrise`) and the mark and the name on the sky. The last layer is the page, so the form sits on the paper the hills are cut from. The header takes 36% of the screen's height, between 180 and 300 points, so a short phone keeps its room for the form: on a 360 by 640 phone the whole login, its button included, is in view without scrolling. `auth_layout_test.dart` checks all three screens at 390x844, 360x640 and 320x568, at normal and 130% text, with the app's fonts.
 

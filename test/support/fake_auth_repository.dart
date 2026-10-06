@@ -5,6 +5,9 @@ import 'package:hitup/features/auth/domain/repositories/auth_repository.dart';
 
 /// An [AuthRepository] that records every call and answers as told: with
 /// [error] when one is set, and not until [hold] completes while it is set.
+///
+/// Like Firebase, a sign-in or a registration that works signs the account
+/// in, and [authStateChanges] says so; a sign-out says nobody is.
 class FakeAuthRepository implements AuthRepository {
   /// The calls made, oldest first, with what they were given.
   final List<String> calls = <String>[];
@@ -15,6 +18,10 @@ class FakeAuthRepository implements AuthRepository {
   /// While set, calls wait for it before answering.
   Completer<void>? hold;
 
+  final StreamController<AuthUser?> _changes =
+      StreamController<AuthUser?>.broadcast();
+  AuthUser? _current;
+
   Future<void> _answer() async {
     if (hold != null) {
       await hold!.future;
@@ -24,6 +31,11 @@ class FakeAuthRepository implements AuthRepository {
     }
   }
 
+  void _become(AuthUser? user) {
+    _current = user;
+    _changes.add(user);
+  }
+
   @override
   Future<AuthUser> signIn({
     required String email,
@@ -31,7 +43,9 @@ class FakeAuthRepository implements AuthRepository {
   }) async {
     calls.add('signIn $email $password');
     await _answer();
-    return const AuthUser(uid: 'uid-1');
+    const AuthUser user = AuthUser(uid: 'uid-1');
+    _become(user);
+    return user;
   }
 
   @override
@@ -42,7 +56,9 @@ class FakeAuthRepository implements AuthRepository {
   }) async {
     calls.add('register [$displayName] $email $password');
     await _answer();
-    return const AuthUser(uid: 'uid-1');
+    const AuthUser user = AuthUser(uid: 'uid-1');
+    _become(user);
+    return user;
   }
 
   @override
@@ -51,12 +67,19 @@ class FakeAuthRepository implements AuthRepository {
     await _answer();
   }
 
+  /// Who is signed in now, then every change.
   @override
-  Stream<AuthUser?> authStateChanges() => const Stream<AuthUser?>.empty();
+  Stream<AuthUser?> authStateChanges() async* {
+    yield _current;
+    yield* _changes.stream;
+  }
 
   @override
-  AuthUser? get currentUser => null;
+  AuthUser? get currentUser => _current;
 
   @override
-  Future<void> signOut() async {}
+  Future<void> signOut() async {
+    calls.add('signOut');
+    _become(null);
+  }
 }

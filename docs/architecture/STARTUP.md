@@ -1,6 +1,6 @@
 # Startup
 
-**STATUS: IMPLEMENTED (HIT-014).** The three destinations are placeholder screens until HIT-015, HIT-017 to HIT-019 and HIT-021 build them. The auth guard that keeps a signed-out user out of the app afterwards is HIT-020.
+**STATUS: IMPLEMENTED (HIT-014), with the guard that follows the account afterwards (HIT-020).** Onboarding and home are placeholder screens until HIT-015 and HIT-021 build them.
 
 ## What happens on a cold start
 
@@ -18,6 +18,7 @@ main  ->  AppBootstrap.init   (Firebase, notifications, analytics, crash reporti
 | `features/onboarding/data/onboarding_store.dart` | The device's onboarding flag |
 | `features/splash/presentation/splash_screen.dart` | The screen itself |
 | `app/router/app_router.dart` | The routes and the one redirect |
+| `app/router/route_guard.dart` | Where a change of account or of the flag takes the user (`guardedRoute`) |
 | `core/widgets/damga_mark.dart` | The mark, drawn rather than loaded |
 
 ## The decision
@@ -58,6 +59,23 @@ The error message says what the user can act on. The failure itself goes to the 
 
 The cost is a copy of the numbers, so a test reads the master and compares every one of them: the stem, the dots, the strokes, the stroke width, the cap, and the gradient's ends, colours and stops. If the master changes and the copy does not, that test fails.
 
-## What the router does, and does not, do
+## After the splash: the guard (HIT-020)
 
-The redirect acts on the splash only. Once startup is known it sends the splash to its destination and leaves every other route alone, so it cannot fight the navigation that comes later. Keeping a signed-out user out of the app once it is open is the guard in HIT-020, not this.
+Startup's answer is worked out again whenever the account or the onboarding flag changes, and the router asks its redirect again each time. On the splash the answer is the destination, as above. Anywhere else the redirect hands the answer and the location to `guardedRoute`, a pure function, so every case has a test without a router, a device or Firebase:
+
+| Startup's answer now | Where the user is | Taken to |
+|---|---|---|
+| onboarding | anywhere but onboarding | onboarding |
+| login | the main app, or onboarding | login |
+| login | the account screens | stays |
+| home | login, forgot password, or onboarding | home |
+| home | registration | stays |
+| home | the main app | stays |
+
+So signing out anywhere in the app leads to login, as does an account that Firebase ends, and a sign-in on the login screen leads home.
+
+**Registration is left alone.** Firebase signs a new account in before its documents are written, and a failed write deletes the account and signs it out again (`AUTH.md`). Following each of those events would show the main app for a moment and then drop the user on login, without the form or the error. The registration screen opens home itself once registration has finished.
+
+**Registration and forgot password are under login** (`/auth/login/register`, `/auth/login/forgot-password`) and are gone to, not pushed. Login stays under each for the back button, and the location the redirect reads is the screen showing: go_router leaves a pushed route out of it, which would make a signed-in user on registration look like one on login.
+
+**Back to the splash only on an error.** Once startup is known, a sign-in, a sign-out or a finished onboarding is worked out from the answers before it while the new one loads, so it never passes through "loading" and the splash. If an answer fails, the redirect does take the user to the splash, which is where the message and the retry are.

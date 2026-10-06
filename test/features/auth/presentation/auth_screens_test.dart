@@ -8,7 +8,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hitup/app/app.dart';
 import 'package:hitup/core/errors/failure_code.dart';
 import 'package:hitup/core/errors/failure_messages.dart';
-import 'package:hitup/features/auth/domain/models/auth_user.dart';
 import 'package:hitup/features/auth/presentation/auth_form_parts.dart';
 import 'package:hitup/features/auth/presentation/auth_labels.dart';
 import 'package:hitup/features/auth/presentation/forgot_password_screen.dart';
@@ -46,8 +45,10 @@ void main() {
       ProviderScope(
         overrides: <Override>[
           onboardingStoreProvider.overrideWithValue(_Onboarded()),
+          // The account follows the fake, as it follows Firebase: signed
+          // out, until a sign-in or a registration works.
           authStateChangesProvider.overrideWith(
-            (Ref ref) => Stream<AuthUser?>.value(null),
+            (Ref ref) => auth.authStateChanges(),
           ),
           authRepositoryProvider.overrideWithValue(auth),
         ],

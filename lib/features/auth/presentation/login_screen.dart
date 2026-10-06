@@ -145,7 +145,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: TextButton(
             onPressed: busy
                 ? null
-                : () => context.push(
+                : () => context.go(
                       RouteNames.forgotPassword,
                       extra: _email.text.trim(),
                     ),
@@ -163,7 +163,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         AuthLinkRow(
           prompt: LoginLabelsTr.noAccount,
           action: LoginLabelsTr.register,
-          onPressed: busy ? null : () => context.push(RouteNames.register),
+          onPressed: busy ? null : () => context.go(RouteNames.register),
         ),
       ],
     );
