@@ -305,6 +305,29 @@ jobs:
         run: |
           if [ -n "$GOOGLE_SERVICES_JSON_BASE64" ]; then
             echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
+          else
+            # Dependabot runs get no Actions secrets. Write an obviously fake
+            # placeholder so the debug build can still be verified; it holds no
+            # real key and is never uploaded or used at runtime.
+            cat > android/app/google-services.json <<'JSON'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "hitup-ci-placeholder",
+              "storage_bucket": "hitup-ci-placeholder.invalid"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                  "android_client_info": { "package_name": "com.posinowa.hitup" }
+                },
+                "api_key": [{ "current_key": "placeholder-not-a-real-key" }]
+              }
+            ],
+            "configuration_version": "1"
+          }
+          JSON
           fi
       - name: Build debug APK (unsigned verification)
         run: flutter build apk --debug
