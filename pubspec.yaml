@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.9
+  cupertino_icons: ^2.0.0
 
   # State management & DI (LOCKED decision — HIT-005)
   flutter_riverpod: ^2.6.1
