@@ -275,7 +275,7 @@ jobs:
         run: flutter test --coverage
       - name: Upload coverage artifact
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-lcov
           path: coverage/lcov.info
@@ -306,9 +306,10 @@ jobs:
           if [ -n "$GOOGLE_SERVICES_JSON_BASE64" ]; then
             echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
           else
-            # Dependabot runs get no Actions secrets. Write an obviously fake
-            # placeholder so the debug build can still be verified; it holds no
-            # real key and is never uploaded or used at runtime.
+            # Dependabot and fork PRs cannot read Actions secrets. This debug build only verifies
+            # that the app compiles, so a placeholder config is enough (Firebase is not used at
+            # build time). release_validation.yml still requires the real secret.
+            echo "::notice::GOOGLE_SERVICES_JSON_BASE64 is not available; using a placeholder google-services.json for the debug build."
             cat > android/app/google-services.json <<'JSON'
           {
             "project_info": {
@@ -322,7 +323,9 @@ jobs:
                   "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
                   "android_client_info": { "package_name": "com.posinowa.hitup" }
                 },
-                "api_key": [{ "current_key": "placeholder-not-a-real-key" }]
+                "oauth_client": [],
+                "api_key": [{ "current_key": "placeholder-not-a-real-key" }],
+                "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
               }
             ],
             "configuration_version": "1"
@@ -332,7 +335,7 @@ jobs:
       - name: Build debug APK (unsigned verification)
         run: flutter build apk --debug
       - name: Upload debug APK
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: app-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk

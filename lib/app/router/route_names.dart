@@ -21,5 +21,9 @@ abstract final class RouteNames {
   static const progress = '/app/progress';
   static const profile = '/app/profile';
 
+  // A training day, over the tabs rather than in one: it is pushed with the
+  // day it runs, so it is never a link of its own (#23).
+  static const session = '/app/session';
+
   static const settings = '/settings';
 }

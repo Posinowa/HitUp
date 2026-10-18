@@ -62,7 +62,7 @@ jobs:
             echo "note=Credential-free validation only. No App Store / Play Store publishing."
           } > release-metadata.txt
           cat release-metadata.txt
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-metadata
           path: release-metadata.txt
@@ -104,7 +104,7 @@ jobs:
             echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
           fi
       - run: flutter build apk --release
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-apk-unsigned-validation-only
           path: build/app/outputs/flutter-apk/app-release.apk
@@ -132,7 +132,7 @@ jobs:
       # the debug signing config. The artifact is not shippable and its name
       # says so; what is being validated is that the bundle compiles at all.
       - run: flutter build appbundle --release
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-aab-unsigned-validation-only
           path: build/app/outputs/bundle/release/app-release.aab

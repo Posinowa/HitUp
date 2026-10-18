@@ -6,6 +6,7 @@ import 'package:hitup/app/app.dart';
 import 'package:hitup/core/widgets/damga_mark.dart';
 import 'package:hitup/features/auth/domain/models/auth_user.dart';
 import 'package:hitup/features/auth/presentation/login_screen.dart';
+import 'package:hitup/features/home/presentation/home_screen.dart';
 import 'package:hitup/features/onboarding/data/onboarding_store.dart';
 import 'package:hitup/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:hitup/shared/providers/auth_providers.dart';
@@ -120,7 +121,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Bugünün antrenmanı'), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
     });
 
     testWidgets('waits for both answers, not just the first',
@@ -139,7 +140,7 @@ void main() {
       await tester.pump();
 
       expect(find.byType(DamgaMark), findsOneWidget);
-      expect(find.text('Bugünün antrenmanı'), findsNothing);
+      expect(find.byType(HomeScreen), findsNothing);
 
       onboarding.release();
       await tester.pumpAndSettle();
