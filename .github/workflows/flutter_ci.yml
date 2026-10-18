@@ -314,8 +314,8 @@ jobs:
           {
             "project_info": {
               "project_number": "000000000000",
-              "project_id": "ci-placeholder",
-              "storage_bucket": "ci-placeholder.appspot.com"
+              "project_id": "hitup-ci-placeholder",
+              "storage_bucket": "hitup-ci-placeholder.invalid"
             },
             "client": [
               {
@@ -324,7 +324,7 @@ jobs:
                   "android_client_info": { "package_name": "com.posinowa.hitup" }
                 },
                 "oauth_client": [],
-                "api_key": [{ "current_key": "ci-placeholder" }],
+                "api_key": [{ "current_key": "placeholder-not-a-real-key" }],
                 "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
               }
             ],
