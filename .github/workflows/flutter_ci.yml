@@ -305,6 +305,32 @@ jobs:
         run: |
           if [ -n "$GOOGLE_SERVICES_JSON_BASE64" ]; then
             echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
+          else
+            # Dependabot and fork PRs cannot read Actions secrets. This debug build only verifies
+            # that the app compiles, so a placeholder config is enough (Firebase is not used at
+            # build time). release_validation.yml still requires the real secret.
+            echo "::notice::GOOGLE_SERVICES_JSON_BASE64 is not available; using a placeholder google-services.json for the debug build."
+            cat > android/app/google-services.json <<'JSON'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "ci-placeholder",
+              "storage_bucket": "ci-placeholder.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                  "android_client_info": { "package_name": "com.posinowa.hitup" }
+                },
+                "oauth_client": [],
+                "api_key": [{ "current_key": "ci-placeholder" }],
+                "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          JSON
           fi
       - name: Build debug APK (unsigned verification)
         run: flutter build apk --debug
