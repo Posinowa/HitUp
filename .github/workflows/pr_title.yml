@@ -53,7 +53,8 @@ jobs:
             echo "  Expected: type(optional-scope): summary [HIT-XXX]"
             echo "  Types:    feat, fix, chore, docs, refactor, test, perf, build, ci, revert"
             echo "  Summary:  starts lowercase, at least 10 characters, no trailing period"
-            echo "  Backlog:  optional, and when present it must be exactly [HIT-<number>]"
+            echo "  Backlog:  optional, and when present it must be exactly [HIT-<number>],"
+            echo "            with the backlog's letter where it has one, as in [HIT-021B]"
             echo ""
             echo "  For example:"
             echo "    feat(auth): add registration screen [HIT-017]"
@@ -69,12 +70,13 @@ jobs:
           # greedy subject can swallow " [HIT-017]" and the optional group then
           # matches nothing, so it enforces its own shape only by accident:
           # "[HIT-BOGUS]" and "[ANYTHING-99]" both pass that way. Peeling makes
-          # the check real.
+          # the check real. A few backlog IDs carry one capital letter after the
+          # number (HIT-021B, HIT-021C), so one is allowed there.
           core="$PR_TITLE"
-          if [[ "$core" =~ ^(.*)[[:space:]]\[HIT-[0-9]+\]$ ]]; then
+          if [[ "$core" =~ ^(.*)[[:space:]]\[HIT-[0-9]+[A-Z]?\]$ ]]; then
             core="${BASH_REMATCH[1]}"
           elif [[ "$core" == *"]" ]]; then
-            explain "The title ends with a bracket that is not a backlog ID. Use [HIT-<number>] or drop it."
+            explain "The title ends with a bracket that is not a backlog ID. Use [HIT-<number>], with the backlog's letter where it has one, or drop it."
           fi
 
           # Subject rules, checked against the title with any backlog ID removed.
