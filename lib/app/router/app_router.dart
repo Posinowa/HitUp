@@ -7,8 +7,11 @@ import '../../core/theme/app_spacing.dart';
 import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/registration_screen.dart';
+import '../../features/home/presentation/home_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
+import '../../features/training/domain/models/models.dart';
+import '../../features/training/presentation/exercise_container_screen.dart';
 import '../../shared/providers/startup_providers.dart';
 import '../shell/main_shell.dart';
 import '../startup/startup_destination.dart';
@@ -28,7 +31,8 @@ import 'route_names.dart';
 ///
 /// Onboarding is HIT-015. The account screens are HIT-017 to HIT-019: login,
 /// and the registration and forgot-password screens it leads to. Home is the
-/// first of the main app's five tabs (HIT-021, `MainShell`), whose screens
+/// first of the main app's five tabs (HIT-021, `MainShell`): today's training
+/// (#23), which opens a training day over the tabs. The other tabs' screens
 /// are still placeholders.
 final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
   return GoRouter(
@@ -89,6 +93,16 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
           ),
         ],
       ),
+      // A training day, over the tabs. It runs the day it was pushed with, so
+      // without one, from a link or a restored location, it goes home.
+      GoRoute(
+        path: RouteNames.session,
+        name: 'session',
+        redirect: (BuildContext context, GoRouterState state) =>
+            state.extra is TodayTraining ? null : RouteNames.home,
+        builder: (BuildContext context, GoRouterState state) =>
+            ExerciseContainerScreen(today: state.extra! as TodayTraining),
+      ),
       // The main app: five tabs, each a branch with a navigator of its own
       // (HIT-021). The order is the tab bar's.
       StatefulShellRoute.indexedStack(
@@ -99,11 +113,15 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         ) =>
             MainShell(navigationShell: navigationShell),
         branches: <StatefulShellBranch>[
-          _tab(
-            RouteNames.home,
-            'home',
-            'Bugünün antrenmanı',
-            'HIT-021B bu ekranı yazacak.',
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: RouteNames.home,
+                name: 'home',
+                builder: (BuildContext context, GoRouterState state) =>
+                    const HomeScreen(),
+              ),
+            ],
           ),
           _tab(
             RouteNames.training,

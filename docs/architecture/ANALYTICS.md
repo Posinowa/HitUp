@@ -1,6 +1,6 @@
 # Analytics
 
-**STATUS: SERVICE AND TAXONOMY IMPLEMENTED (HIT-063); THE TRAINING CALL SITES WIRED (HIT-064); THE SPEAKING CHALLENGE WIRED (HIT-048); SIGN-UP AND LOGIN WIRED WITH THE ACCOUNT SCREENS (HIT-017, HIT-018); ONBOARDING'S WITH ITS SCREEN (HIT-015).** The rest land with the screens that raise them: the reminder (#62), and the programme's end with the home screen (#23), which is where a finished programme is known. Crash reporting is HIT-065.
+**STATUS: SERVICE AND TAXONOMY IMPLEMENTED (HIT-063); THE TRAINING CALL SITES WIRED (HIT-064); THE SPEAKING CHALLENGE WIRED (HIT-048); SIGN-UP AND LOGIN WIRED WITH THE ACCOUNT SCREENS (HIT-017, HIT-018); ONBOARDING'S WITH ITS SCREEN (HIT-015); THE PROGRAMME'S END WITH THE HOME SCREEN (HIT-021B).** The reminder's land with its settings (#62). Crash reporting is HIT-065.
 
 ## The shape
 
@@ -58,6 +58,7 @@ Each event is raised once, from the one place that sees the moment happen. A num
 | `speaking_challenge_started` | `SpeakingChallengeView` | The speaking phase begins, once the preparation is over. |
 | `speaking_challenge_completed` | `SpeakingChallengeView` | The speaking ends, by its time or by "Bitirdim". `duration_seconds` is the seconds the clock ran, so time the session spent paused is not counted. A speaking left before its end, for another challenge or another screen, is not completed. |
 | `streak_advanced` | `TrainingDayRecorder` | Recording a day moves the streak, which happens once for a date: a retry of a half-recorded day finds it counted. After a gap the run reached is 1. |
+| `program_finished` | `HomeScreen` | The first time home sees the programme finished for an account on this device, with the last day as `program_day`. Later visits are not counted again (`HOME.md`). |
 
 **`presentation_type` is the type's name in snake case** (`tongue_twister`, `timed_reading`), since a string value has to be lower case. A test builds the exercise events for every exercise the content ships, so content that could not be reported fails a test instead of a session.
 
