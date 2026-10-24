@@ -168,6 +168,10 @@ class HomeScreen extends ConsumerWidget {
         onRefresh: () => _refresh(ref),
         child: ListView(
           padding: EdgeInsets.zero,
+          // A vertical list without a controller already gets this; said
+          // here so that a controller added later cannot take away the pull
+          // down on content shorter than the screen, such as a failure.
+          physics: const AlwaysScrollableScrollPhysics(),
           children: <Widget>[
             _Header(now: now, profile: profile),
             Padding(
