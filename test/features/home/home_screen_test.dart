@@ -590,6 +590,41 @@ void main() {
       expect(button('Antrenmana başla'), findsOneWidget);
     });
 
+    testWidgets(
+        'a failure, shorter than the screen, can still be pulled down to try '
+        'again', (WidgetTester tester) async {
+      progress.failWith = const AppException(
+        'A field of the wrong type',
+        code: FailureCode.dataUnknown,
+      );
+      await open(tester);
+      expect(find.text('Tekrar dene'), findsOneWidget);
+      // Nothing to scroll: the failure leaves the list shorter than the
+      // screen, which is where a pull down would otherwise go unnoticed.
+      final ScrollPosition list = tester
+          .state<ScrollableState>(
+            find.descendant(
+              of: find.byType(HomeScreen),
+              matching: find.byType(Scrollable),
+            ),
+          )
+          .position;
+      expect(list.maxScrollExtent, 0);
+
+      progress.failWith = null;
+      await tester.fling(
+        find.descendant(
+          of: find.byType(HomeScreen),
+          matching: find.byType(ListView),
+        ),
+        const Offset(0, 400),
+        1000,
+      );
+      await tester.pumpAndSettle();
+
+      expect(button('Antrenmana başla'), findsOneWidget);
+    });
+
     testWidgets('a pull down that fails shows the failure, and is not a crash',
         (WidgetTester tester) async {
       await open(tester);
