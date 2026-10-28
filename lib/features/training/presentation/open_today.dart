@@ -26,5 +26,9 @@ Future<void> openToday(
     return;
   }
   await context.push(RouteNames.session, extra: status.today);
+  // As before the push: a screen gone meanwhile has no ref to use.
+  if (!context.mounted) {
+    return;
+  }
   ref.invalidate(todayStatusProvider);
 }
