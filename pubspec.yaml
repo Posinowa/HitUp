@@ -19,7 +19,7 @@ dependencies:
   go_router: ^18.1.0
 
   # Firebase client services only — NO custom backend / NO Cloud Functions
-  firebase_core: ^4.15.0
+  firebase_core: ^4.15.2
   firebase_auth: ^6.7.0
   cloud_firestore: ^6.10.0
   firebase_analytics: ^12.6.0
